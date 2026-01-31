@@ -15,7 +15,10 @@ Cyclone::Application::Application() noexcept :
 	mOutputWidth( 1920 ),
 	mOutputHeight( 1080 ),
 	mFeatureLevel( D3D_FEATURE_LEVEL_12_1 )
-{}
+{
+	// Create main UI
+	mMainUI = std::make_unique<Cyclone::UI::MainUI>();
+}
 
 Cyclone::Application::~Application()
 {
@@ -47,8 +50,7 @@ void Cyclone::Application::Initialize( HWND inWindow, int inWidth, int inHeight 
 	ImGui_ImplWin32_Init( inWindow );
 	ImGui_ImplDX11_Init( mDevice.Get(), mDeviceContext.Get() );
 
-	// Initialize MainUI
-
+	mMainUI->Initialize();
 }
 
 void Cyclone::Application::Tick()
@@ -88,18 +90,18 @@ void Cyclone::Application::GetDefaultSize( int &outWidth, int &outHeight ) const
 
 void Cyclone::Application::Update( float inDeltaTime )
 {
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
 
+	ImGui::ShowDemoWindow();
+
+	mMainUI->Update( inDeltaTime );
 }
 
 void Cyclone::Application::Render()
 {
 	Clear();
-
-	// Start the Dear ImGui frame
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-	ImGui::ShowDemoWindow(); // Show demo window! :)
 
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData( ImGui::GetDrawData() );
@@ -117,10 +119,9 @@ void Cyclone::Application::Render()
 void Cyclone::Application::Clear()
 {
 	// Clear the views.
-	mDeviceContext->ClearRenderTargetView( mRenderTargetView.Get(), DirectX::Colors::CornflowerBlue );
-	mDeviceContext->ClearDepthStencilView( mDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0 );
+	mDeviceContext->ClearRenderTargetView( mRenderTargetView.Get(), DirectX::Colors::Transparent );
 
-	mDeviceContext->OMSetRenderTargets( 1, mRenderTargetView.GetAddressOf(), mDepthStencilView.Get() );
+	mDeviceContext->OMSetRenderTargets( 1, mRenderTargetView.GetAddressOf(), nullptr );
 
 	// Set the viewport.
 	D3D11_VIEWPORT viewport = { 0.0f, 0.0f, static_cast<float>( mOutputWidth ), static_cast<float>( mOutputHeight ), 0.f, 1.f };
@@ -129,10 +130,9 @@ void Cyclone::Application::Clear()
 
 void Cyclone::Application::Present()
 {
-	// The first argument instructs DXGI to block until VSync, putting the application
-	// to sleep until the next VSync. This ensures we don't waste any cycles rendering
-	// frames that will never be displayed to the screen.
-	HRESULT hr = mSwapChain->Present( 1, 0 );
+	UINT syncInterval = mMainUI->IsVerticalSyncEnabled() ? 1 : 0;
+
+	HRESULT hr = mSwapChain->Present( syncInterval, 0 );
 
 	// If the device was reset we must completely reinitialize the renderer.
 	if ( hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET )
@@ -217,13 +217,12 @@ void Cyclone::Application::CreateResources()
 	// Clear the previous window size specific context.
 	mDeviceContext->OMSetRenderTargets( 0, nullptr, nullptr );
 	mRenderTargetView.Reset();
-	mDepthStencilView.Reset();
 	mDeviceContext->Flush();
 
 	const UINT backBufferWidth = static_cast<UINT>( mOutputWidth );
 	const UINT backBufferHeight = static_cast<UINT>( mOutputHeight );
 	const DXGI_FORMAT backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
-	const DXGI_FORMAT depthBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	const DXGI_FORMAT depthBufferFormat = DXGI_FORMAT_UNKNOWN;
 	constexpr UINT backBufferCount = 2;
 
 	// If the swap chain already exists, resize it, otherwise create one.
@@ -292,22 +291,10 @@ void Cyclone::Application::CreateResources()
 
 	// Create a view interface on the rendertarget to use on bind.
 	DX::ThrowIfFailed( mDevice->CreateRenderTargetView( backBuffer.Get(), nullptr, mRenderTargetView.ReleaseAndGetAddressOf() ) );
-
-	// Allocate a 2-D surface as the depth/stencil buffer and
-	// create a DepthStencil view on this surface to use on bind.
-	CD3D11_TEXTURE2D_DESC depthStencilDesc( depthBufferFormat, backBufferWidth, backBufferHeight, 1, 1, D3D11_BIND_DEPTH_STENCIL );
-
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencil;
-	DX::ThrowIfFailed( mDevice->CreateTexture2D( &depthStencilDesc, nullptr, depthStencil.GetAddressOf() ) );
-
-	DX::ThrowIfFailed( mDevice->CreateDepthStencilView( depthStencil.Get(), nullptr, mDepthStencilView.ReleaseAndGetAddressOf() ) );
-
-	// TODO: Initialize windows-size dependent objects here.
 }
 
 void Cyclone::Application::OnDeviceLost()
 {
-	mDepthStencilView.Reset();
 	mRenderTargetView.Reset();
 	mSwapChain.Reset();
 	mDeviceContext.Reset();

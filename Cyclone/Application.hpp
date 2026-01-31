@@ -57,6 +57,7 @@ namespace Cyclone
 
 		Microsoft::WRL::ComPtr<IDXGISwapChain1>         mSwapChain;
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  mRenderTargetView;
-		Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  mDepthStencilView;
+
+		std::unique_ptr<Cyclone::UI::MainUI>			mMainUI;
 	};
 }

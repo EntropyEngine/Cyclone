@@ -5,28 +5,36 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Cyclone">
-      <UniqueIdentifier>{bcc6e8fa-b24a-4c76-b87d-a34a40ad29cb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ImGui">
       <UniqueIdentifier>{9a284b6d-3c11-4596-ac05-fb89bf84aa93}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Cyclone\UI">
+    <Filter Include="Entrypoint">
+      <UniqueIdentifier>{3a2ed8c7-6d83-4323-a6ab-faa20c082bf5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
       <UniqueIdentifier>{8ada7e93-f0ea-424b-b815-b8f106e50f6c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Application.hpp">
-      <Filter>Cyclone</Filter>
+    <ClInclude Include="targetver.h">
+      <Filter>Entrypoint</Filter>
     </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Entrypoint</Filter>
+    </ClInclude>
+    <ClInclude Include="main.h">
+      <Filter>Entrypoint</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Entrypoint</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Entrypoint</Filter>
+    </ClInclude>
+    <ClInclude Include="Application.hpp" />
     <ClInclude Include="UI\MainUI.hpp">
-      <Filter>Cyclone\UI</Filter>
+      <Filter>UI</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="main.h" />
-    <ClInclude Include="framework.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -50,14 +58,16 @@
     <ClCompile Include="ImGui\imgui_impl_win32.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Application.cpp">
-      <Filter>Cyclone</Filter>
+    <ClCompile Include="main.cpp">
+      <Filter>Entrypoint</Filter>
     </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Entrypoint</Filter>
+    </ClCompile>
+    <ClCompile Include="Application.cpp" />
     <ClCompile Include="UI\MainUI.cpp">
-      <Filter>Cyclone\UI</Filter>
+      <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp" />
-    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Cyclone.rc">

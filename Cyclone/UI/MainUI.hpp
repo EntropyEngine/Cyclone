@@ -14,7 +14,7 @@ namespace Cyclone
 
 			void Update( float inDeltaTime );
 
-			bool IsVerticalSyncEnabled() const noexcept;
+			bool IsVerticalSyncEnabled() const noexcept { return mVerticalSyncEnabled; }
 
 		protected:
 			bool mVerticalSyncEnabled;
