@@ -2,26 +2,29 @@
 
 #include "Application.hpp"
 
+// Cyclone includes
+#include "Cyclone/UI/MainUI.hpp"
+
 // ImGui includes
 #include <imgui.h>
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
 
-Application::Application() noexcept :
+Cyclone::Application::Application() noexcept :
 	mWindow( nullptr ),
 	mOutputWidth( 1920 ),
 	mOutputHeight( 1080 ),
 	mFeatureLevel( D3D_FEATURE_LEVEL_12_1 )
 {}
 
-Application::~Application()
+Cyclone::Application::~Application()
 {
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 }
 
-void Application::Initialize( HWND inWindow, int inWidth, int inHeight )
+void Cyclone::Application::Initialize( HWND inWindow, int inWidth, int inHeight )
 {
 	mWindow = inWindow;
 	mOutputWidth = inWidth;
@@ -42,28 +45,31 @@ void Application::Initialize( HWND inWindow, int inWidth, int inHeight )
 	
 	// Setup Platform/Renderer backends
 	ImGui_ImplWin32_Init( inWindow );
-	ImGui_ImplDX11_Init( mDevice.Get(), mDeviceContext.Get());
+	ImGui_ImplDX11_Init( mDevice.Get(), mDeviceContext.Get() );
+
+	// Initialize MainUI
+
 }
 
-void Application::Tick()
+void Cyclone::Application::Tick()
 {
 	Update( 1.0f / 60 );
 	Render();
 }
 
-void Application::OnActivated()
+void Cyclone::Application::OnActivated()
 {}
 
-void Application::OnDeactivated()
+void Cyclone::Application::OnDeactivated()
 {}
 
-void Application::OnSuspending()
+void Cyclone::Application::OnSuspending()
 {}
 
-void Application::OnResuming()
+void Cyclone::Application::OnResuming()
 {}
 
-void Application::OnWindowSizeChanged( int inWidth, int inHeight )
+void Cyclone::Application::OnWindowSizeChanged( int inWidth, int inHeight )
 {
 	if ( !mWindow )
 		return;
@@ -74,18 +80,18 @@ void Application::OnWindowSizeChanged( int inWidth, int inHeight )
 	CreateResources();
 }
 
-void Application::GetDefaultSize( int &outWidth, int &outHeight ) const noexcept
+void Cyclone::Application::GetDefaultSize( int &outWidth, int &outHeight ) const noexcept
 {
 	outWidth = 1920;
 	outHeight = 1080;
 }
 
-void Application::Update( float inDeltaTime )
+void Cyclone::Application::Update( float inDeltaTime )
 {
 
 }
 
-void Application::Render()
+void Cyclone::Application::Render()
 {
 	Clear();
 
@@ -108,7 +114,7 @@ void Application::Render()
 	Present();
 }
 
-void Application::Clear()
+void Cyclone::Application::Clear()
 {
 	// Clear the views.
 	mDeviceContext->ClearRenderTargetView( mRenderTargetView.Get(), DirectX::Colors::CornflowerBlue );
@@ -121,7 +127,7 @@ void Application::Clear()
 	mDeviceContext->RSSetViewports( 1, &viewport );
 }
 
-void Application::Present()
+void Cyclone::Application::Present()
 {
 	// The first argument instructs DXGI to block until VSync, putting the application
 	// to sleep until the next VSync. This ensures we don't waste any cycles rendering
@@ -139,7 +145,7 @@ void Application::Present()
 	}
 }
 
-void Application::CreateDevice()
+void Cyclone::Application::CreateDevice()
 {
 	UINT creationFlags = 0;
 
@@ -206,7 +212,7 @@ void Application::CreateDevice()
 	// TODO: Initialize device dependent objects here (independent of window size).
 }
 
-void Application::CreateResources()
+void Cyclone::Application::CreateResources()
 {
 	// Clear the previous window size specific context.
 	mDeviceContext->OMSetRenderTargets( 0, nullptr, nullptr );
@@ -299,7 +305,7 @@ void Application::CreateResources()
 	// TODO: Initialize windows-size dependent objects here.
 }
 
-void Application::OnDeviceLost()
+void Cyclone::Application::OnDeviceLost()
 {
 	mDepthStencilView.Reset();
 	mRenderTargetView.Reset();

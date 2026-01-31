@@ -4,16 +4,16 @@
 #include "pch.h"
 
 #include "main.h"
-#include "Application.hpp"
+#include "Cyclone/Application.hpp"
 
-#include "imgui.h"
+#include <imgui.h>
 
 #define MAX_LOADSTRING 100
 
 // Global Variables
 namespace
 {
-	std::unique_ptr<Application> gApplication;
+	std::unique_ptr<Cyclone::Application> gApplication;
 }
 
 // Global Windows Variables:
@@ -46,7 +46,7 @@ int APIENTRY wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstanc
 	if ( FAILED( CoInitializeEx( nullptr, COINITBASE_MULTITHREADED ) ) ) return 1;
 
 	// Create application instance
-	gApplication = std::make_unique<Application>();
+	gApplication = std::make_unique<Cyclone::Application>();
 
 	// Initialize global strings
 	LoadStringW( hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING );
@@ -142,7 +142,7 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 	if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
 		return true;
 
-	auto application = reinterpret_cast<Application*>( GetWindowLongPtr( hWnd, GWLP_USERDATA ) );
+	auto application = reinterpret_cast<Cyclone::Application *>( GetWindowLongPtr( hWnd, GWLP_USERDATA ) );
 
 	switch ( message )
 	{

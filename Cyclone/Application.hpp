@@ -1,55 +1,62 @@
 #pragma once
 
-class Application
+namespace Cyclone
 {
-public:
-	Application() noexcept;
-	~Application();
+	namespace UI {
+		class MainUI;
+	}
 
-	Application( Application&& ) = default;
-	Application& operator= ( Application&& ) = default;
+	class Application
+	{
+	public:
+		Application() noexcept;
+		~Application();
 
-	Application( Application const& ) = delete;
-	Application& operator= ( Application const& ) = delete;
+		Application( Application && ) = default;
+		Application &operator= ( Application && ) = default;
 
-	// Initialize device and create default resources
-	void Initialize( HWND inWindow, int inWidth, int inHeight );
+		Application( Application const & ) = delete;
+		Application &operator= ( Application const & ) = delete;
 
-	// Render and update loop
-	void Tick();
+		// Initialize device and create default resources
+		void Initialize( HWND inWindow, int inWidth, int inHeight );
 
-	// System messages
-	void OnActivated();
-	void OnDeactivated();
-	void OnSuspending();
-	void OnResuming();
-	void OnWindowSizeChanged( int inWidth, int inHeight );
+		// Render and update loop
+		void Tick();
 
-	// Properties
-	void GetDefaultSize( int& outWidth, int& outHeight ) const noexcept;
+		// System messages
+		void OnActivated();
+		void OnDeactivated();
+		void OnSuspending();
+		void OnResuming();
+		void OnWindowSizeChanged( int inWidth, int inHeight );
 
-protected:
-	void Update( float inDeltaTime );
-	void Render();
+		// Properties
+		void GetDefaultSize( int &outWidth, int &outHeight ) const noexcept;
 
-	void Clear();
-	void Present();
+	protected:
+		void Update( float inDeltaTime );
+		void Render();
 
-	void CreateDevice();
-	void CreateResources();
+		void Clear();
+		void Present();
 
-	void OnDeviceLost();
+		void CreateDevice();
+		void CreateResources();
 
-	// Device resources.
-	HWND                                            mWindow;
-	int                                             mOutputWidth;
-	int                                             mOutputHeight;
+		void OnDeviceLost();
 
-	D3D_FEATURE_LEVEL                               mFeatureLevel;
-	Microsoft::WRL::ComPtr<ID3D11Device3>           mDevice;
-	Microsoft::WRL::ComPtr<ID3D11DeviceContext3>    mDeviceContext;
+		// Device resources.
+		HWND                                            mWindow;
+		int                                             mOutputWidth;
+		int                                             mOutputHeight;
 
-	Microsoft::WRL::ComPtr<IDXGISwapChain1>         mSwapChain;
-	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  mRenderTargetView;
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  mDepthStencilView;
-};
+		D3D_FEATURE_LEVEL                               mFeatureLevel;
+		Microsoft::WRL::ComPtr<ID3D11Device3>           mDevice;
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext3>    mDeviceContext;
+
+		Microsoft::WRL::ComPtr<IDXGISwapChain1>         mSwapChain;
+		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  mRenderTargetView;
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  mDepthStencilView;
+	};
+}
