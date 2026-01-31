@@ -14,6 +14,13 @@ Application::Application() noexcept :
 	mFeatureLevel( D3D_FEATURE_LEVEL_12_1 )
 {}
 
+Application::~Application()
+{
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+}
+
 void Application::Initialize( HWND inWindow, int inWidth, int inHeight )
 {
 	mWindow = inWindow;

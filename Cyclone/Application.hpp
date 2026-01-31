@@ -4,7 +4,7 @@ class Application
 {
 public:
 	Application() noexcept;
-	~Application() = default;
+	~Application();
 
 	Application( Application&& ) = default;
 	Application& operator= ( Application&& ) = default;
