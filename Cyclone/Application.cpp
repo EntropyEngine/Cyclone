@@ -94,9 +94,10 @@ void Cyclone::Application::Update( float inDeltaTime )
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::ShowDemoWindow();
 
 	mMainUI->Update( inDeltaTime );
+
+	ImGui::ShowDemoWindow();
 }
 
 void Cyclone::Application::Render()
