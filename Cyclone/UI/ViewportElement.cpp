@@ -15,7 +15,7 @@ Cyclone::UI::ViewportElement::ViewportElement( ID3D11Device3 *inDevice, DXGI_FOR
 	mHeight = 0;
 }
 
-ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetImageSRV( size_t inWidth, size_t inHeight )
+ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetOrResizeSRV( size_t inWidth, size_t inHeight )
 {
 	mTargetMSAA->SizeResources( inWidth, inHeight );
 	mTargetRT->SizeResources( inWidth, inHeight );

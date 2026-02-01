@@ -19,9 +19,13 @@ namespace Cyclone
 			ViewportElement( ViewportElement const & ) = delete;
 			ViewportElement &operator= ( ViewportElement const & ) = delete;
 
-			ID3D11ShaderResourceView *GetImageSRV( size_t inWidth, size_t inHeight );
+			ID3D11ShaderResourceView *GetOrResizeSRV( size_t inWidth, size_t inHeight );
 			void Clear( ID3D11DeviceContext3 *inDeviceContext );
 			void Resolve( ID3D11DeviceContext3 *inDeviceContext );
+
+			size_t GetWidth() const  { return mWidth; }
+			size_t GetHeight() const { return mHeight; }
+
 		protected:
 			std::unique_ptr<DX::MSAAHelper> mTargetMSAA;
 			std::unique_ptr<DX::RenderTexture> mTargetRT;
