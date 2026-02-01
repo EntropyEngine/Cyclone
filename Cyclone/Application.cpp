@@ -45,12 +45,13 @@ void Cyclone::Application::Initialize( HWND inWindow, int inWidth, int inHeight 
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	io.Fonts->AddFontFromFileTTF( "unispace.bold.otf", 13.0f );
 	
 	// Setup Platform/Renderer backends
 	ImGui_ImplWin32_Init( inWindow );
 	ImGui_ImplDX11_Init( mDevice.Get(), mDeviceContext.Get() );
 
-	mMainUI->Initialize();
+	mMainUI->Initialize( mDevice.Get() );
 }
 
 void Cyclone::Application::Tick()
@@ -102,6 +103,8 @@ void Cyclone::Application::Update( float inDeltaTime )
 
 void Cyclone::Application::Render()
 {
+	mMainUI->Render( mDeviceContext.Get() );
+
 	Clear();
 
 	ImGui::Render();
