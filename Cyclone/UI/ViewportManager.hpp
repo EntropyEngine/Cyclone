@@ -20,10 +20,10 @@ namespace Cyclone
 
 			void Update( float inDeltaTime );
 
-			Cyclone::UI::ViewportElement *GetPerspective() { return mViewportPerspective.get(); }
-			Cyclone::UI::ViewportElement *GetTop()		   { return mViewportTop.get(); }
-			Cyclone::UI::ViewportElement *GetFront()	   { return mViewportFront.get(); }
-			Cyclone::UI::ViewportElement *GetSide()		   { return mViewportSide.get(); }
+			void RenderPerspective( ID3D11DeviceContext3 *inDeviceContext );
+			void RenderTop( ID3D11DeviceContext3 *inDeviceContext );
+			void RenderFront( ID3D11DeviceContext3 *inDeviceContext );
+			void RenderSide( ID3D11DeviceContext3 *inDeviceContext );
 
 		protected:
 			std::unique_ptr<Cyclone::UI::ViewportElement> mViewportPerspective;
@@ -31,7 +31,7 @@ namespace Cyclone
 			std::unique_ptr<Cyclone::UI::ViewportElement> mViewportFront;
 			std::unique_ptr<Cyclone::UI::ViewportElement> mViewportSide;
 
-			float mZoomScale2D = 0.1f; // Pixels to meters
+			double mZoomScale2D = 0.1; // Pixels to meters
 			double mCenterX2D = 0.0;
 			double mCenterY2D = 0.0;
 			double mCenterZ2D = 0.0;

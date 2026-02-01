@@ -69,19 +69,8 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime )
 
 void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext )
 {
-	mViewportManager->GetPerspective()->Clear( inDeviceContext );
-	// Render
-	mViewportManager->GetPerspective()->Resolve( inDeviceContext );
-
-	mViewportManager->GetTop()->Clear( inDeviceContext );
-	// Render
-	mViewportManager->GetTop()->Resolve( inDeviceContext );
-
-	mViewportManager->GetFront()->Clear( inDeviceContext );
-	// Render
-	mViewportManager->GetFront()->Resolve( inDeviceContext );
-
-	mViewportManager->GetSide()->Clear( inDeviceContext );
-	// Render
-	mViewportManager->GetSide()->Resolve( inDeviceContext );
+	mViewportManager->RenderPerspective( inDeviceContext );
+	mViewportManager->RenderTop( inDeviceContext );
+	mViewportManager->RenderFront( inDeviceContext );
+	mViewportManager->RenderSide( inDeviceContext );
 }
