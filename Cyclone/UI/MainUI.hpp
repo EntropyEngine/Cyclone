@@ -1,7 +1,7 @@
 #pragma once
 
 // Cyclone includes
-#include "Cyclone/UI/ViewportElement.hpp"
+#include "Cyclone/UI/ViewportManager.hpp"
 
 namespace Cyclone
 {
@@ -13,6 +13,12 @@ namespace Cyclone
 			MainUI() noexcept;
 			~MainUI() = default;
 
+			MainUI( MainUI && ) = default;
+			MainUI &operator= ( MainUI && ) = default;
+
+			MainUI( MainUI const & ) = delete;
+			MainUI &operator= ( MainUI const & ) = delete;
+
 			void Initialize( ID3D11Device3 *inDevice );
 
 			void Update( float inDeltaTime );
@@ -23,10 +29,7 @@ namespace Cyclone
 		protected:
 			bool mVerticalSyncEnabled;
 
-			std::unique_ptr<Cyclone::UI::ViewportElement> mViewportPerspective;
-			std::unique_ptr<Cyclone::UI::ViewportElement> mViewportTop;
-			std::unique_ptr<Cyclone::UI::ViewportElement> mViewportFront;
-			std::unique_ptr<Cyclone::UI::ViewportElement> mViewportSide;
+			std::unique_ptr<Cyclone::UI::ViewportManager> mViewportManager;
 		};
 	}
 }
