@@ -97,7 +97,7 @@ void Cyclone::Application::Update( float inDeltaTime )
 
 	mMainUI->Update( inDeltaTime );
 
-	//ImGui::ShowDemoWindow();
+	ImGui::ShowDemoWindow();
 }
 
 void Cyclone::Application::Render()

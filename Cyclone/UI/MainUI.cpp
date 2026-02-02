@@ -34,7 +34,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime )
 	ImGui::SetNextWindowPos( viewport->WorkPos );
 	ImGui::SetNextWindowSize( { viewport->WorkSize.x, kToolbarHeight } );
 	if ( ImGui::Begin( "ToolBar", nullptr, windowFlags ) ) {
-
+		mViewportManager->ToolbarUpdate();
 	}
 	ImGui::End();
 

@@ -2,7 +2,10 @@
 
 #include "Cyclone/UI/ViewportManager.hpp"
 
-// ImGui includes
+// STL Includes
+#include <format>
+
+// ImGui Includes
 #include <imgui.h>
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
@@ -46,6 +49,28 @@ Cyclone::UI::ViewportManager::ViewportManager( ID3D11Device3 *inDevice )
 	mWireframeBatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>( deviceContext );
 }
 
+void Cyclone::UI::ViewportManager::ToolbarUpdate()
+{
+	ImGui::PushStyleVarX( ImGuiStyleVar_SelectableTextAlign, 1.0f );
+	ImGui::PushStyleVar( ImGuiStyleVar_FrameRounding, 12.0f );
+
+	ImGui::SetNextItemWidth( 128.0f );
+	std::string subGridLevelPreview = std::format( "Grid Snap: {}", kSubGridLevelText[mSubGridSizeIndex] );
+	if ( ImGui::BeginCombo( "##SubGridLevel", subGridLevelPreview.c_str(), ImGuiComboFlags_HeightLarge ) ) {
+		for ( int i = 0; i < std::size( kSubGridLevels ); ++i ) {
+			const bool isSelected = mSubGridSizeIndex == i;
+			if ( ImGui::Selectable( kSubGridLevelText[i], isSelected ) ) {
+				mSubGridSizeIndex = i;
+				mSubGridSize = kSubGridLevels[i];
+			}
+			if ( isSelected ) ImGui::SetItemDefaultFocus();
+		}
+
+		ImGui::EndCombo();
+	}
+	ImGui::PopStyleVar( 2 );
+}
+
 void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 {
 	ImGuiIO &io = ImGui::GetIO();
@@ -86,16 +111,21 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 			double xPos = mCenterX2D - viewportRelPos.x * mZoomScale2D;
 			double zPos = mCenterZ2D - viewportRelPos.y * mZoomScale2D;
 
+			double xSnapPos = std::round( xPos / mSubGridSize ) * mSubGridSize;
+			double zSnapPos = std::round( zPos / mSubGridSize ) * mSubGridSize;
+
 			if ( isHovered ) ImGui::SetTooltip(
 				"Mouse pos: (%.0f, %.0f)\n"
 				"Viewport abs pos: (%.0f, %.0f)\n"
 				"Viewport rel pos: (%.1f, %.1f)\n"
-				"World Pos: (x=%.1f, z=%.1f)\n"
+				"World Pos: (x=%.2f, z=%.2f)\n"
+				"Snap Pos: (x=%.2f, z=%.2f)\n"
 				"Zoom Level: (%.3f)",
 				io.MousePos.x, io.MousePos.y,
 				viewportAbsPos.x, viewportAbsPos.y,
 				viewportRelPos.x, viewportRelPos.y,
 				xPos, zPos,
+				xSnapPos, zSnapPos,
 				mZoomScale2D
 			);
 
@@ -106,7 +136,22 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 
 			if ( isHovered ) {
 				mZoomLevel -= io.MouseWheel;
-				mZoomScale2D = std::pow( 10.0, static_cast<double>( mZoomLevel ) / 10.0 - 1.0 );
+				mZoomScale2D = sZoomLevelToScale( mZoomLevel );
+			}
+
+			
+			if ( isHovered ) {
+				ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+				ImVec2 gridPos;
+				gridPos.x = ( mCenterX2D - xSnapPos ) / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x;
+				gridPos.y = ( mCenterZ2D - zSnapPos ) / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y;
+
+				float offset = static_cast<float>( std::max( 2.0, mSubGridSize / mZoomScale2D ) );
+
+				//drawList->AddCircle( gridPos, 1.0f, IM_COL32( 255, 255, 255, 255 ) );
+				drawList->AddLine( { gridPos.x - offset, gridPos.y - offset }, { gridPos.x + offset, gridPos.y + offset }, IM_COL32( 255, 255, 255, 255 ) );
+				drawList->AddLine( { gridPos.x + offset, gridPos.y - offset }, { gridPos.x - offset, gridPos.y + offset }, IM_COL32( 255, 255, 255, 255 ) );
 			}
 		}
 		ImGui::PopStyleVar( 2 );
@@ -141,7 +186,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 				"Mouse pos: (%.0f, %.0f)\n"
 				"Viewport abs pos: (%.0f, %.0f)\n"
 				"Viewport rel pos: (%.1f, %.1f)\n"
-				"World Pos: (x=%.1f, y=%.1f)\n"
+				"World Pos: (x=%.2f, y=%.2f)\n"
 				"Zoom Level: (%.3f)",
 				io.MousePos.x, io.MousePos.y,
 				viewportAbsPos.x, viewportAbsPos.y,
@@ -157,7 +202,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 
 			if ( isHovered ) {
 				mZoomLevel -= io.MouseWheel;
-				mZoomScale2D = std::pow( 10.0, static_cast<double>( mZoomLevel ) / 10.0 - 1.0 );
+				mZoomScale2D = sZoomLevelToScale( mZoomLevel );
 			}
 		}
 		ImGui::PopStyleVar( 2 );
@@ -193,7 +238,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 				"Mouse pos: (%.0f, %.0f)\n"
 				"Viewport abs pos: (%.0f, %.0f)\n"
 				"Viewport rel pos: (%.1f, %.1f)\n"
-				"World Pos: (z=%.1f, y=%.1f)\n"
+				"World Pos: (z=%.2f, y=%.2f)\n"
 				"Zoom Level: (%.3f)",
 				io.MousePos.x, io.MousePos.y,
 				viewportAbsPos.x, viewportAbsPos.y,
@@ -209,7 +254,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 
 			if ( isHovered ) {
 				mZoomLevel -= io.MouseWheel;
-				mZoomScale2D = std::pow( 10.0, static_cast<double>( mZoomLevel ) / 10.0 - 1.0 );
+				mZoomScale2D = sZoomLevelToScale( mZoomLevel );
 			}
 		}
 		ImGui::PopStyleVar( 2 );
@@ -267,7 +312,15 @@ void Cyclone::UI::ViewportManager::RenderWireFrame( ID3D11DeviceContext3 *inDevi
 	GetMinMaxUV<T>( minU, maxU, minV, maxV );
 
 	double subgridStep = mSubGridSize;
-	double gridStep = mGridSize;
+	double gridStep = mSubGridSize * 10;
+
+	while ( subgridStep / mZoomScale2D < mMinGridSize ) {
+		subgridStep *= 10;
+	}
+
+	while ( gridStep / mZoomScale2D < mMinGridSize * 5 ) {
+		gridStep *= 10;
+	}
 
 	if ( subgridStep / mZoomScale2D > mMinGridSize ) {
 		DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, subgridStep, DirectX::ColorsLinear::DimGray );
@@ -276,6 +329,9 @@ void Cyclone::UI::ViewportManager::RenderWireFrame( ID3D11DeviceContext3 *inDevi
 
 	DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, gridStep, DirectX::Colors::DimGray );
 	DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, gridStep, DirectX::Colors::DimGray );
+
+	DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, 1000, DirectX::Colors::Gray );
+	DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, 1000, DirectX::Colors::Gray );
 
 	DrawAxisLine<AxisU>( minU, maxU );
 	DrawAxisLine<AxisV>( minV, maxV );

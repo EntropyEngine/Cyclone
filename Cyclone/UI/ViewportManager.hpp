@@ -15,6 +15,10 @@ namespace Cyclone
 	{
 		class ViewportManager
 		{
+			static constexpr double kSubGridLevels[] = { 0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0 };
+			static constexpr const char *kSubGridLevelText[] = { "1cm", "5cm", "10cm", "25cm", "50cm", "1m", "2.5m", "5m", "10m" };
+			static double sZoomLevelToScale( int inLevel ) { return std::pow( 10.0, static_cast<double>( inLevel ) / 20.0 - 1.0 ); }
+
 		public:
 			ViewportManager( ID3D11Device3 *inDevice );
 
@@ -24,6 +28,7 @@ namespace Cyclone
 			ViewportManager( ViewportManager const & ) = delete;
 			ViewportManager &operator= ( ViewportManager const & ) = delete;
 
+			void ToolbarUpdate();
 			void Update( float inDeltaTime );
 
 			void RenderPerspective( ID3D11DeviceContext3 *inDeviceContext );
@@ -42,14 +47,15 @@ namespace Cyclone
 			Microsoft::WRL::ComPtr<ID3D11InputLayout> mWireFrameInputLayout;
 			std::unique_ptr<DirectX::CommonStates>	  mCommonStates;
 
-			int mZoomLevel = 0;
-			double mZoomScale2D = 0.1; // Pixels to meters
+			int    mZoomLevel = 0;
+			double mZoomScale2D = sZoomLevelToScale( mZoomLevel ); // Pixels to meters
 
 			double mWorldLimit = 10000.0; // World +/- limit in meters
-			double mGridSize = 10.0; // Grid spacing in meters
-			double mSubGridSize = 1.0; // Grid spacing in meters
 
-			double mMinGridSize = 5.0; // Min subgrid view size in pixels
+			int	   mSubGridSizeIndex = 5;
+			double mSubGridSize = kSubGridLevels[mSubGridSizeIndex]; // Grid spacing in meters
+
+			double mMinGridSize = 8.0; // Min subgrid view size in pixels
 
 			double mCenterX2D = 0.0;
 			double mCenterY2D = 0.0;

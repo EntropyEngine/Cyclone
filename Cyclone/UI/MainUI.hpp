@@ -10,7 +10,7 @@ namespace Cyclone
 		class MainUI
 		{
 		private:
-			static constexpr float kToolbarHeight = 32.0f;
+			static constexpr float kToolbarHeight = 35.0f;
 			static constexpr float kSidebarWidth = 64.0f;
 			static constexpr float kOutlinerWidth = 256.0f;
 
