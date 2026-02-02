@@ -27,26 +27,26 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime )
 		ImGui::EndMainMenuBar();
 	}
 
-	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus;
+	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 
 	ImGui::SetNextWindowPos( viewport->WorkPos );
-	ImGui::SetNextWindowSize( { viewport->WorkSize.x - 256, 64 } );
+	ImGui::SetNextWindowSize( { viewport->WorkSize.x, kToolbarHeight } );
 	if ( ImGui::Begin( "ToolBar", nullptr, windowFlags ) ) {
 
 	}
 	ImGui::End();
 
-	ImGui::SetNextWindowPos( { viewport->WorkPos.x, viewport->WorkPos.y + 64 } );
-	ImGui::SetNextWindowSize( { 64, viewport->WorkSize.y - 64 } );
+	ImGui::SetNextWindowPos( { viewport->WorkPos.x, viewport->WorkPos.y + kToolbarHeight } );
+	ImGui::SetNextWindowSize( { kSidebarWidth, viewport->WorkSize.y - kToolbarHeight } );
 	if ( ImGui::Begin( "SideBar", nullptr, windowFlags ) ) {
 
 	}
 	ImGui::End();
 
-	ImGui::SetNextWindowPos( { viewport->WorkPos.x + 64, viewport->WorkPos.y + 64 } );
-	ImGui::SetNextWindowSize( { viewport->WorkSize.x - 64 - 256, viewport->WorkSize.y - 64 } );
+	ImGui::SetNextWindowPos( { viewport->WorkPos.x + kSidebarWidth, viewport->WorkPos.y + kToolbarHeight } );
+	ImGui::SetNextWindowSize( { viewport->WorkSize.x - kSidebarWidth - kOutlinerWidth, viewport->WorkSize.y - kToolbarHeight } );
 
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f } );
 	ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f } );
@@ -56,8 +56,8 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime )
 	ImGui::End();
 	ImGui::PopStyleVar( 2 );
 
-	ImGui::SetNextWindowPos( { viewport->WorkPos.x + viewport->WorkSize.x - 256, viewport->WorkPos.y } );
-	ImGui::SetNextWindowSize( { 256, viewport->WorkSize.y } );
+	ImGui::SetNextWindowPos( { viewport->WorkPos.x + viewport->WorkSize.x - kOutlinerWidth, viewport->WorkPos.y + kToolbarHeight } );
+	ImGui::SetNextWindowSize( { 256, viewport->WorkSize.y - kToolbarHeight } );
 	if ( ImGui::Begin( "Outliner", nullptr, windowFlags ) ) {
 
 	}

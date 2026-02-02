@@ -36,8 +36,8 @@ namespace Cyclone
 		template<>
 		struct ViewportTypeTraits<EViewportType::SideYZ>
 		{
-			static constexpr size_t AxisU = 1;
-			static constexpr size_t AxisV = 2;
+			static constexpr size_t AxisU = 2;
+			static constexpr size_t AxisV = 1;
 		};
 
 		class ViewportElement

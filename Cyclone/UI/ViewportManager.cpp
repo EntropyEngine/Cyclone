@@ -241,3 +241,46 @@ void Cyclone::UI::ViewportManager::RenderSide( ID3D11DeviceContext3 *inDeviceCon
 {
 	RenderWireFrame<EViewportType::SideYZ>( inDeviceContext );
 }
+
+
+template<Cyclone::UI::EViewportType T>
+void Cyclone::UI::ViewportManager::RenderWireFrame( ID3D11DeviceContext3 *inDeviceContext )
+{
+	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
+	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
+
+	ViewportElement *viewport = GetViewport<T>();
+
+	viewport->Clear( inDeviceContext );
+
+	inDeviceContext->OMSetBlendState( mCommonStates->Opaque(), nullptr, 0xFFFFFFFF );
+	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
+	inDeviceContext->RSSetState( mCommonStates->CullNone() );
+	inDeviceContext->IASetInputLayout( mWireFrameInputLayout.Get() );
+
+	mWireframeEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix<T>(), GetProjMatrix<T>() );
+	mWireframeEffect->Apply( inDeviceContext );
+
+	mWireframeBatch->Begin();
+
+	double minU, maxU, minV, maxV;
+	GetMinMaxUV<T>( minU, maxU, minV, maxV );
+
+	double subgridStep = mSubGridSize;
+	double gridStep = mGridSize;
+
+	if ( subgridStep / mZoomScale2D > mMinGridSize ) {
+		DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, subgridStep, DirectX::ColorsLinear::DimGray );
+		DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, subgridStep, DirectX::ColorsLinear::DimGray );
+	}
+
+	DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, gridStep, DirectX::Colors::DimGray );
+	DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, gridStep, DirectX::Colors::DimGray );
+
+	DrawAxisLine<AxisU>( minU, maxU );
+	DrawAxisLine<AxisV>( minV, maxV );
+
+	mWireframeBatch->End();
+
+	viewport->Resolve( inDeviceContext );
+}

@@ -4,7 +4,7 @@
 
 Cyclone::UI::ViewportElement::ViewportElement( ID3D11Device3 *inDevice, DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor )
 {
-	mTargetMSAA = std::make_unique<DX::MSAAHelper>( inBackBufferFormat, inDepthBufferFormat );
+	mTargetMSAA = std::make_unique<DX::MSAAHelper>( inBackBufferFormat, inDepthBufferFormat, 4 );
 	mTargetRT = std::make_unique<DX::RenderTexture>( inBackBufferFormat );
 	mClearColor = inClearColor;
 
