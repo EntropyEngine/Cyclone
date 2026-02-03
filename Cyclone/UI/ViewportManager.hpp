@@ -54,9 +54,9 @@ namespace Cyclone
 			std::unique_ptr<Cyclone::UI::ViewportElement> mViewportFront;
 			std::unique_ptr<Cyclone::UI::ViewportElement> mViewportSide;
 
-			std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> mWireframeBatch;
-			std::unique_ptr<DirectX::BasicEffect>	  mWireframeEffect;
-			Microsoft::WRL::ComPtr<ID3D11InputLayout> mWireFrameInputLayout;
+			std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> mWireframeGridBatch;
+			std::unique_ptr<DirectX::BasicEffect>	  mWireframeGridEffect;
+			Microsoft::WRL::ComPtr<ID3D11InputLayout> mWireframeGridInputLayout;
 			std::unique_ptr<DirectX::CommonStates>	  mCommonStates;
 
 			int    mZoomLevel = 0;
@@ -72,7 +72,7 @@ namespace Cyclone
 			Cyclone::Math::XLVector mCenter = Cyclone::Math::XLVector::sZero();
 
 			template<EViewportType T>
-			void RenderWireFrame( ID3D11DeviceContext3 *inDeviceContext ); // Implemented in ViewportManager.cpp
+			void RenderWireframe( ID3D11DeviceContext3 *inDeviceContext ); // Implemented in ViewportManager.cpp
 
 			template<EViewportType T> // Implemented in ViewportManager.cpp
 			void UpdateWireframe();
@@ -106,7 +106,7 @@ namespace Cyclone
 					Cyclone::Math::XLVector varMin = fixedMin + varLine;
 					Cyclone::Math::XLVector varMax = fixedMax + varLine;
 
-					mWireframeBatch->DrawLine(
+					mWireframeGridBatch->DrawLine(
 						{ varMin.ToXMVECTOR(), inColor},
 						{ varMax.ToXMVECTOR(), inColor }
 					);
@@ -122,7 +122,7 @@ namespace Cyclone
 				Cyclone::Math::XLVector rebasedMin = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<Axis>( inMin );
 				Cyclone::Math::XLVector rebasedMax = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<Axis>( inMax );
 
-				mWireframeBatch->DrawLine(
+				mWireframeGridBatch->DrawLine(
 					{ rebasedMin.ToXMVECTOR(), colors[Axis]},
 					{ rebasedMax.ToXMVECTOR(), colors[Axis] }
 				);

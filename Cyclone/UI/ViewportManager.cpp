@@ -36,15 +36,15 @@ Cyclone::UI::ViewportManager::ViewportManager( ID3D11Device3 *inDevice )
 
 	mCommonStates = std::make_unique<DirectX::CommonStates>( inDevice );
 
-	mWireframeEffect = std::make_unique<DirectX::BasicEffect>( inDevice );
-	mWireframeEffect->SetVertexColorEnabled( true );
+	mWireframeGridEffect = std::make_unique<DirectX::BasicEffect>( inDevice );
+	mWireframeGridEffect->SetVertexColorEnabled( true );
 
-	DX::ThrowIfFailed( DirectX::CreateInputLayoutFromEffect<DirectX::VertexPositionColor>( inDevice, mWireframeEffect.get(), mWireFrameInputLayout.ReleaseAndGetAddressOf() ) );
+	DX::ThrowIfFailed( DirectX::CreateInputLayoutFromEffect<DirectX::VertexPositionColor>( inDevice, mWireframeGridEffect.get(), mWireframeGridInputLayout.ReleaseAndGetAddressOf() ) );
 
 	ID3D11DeviceContext3 *deviceContext = nullptr;
 	inDevice->GetImmediateContext3( &deviceContext );
 
-	mWireframeBatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>( deviceContext );
+	mWireframeGridBatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>( deviceContext );
 }
 
 void Cyclone::UI::ViewportManager::ToolbarUpdate()
@@ -59,7 +59,6 @@ void Cyclone::UI::ViewportManager::ToolbarUpdate()
 			const bool isSelected = mSubGridSizeIndex == i;
 			if ( ImGui::Selectable( kSubGridLevelText[i], isSelected ) ) {
 				mSubGridSizeIndex = i;
-				mSubGridSize = kSubGridLevels[i];
 			}
 			if ( isSelected ) ImGui::SetItemDefaultFocus();
 		}
@@ -67,6 +66,14 @@ void Cyclone::UI::ViewportManager::ToolbarUpdate()
 		ImGui::EndCombo();
 	}
 	ImGui::PopStyleVar( 2 );
+
+	// Adjust grid size with [ and ]
+	mSubGridSizeIndex -= ImGui::IsKeyPressed( ImGuiKey_LeftBracket, false );
+	mSubGridSizeIndex += ImGui::IsKeyPressed( ImGuiKey_RightBracket, false );
+	mSubGridSizeIndex = std::clamp( mSubGridSizeIndex, 0, static_cast<int>( std::size( kSubGridLevels ) ) - 1 );
+
+	// Propogate any grid level changes to the actual value
+	mSubGridSize = kSubGridLevels[mSubGridSizeIndex];
 }
 
 template<Cyclone::UI::EViewportType T>
@@ -202,22 +209,22 @@ void Cyclone::UI::ViewportManager::RenderPerspective( ID3D11DeviceContext3 *inDe
 
 void Cyclone::UI::ViewportManager::RenderTop( ID3D11DeviceContext3 *inDeviceContext )
 {
-	RenderWireFrame<EViewportType::TopXZ>( inDeviceContext );
+	RenderWireframe<EViewportType::TopXZ>( inDeviceContext );
 }
 
 void Cyclone::UI::ViewportManager::RenderFront( ID3D11DeviceContext3 *inDeviceContext )
 {
-	RenderWireFrame<EViewportType::FrontXY>( inDeviceContext );
+	RenderWireframe<EViewportType::FrontXY>( inDeviceContext );
 }
 
 void Cyclone::UI::ViewportManager::RenderSide( ID3D11DeviceContext3 *inDeviceContext )
 {
-	RenderWireFrame<EViewportType::SideYZ>( inDeviceContext );
+	RenderWireframe<EViewportType::SideYZ>( inDeviceContext );
 }
 
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportManager::RenderWireFrame( ID3D11DeviceContext3 *inDeviceContext )
+void Cyclone::UI::ViewportManager::RenderWireframe( ID3D11DeviceContext3 *inDeviceContext )
 {
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
@@ -229,12 +236,12 @@ void Cyclone::UI::ViewportManager::RenderWireFrame( ID3D11DeviceContext3 *inDevi
 	inDeviceContext->OMSetBlendState( mCommonStates->Opaque(), nullptr, 0xFFFFFFFF );
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
 	inDeviceContext->RSSetState( mCommonStates->CullNone() );
-	inDeviceContext->IASetInputLayout( mWireFrameInputLayout.Get() );
+	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
 
-	mWireframeEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix<T>(), GetProjMatrix<T>());
-	mWireframeEffect->Apply( inDeviceContext );
+	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix<T>(), GetProjMatrix<T>());
+	mWireframeGridEffect->Apply( inDeviceContext );
 
-	mWireframeBatch->Begin();
+	mWireframeGridBatch->Begin();
 
 	double minU, maxU, minV, maxV;
 	GetMinMaxUV<T>( minU, maxU, minV, maxV );
@@ -264,7 +271,7 @@ void Cyclone::UI::ViewportManager::RenderWireFrame( ID3D11DeviceContext3 *inDevi
 	DrawAxisLine<AxisU>( minU, maxU );
 	DrawAxisLine<AxisV>( minV, maxV );
 
-	mWireframeBatch->End();
+	mWireframeGridBatch->End();
 
 	viewport->Resolve( inDeviceContext );
 }
