@@ -84,7 +84,7 @@ namespace Cyclone
 			template<> void GetMinMaxUV<EViewportType::FrontXY>( double &outMinU, double &outMaxU, double &outMinV, double &outMaxV )
 			{
 				ViewportElement *viewport = GetViewport<EViewportType::FrontXY>();
-				ComputeMinMax( static_cast<double>( viewport->GetWidth() ), -mCenterX2D, outMinU, outMaxU );
+				ComputeMinMax( static_cast<double>( viewport->GetWidth() ), mCenterX2D, outMinU, outMaxU );
 				ComputeMinMax( static_cast<double>( viewport->GetHeight() ), mCenterY2D, outMinV, outMaxV );
 			}
 
@@ -99,13 +99,22 @@ namespace Cyclone
 			template<size_t SwizzleFixed, size_t SwizzleLine>
 			void DrawLineLoop( double inFixedMin, double inFixedMax, double inLineMin, double inLineMax, double inStep, DirectX::FXMVECTOR inColor )
 			{
-				DirectX::XMVECTOR vFixedMin = DirectX::XMVectorSetByIndex( DirectX::g_XMZero, static_cast<float>( inFixedMin ), SwizzleFixed );
-				DirectX::XMVECTOR vFixedMax = DirectX::XMVectorSetByIndex( DirectX::g_XMZero, static_cast<float>( inFixedMax ), SwizzleFixed );
+				double dFixedMin[3] = { -mCenterX2D, -mCenterY2D, -mCenterZ2D };
+				double dFixedMax[3] = { -mCenterX2D, -mCenterY2D, -mCenterZ2D };
+				
+				dFixedMin[SwizzleFixed] += inFixedMin;
+				dFixedMax[SwizzleFixed] += inFixedMax;
 
 				for ( double line = std::round( inLineMin / inStep ) * inStep; line <= inLineMax; line += inStep ) {
+					double dVarMin[3] = { dFixedMin[0], dFixedMin[1], dFixedMin[2] };
+					double dVarMax[3] = { dFixedMax[0], dFixedMax[1], dFixedMax[2] };
+
+					dVarMin[SwizzleLine] += line;
+					dVarMax[SwizzleLine] += line;
+
 					mWireframeBatch->DrawLine(
-						{ DirectX::XMVectorSetByIndex( vFixedMin, static_cast<float>( line ), SwizzleLine ), inColor },
-						{ DirectX::XMVectorSetByIndex( vFixedMax, static_cast<float>( line ), SwizzleLine ), inColor }
+						{ DirectX::XMVectorSet( static_cast<float>( dVarMin[0] ), static_cast<float>( dVarMin[1] ), static_cast<float>( dVarMin[2] ), 0.0f ), inColor },
+						{ DirectX::XMVectorSet( static_cast<float>( dVarMax[0] ), static_cast<float>( dVarMax[1] ), static_cast<float>( dVarMax[2] ), 0.0f ), inColor }
 					);
 				}
 			}
@@ -114,9 +123,16 @@ namespace Cyclone
 			void DrawAxisLine( double inMin, double inMax )
 			{
 				const DirectX::XMVECTOR colors[3] = { DirectX::Colors::DarkRed, DirectX::Colors::Green, DirectX::Colors::DarkBlue };
+
+				double dRebaseMin[3] = { -mCenterX2D, -mCenterY2D, -mCenterZ2D };
+				double dRebaseMax[3] = { -mCenterX2D, -mCenterY2D, -mCenterZ2D };
+
+				dRebaseMin[Axis] += inMin;
+				dRebaseMax[Axis] += inMax;
+
 				mWireframeBatch->DrawLine(
-					{ DirectX::XMVectorSetByIndex( DirectX::g_XMZero, static_cast<float>( inMin ), Axis ), colors[Axis] },
-					{ DirectX::XMVectorSetByIndex( DirectX::g_XMZero, static_cast<float>( inMax ), Axis ), colors[Axis] }
+					{ DirectX::XMVectorSet( static_cast<float>( dRebaseMin[0] ), static_cast<float>( dRebaseMin[1] ), static_cast<float>( dRebaseMin[2] ), 0.0f ), colors[Axis] },
+					{ DirectX::XMVectorSet( static_cast<float>( dRebaseMax[0] ), static_cast<float>( dRebaseMax[1] ), static_cast<float>( dRebaseMax[2] ), 0.0f ), colors[Axis] }
 				);
 			}
 
@@ -135,24 +151,27 @@ namespace Cyclone
 
 			template<> DirectX::XMMATRIX XM_CALLCONV GetViewMatrix<EViewportType::TopXZ>() const
 			{
-				return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( static_cast<float>( mCenterX2D ), static_cast<float>( mWorldLimit ), static_cast<float>( mCenterZ2D ), 0.0f ), -DirectX::g_XMIdentityR1, DirectX::g_XMIdentityR2 );
+				//return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( static_cast<float>( mCenterX2D ), static_cast<float>( mWorldLimit ), static_cast<float>( mCenterZ2D ), 0.0f ), -DirectX::g_XMIdentityR1, DirectX::g_XMIdentityR2 );
+				return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( 0.0f, static_cast<float>( 2 * mWorldLimit ), 0.0f, 0.0f ), -DirectX::g_XMIdentityR1, DirectX::g_XMIdentityR2 );
 			}
 
 			template<> DirectX::XMMATRIX XM_CALLCONV GetViewMatrix<EViewportType::FrontXY>() const
 			{
-				return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( static_cast<float>( -mCenterX2D ), static_cast<float>( mCenterY2D ), static_cast<float>( mWorldLimit ), 0.0f ), -DirectX::g_XMIdentityR2, DirectX::g_XMIdentityR1 );
+				//return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( static_cast<float>( -mCenterX2D ), static_cast<float>( mCenterY2D ), static_cast<float>( mWorldLimit ), 0.0f ), -DirectX::g_XMIdentityR2, DirectX::g_XMIdentityR1 );
+				return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( 0.0f, 0.0f, static_cast<float>( -2 * mWorldLimit ), 0.0f ), DirectX::g_XMIdentityR2, DirectX::g_XMIdentityR1 );
 			}
 
 			template<> DirectX::XMMATRIX XM_CALLCONV GetViewMatrix<EViewportType::SideYZ>() const
 			{
-				return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( static_cast<float>( mWorldLimit ), static_cast<float>( mCenterY2D ), static_cast<float>( mCenterZ2D ), 0.0f ), -DirectX::g_XMIdentityR0, DirectX::g_XMIdentityR1 );
+				//return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( static_cast<float>( mWorldLimit ), static_cast<float>( mCenterY2D ), static_cast<float>( mCenterZ2D ), 0.0f ), -DirectX::g_XMIdentityR0, DirectX::g_XMIdentityR1 );
+				return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( static_cast<float>( 2 * mWorldLimit ), 0.0f, 0.0f, 0.0f ), -DirectX::g_XMIdentityR0, DirectX::g_XMIdentityR1 );
 			}
 
 			template<EViewportType T>
 			DirectX::XMMATRIX XM_CALLCONV GetProjMatrix()
 			{
 				ViewportElement *viewport = GetViewport<T>();
-				return DirectX::XMMatrixOrthographicRH( static_cast<float>( viewport->GetWidth() * mZoomScale2D ), static_cast<float>( viewport->GetHeight() * mZoomScale2D ), 1.0f, static_cast<float>( 2 * mWorldLimit ) );
+				return DirectX::XMMatrixOrthographicRH( static_cast<float>( viewport->GetWidth() * mZoomScale2D ), static_cast<float>( viewport->GetHeight() * mZoomScale2D ), 1.0f, static_cast<float>( 4 * mWorldLimit ) );
 			}
 		};
 	}

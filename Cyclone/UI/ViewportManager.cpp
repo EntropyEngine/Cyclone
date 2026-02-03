@@ -263,6 +263,10 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 
 		ImGui::EndChild();
 	}
+
+	mCenterX2D = std::clamp( mCenterX2D, -mWorldLimit, mWorldLimit );
+	mCenterY2D = std::clamp( mCenterY2D, -mWorldLimit, mWorldLimit );
+	mCenterZ2D = std::clamp( mCenterZ2D, -mWorldLimit, mWorldLimit );
 }
 
 void Cyclone::UI::ViewportManager::RenderPerspective( ID3D11DeviceContext3 *inDeviceContext )
@@ -303,7 +307,7 @@ void Cyclone::UI::ViewportManager::RenderWireFrame( ID3D11DeviceContext3 *inDevi
 	inDeviceContext->RSSetState( mCommonStates->CullNone() );
 	inDeviceContext->IASetInputLayout( mWireFrameInputLayout.Get() );
 
-	mWireframeEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix<T>(), GetProjMatrix<T>() );
+	mWireframeEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix<T>(), GetProjMatrix<T>());
 	mWireframeEffect->Apply( inDeviceContext );
 
 	mWireframeBatch->Begin();
