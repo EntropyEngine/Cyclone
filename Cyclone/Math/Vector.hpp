@@ -8,7 +8,7 @@ namespace Cyclone
 {
 	namespace Math
 	{
-		struct XLVector
+		struct alignas( 32 ) XLVector
 		{
 			union
 			{
