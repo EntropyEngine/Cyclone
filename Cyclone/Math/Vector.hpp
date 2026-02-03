@@ -32,10 +32,10 @@ namespace Cyclone
 
 			template<size_t Axis>
 			static XLVector sZeroSetValueByIndex( double inV );
-			template<> static XLVector sZeroSetValueByIndex<0>( double inV ) { return XLVector( inV, 0.0, 0.0, 0.0 ); }
-			template<> static XLVector sZeroSetValueByIndex<1>( double inV ) { return XLVector( 0.0, inV, 0.0, 0.0 ); }
-			template<> static XLVector sZeroSetValueByIndex<2>( double inV ) { return XLVector( 0.0, 0.0, inV, 0.0 ); }
-			template<> static XLVector sZeroSetValueByIndex<3>( double inV ) { return XLVector( 0.0, 0.0, 0.0, inV ); }
+			template<> XLVector sZeroSetValueByIndex<0>( double inV ) { return XLVector( inV, 0.0, 0.0, 0.0 ); }
+			template<> XLVector sZeroSetValueByIndex<1>( double inV ) { return XLVector( 0.0, inV, 0.0, 0.0 ); }
+			template<> XLVector sZeroSetValueByIndex<2>( double inV ) { return XLVector( 0.0, 0.0, inV, 0.0 ); }
+			template<> XLVector sZeroSetValueByIndex<3>( double inV ) { return XLVector( 0.0, 0.0, 0.0, inV ); }
 
 			static XLVector sReplicate( double inV ) { return _mm256_set1_pd( inV ); }
 
