@@ -3,6 +3,7 @@
 // Cyclone includes
 #include "Cyclone/Math/Vector.hpp"
 #include "Cyclone/UI/ViewportElement.hpp"
+#include "Cyclone/UI/ViewportType.hpp"
 
 // DX Includes
 #include <PrimitiveBatch.h>
