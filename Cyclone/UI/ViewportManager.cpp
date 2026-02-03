@@ -189,17 +189,8 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 
 		ImGui::EndChild();
 	}
-	// IMPORTANT
-	// TODO ADD VECTORIZED CLAMPING
-	// IMPORTANT
 
 	mCenter = Cyclone::Math::XLVector::sClamp( mCenter, Cyclone::Math::XLVector::sReplicate( -mWorldLimit ), Cyclone::Math::XLVector::sReplicate( mWorldLimit ) );
-
-	//mCenter = Cyclone::Math::XLVector(
-	//	std::clamp( mCenter.GetX(), -mWorldLimit, mWorldLimit ),
-	//	std::clamp( mCenter.GetY(), -mWorldLimit, mWorldLimit ),
-	//	std::clamp( mCenter.GetZ(), -mWorldLimit, mWorldLimit )
-	//);
 }
 
 void Cyclone::UI::ViewportManager::RenderPerspective( ID3D11DeviceContext3 *inDeviceContext )

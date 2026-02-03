@@ -70,9 +70,6 @@ namespace Cyclone
 			double mMinGridSize = 8.0; // Min subgrid view size in pixels
 
 			Cyclone::Math::XLVector mCenter = Cyclone::Math::XLVector::sZero();
-			//double mCenterX2D = 0.0;
-			//double mCenterY2D = 0.0;
-			//double mCenterZ2D = 0.0;
 
 			template<EViewportType T>
 			void RenderWireFrame( ID3D11DeviceContext3 *inDeviceContext ); // Implemented in ViewportManager.cpp
@@ -104,18 +101,7 @@ namespace Cyclone
 				Cyclone::Math::XLVector fixedMin = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<SwizzleFixed>( inFixedMin );
 				Cyclone::Math::XLVector fixedMax = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<SwizzleFixed>( inFixedMax );
 
-				//double dFixedMin[3] = { -mCenterX2D, -mCenterY2D, -mCenterZ2D };
-				//double dFixedMax[3] = { -mCenterX2D, -mCenterY2D, -mCenterZ2D };
-				
-				//dFixedMin[SwizzleFixed] += inFixedMin;
-				//dFixedMax[SwizzleFixed] += inFixedMax;
-
 				for ( double line = std::round( inLineMin / inStep ) * inStep; line <= inLineMax; line += inStep ) {
-					//double dVarMin[3] = { dFixedMin[0], dFixedMin[1], dFixedMin[2] };
-					//double dVarMax[3] = { dFixedMax[0], dFixedMax[1], dFixedMax[2] };
-
-					//dVarMin[SwizzleLine] += line;
-					//dVarMax[SwizzleLine] += line;
 					Cyclone::Math::XLVector varLine = Cyclone::Math::XLVector::sZeroSetValueByIndex<SwizzleLine>( line );
 					Cyclone::Math::XLVector varMin = fixedMin + varLine;
 					Cyclone::Math::XLVector varMax = fixedMax + varLine;
