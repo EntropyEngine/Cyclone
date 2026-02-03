@@ -36,6 +36,17 @@ namespace Cyclone
 			void RenderFront( ID3D11DeviceContext3 *inDeviceContext );
 			void RenderSide( ID3D11DeviceContext3 *inDeviceContext );
 
+			template<size_t Axis>
+			double GetCenter2D()
+			{
+				switch ( Axis ) {
+					case 0: return mCenterX2D;
+					case 1: return mCenterY2D;
+					case 2: return mCenterZ2D;
+					default: __assume( false );
+				}
+			}
+
 		protected:
 			std::unique_ptr<Cyclone::UI::ViewportElement> mViewportPerspective;
 			std::unique_ptr<Cyclone::UI::ViewportElement> mViewportTop;
@@ -64,6 +75,16 @@ namespace Cyclone
 			template<EViewportType T>
 			void RenderWireFrame( ID3D11DeviceContext3 *inDeviceContext ); // Implemented in ViewportManager.cpp
 
+			//template<EViewportType T>
+			//void UpdateWireframe()
+			//{
+			//	ImVec2 viewSize = ImGui::GetWindowSize();
+			//	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
+			//
+			//	ImGui::SetCursorPos( { 0, 0 } );
+			//	ImGui::Image( mViewportTop->GetOrResizeSRV( static_cast<size_t>( viewSize.x ), static_cast<size_t>( viewSize.y ) ), viewSize );
+			//}
+
 		private:
 			inline void ComputeMinMax( double inDim, double inCenter2D, double &outMin, double &outMax )
 			{
@@ -72,29 +93,14 @@ namespace Cyclone
 			}
 
 			template<EViewportType T>
-			void GetMinMaxUV( double &outMinU, double &outMaxU, double &outMinV, double &outMaxV );
-
-			template<> void GetMinMaxUV<EViewportType::TopXZ>( double &outMinU, double &outMaxU, double &outMinV, double &outMaxV )
+			void GetMinMaxUV( double &outMinU, double &outMaxU, double &outMinV, double &outMaxV )
 			{
-				ViewportElement *viewport = GetViewport<EViewportType::TopXZ>();
-				ComputeMinMax( static_cast<double>( viewport->GetWidth() ), mCenterX2D, outMinU, outMaxU );
-				ComputeMinMax( static_cast<double>( viewport->GetHeight() ), mCenterZ2D, outMinV, outMaxV );
+				constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
+				constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
+				ViewportElement *viewport = GetViewport<T>();
+				ComputeMinMax( static_cast<double>( viewport->GetWidth() ), GetCenter2D<AxisU>(), outMinU, outMaxU);
+				ComputeMinMax( static_cast<double>( viewport->GetHeight() ), GetCenter2D<AxisV>(), outMinV, outMaxV);
 			}
-
-			template<> void GetMinMaxUV<EViewportType::FrontXY>( double &outMinU, double &outMaxU, double &outMinV, double &outMaxV )
-			{
-				ViewportElement *viewport = GetViewport<EViewportType::FrontXY>();
-				ComputeMinMax( static_cast<double>( viewport->GetWidth() ), mCenterX2D, outMinU, outMaxU );
-				ComputeMinMax( static_cast<double>( viewport->GetHeight() ), mCenterY2D, outMinV, outMaxV );
-			}
-
-			template<> void GetMinMaxUV<EViewportType::SideYZ>( double &outMinU, double &outMaxU, double &outMinV, double &outMaxV )
-			{
-				ViewportElement *viewport = GetViewport<EViewportType::SideYZ>();
-				ComputeMinMax( static_cast<double>( viewport->GetWidth() ), mCenterZ2D, outMinU, outMaxU );
-				ComputeMinMax( static_cast<double>( viewport->GetHeight() ), mCenterY2D, outMinV, outMaxV );
-			}
-
 
 			template<size_t SwizzleFixed, size_t SwizzleLine>
 			void DrawLineLoop( double inFixedMin, double inFixedMax, double inLineMin, double inLineMax, double inStep, DirectX::FXMVECTOR inColor )
@@ -151,19 +157,16 @@ namespace Cyclone
 
 			template<> DirectX::XMMATRIX XM_CALLCONV GetViewMatrix<EViewportType::TopXZ>() const
 			{
-				//return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( static_cast<float>( mCenterX2D ), static_cast<float>( mWorldLimit ), static_cast<float>( mCenterZ2D ), 0.0f ), -DirectX::g_XMIdentityR1, DirectX::g_XMIdentityR2 );
 				return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( 0.0f, static_cast<float>( 2 * mWorldLimit ), 0.0f, 0.0f ), -DirectX::g_XMIdentityR1, DirectX::g_XMIdentityR2 );
 			}
 
 			template<> DirectX::XMMATRIX XM_CALLCONV GetViewMatrix<EViewportType::FrontXY>() const
 			{
-				//return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( static_cast<float>( -mCenterX2D ), static_cast<float>( mCenterY2D ), static_cast<float>( mWorldLimit ), 0.0f ), -DirectX::g_XMIdentityR2, DirectX::g_XMIdentityR1 );
 				return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( 0.0f, 0.0f, static_cast<float>( -2 * mWorldLimit ), 0.0f ), DirectX::g_XMIdentityR2, DirectX::g_XMIdentityR1 );
 			}
 
 			template<> DirectX::XMMATRIX XM_CALLCONV GetViewMatrix<EViewportType::SideYZ>() const
 			{
-				//return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( static_cast<float>( mWorldLimit ), static_cast<float>( mCenterY2D ), static_cast<float>( mCenterZ2D ), 0.0f ), -DirectX::g_XMIdentityR0, DirectX::g_XMIdentityR1 );
 				return DirectX::XMMatrixLookToRH( DirectX::XMVectorSet( static_cast<float>( 2 * mWorldLimit ), 0.0f, 0.0f, 0.0f ), -DirectX::g_XMIdentityR0, DirectX::g_XMIdentityR1 );
 			}
 
