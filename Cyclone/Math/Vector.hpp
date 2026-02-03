@@ -53,6 +53,7 @@ namespace Cyclone
 			double SetZ( double inZ ) { mScalar[2] = inZ; }
 			double SetW( double inW ) { mScalar[3] = inW; }
 
+			// Cast to 32 bit
 			DirectX::XMVECTOR XM_CALLCONV ToXMVECTOR() const
 			{
 				return _mm256_cvtpd_ps( mVector );
@@ -87,6 +88,19 @@ namespace Cyclone
 			XLVector &operator -= ( XLVector inRhs )
 			{
 				mVector = _mm256_sub_pd( mVector, inRhs.mVector );
+				return *this;
+			}
+
+			// FP64 multiplication
+			XLVector operator * ( XLVector inRhs )
+			{
+				return _mm256_mul_pd( mVector, inRhs.mVector );
+			}
+
+			// FP64 inplace multiplication
+			XLVector operator *= ( XLVector inRhs )
+			{
+				mVector = _mm256_mul_pd( mVector, inRhs.mVector );
 				return *this;
 			}
 		};
