@@ -91,6 +91,7 @@
     <ClInclude Include="entt.hpp" />
     <ClInclude Include="main.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Math\Vector.hpp" />
     <ClInclude Include="MSAAHelper.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RenderTexture.h" />

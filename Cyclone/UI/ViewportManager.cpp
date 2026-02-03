@@ -7,8 +7,6 @@
 
 // ImGui Includes
 #include <imgui.h>
-#include <imgui_impl_win32.h>
-#include <imgui_impl_dx11.h>
 #include <imgui_internal.h>
 
 // DX Includes
@@ -71,6 +69,83 @@ void Cyclone::UI::ViewportManager::ToolbarUpdate()
 	ImGui::PopStyleVar( 2 );
 }
 
+template<Cyclone::UI::EViewportType T>
+void Cyclone::UI::ViewportManager::UpdateWireframe()
+{
+	ImVec2 viewSize = ImGui::GetWindowSize();
+	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
+
+	ImGui::SetCursorPos( { 0, 0 } );
+	ImGui::Image( GetViewport<T>()->GetOrResizeSRV( static_cast<size_t>( viewSize.x ), static_cast<size_t>( viewSize.y ) ), viewSize );
+
+	ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
+	ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
+	{
+		constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
+		constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
+
+		ImGuiIO &io = ImGui::GetIO();
+
+		ImGui::SetCursorPos( { 0, 0 } );
+		ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
+		const bool isHovered = ImGui::IsItemHovered();
+		const bool isActive = ImGui::IsItemActive();
+
+		ImVec2 viewportAbsPos( io.MousePos.x - viewOrigin.x, io.MousePos.y - viewOrigin.y );
+		ImVec2 viewportRelPos( viewportAbsPos.x - viewSize.x / 2.0f, viewportAbsPos.y - viewSize.y / 2.0f );
+
+		double uPos = GetCenter2D<AxisU>() - viewportRelPos.x * mZoomScale2D;
+		double vPos = GetCenter2D<AxisV>() - viewportRelPos.y * mZoomScale2D;
+
+		double uSnapPos = std::round( uPos / mSubGridSize ) * mSubGridSize;
+		double vSnapPos = std::round( vPos / mSubGridSize ) * mSubGridSize;
+
+		const char *uStr = std::array{ "x", "y", "z" }[AxisU];
+		const char *vStr = std::array{ "x", "y", "z" }[AxisV];
+
+		if ( isHovered ) ImGui::SetTooltip(
+			"Mouse pos: (%.0f, %.0f)\n"
+			"Viewport abs pos: (%.0f, %.0f)\n"
+			"Viewport rel pos: (%.1f, %.1f)\n"
+			"World Pos: (%s=%.2f, %s=%.2f)\n"
+			"Snap Pos: (%s=%.2f, %s=%.2f)\n"
+			"Zoom Level: (%.3f)",
+			io.MousePos.x, io.MousePos.y,
+			viewportAbsPos.x, viewportAbsPos.y,
+			viewportRelPos.x, viewportRelPos.y,
+			uStr, uPos, vStr, vPos,
+			uStr, uSnapPos, vStr, vSnapPos,
+			mZoomScale2D
+		);
+
+		if ( isActive && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
+			GetCenter2D<AxisU>() += io.MouseDelta.x * mZoomScale2D;
+			GetCenter2D<AxisV>() += io.MouseDelta.y * mZoomScale2D;
+		}
+
+		if ( isHovered ) {
+			mZoomLevel -= ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 );
+			mZoomScale2D = sZoomLevelToScale( mZoomLevel );
+		}
+
+
+		if ( isHovered ) {
+			ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+			ImVec2 gridPos;
+			gridPos.x = static_cast<float>( ( GetCenter2D<AxisU>() - uSnapPos ) / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
+			gridPos.y = static_cast<float>( ( GetCenter2D<AxisV>() - vSnapPos ) / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
+
+			float offset = static_cast<float>( std::max( 2.0, mSubGridSize / mZoomScale2D ) );
+
+			//drawList->AddCircle( gridPos, offset / 2, IM_COL32( 255, 255, 255, 255 ) );
+			drawList->AddLine( { gridPos.x - offset, gridPos.y - offset }, { gridPos.x + offset, gridPos.y + offset }, IM_COL32( 255, 255, 255, 255 ) );
+			drawList->AddLine( { gridPos.x + offset, gridPos.y - offset }, { gridPos.x - offset, gridPos.y + offset }, IM_COL32( 255, 255, 255, 255 ) );
+		}
+	}
+	ImGui::PopStyleVar( 2 );
+}
+
 void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 {
 	ImGuiIO &io = ImGui::GetIO();
@@ -91,70 +166,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "TopView", ImVec2( ImGui::GetContentRegionAvail().x, perspectiveViewSize.y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		ImVec2 viewSize = ImGui::GetWindowSize();
-		ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
-
-		ImGui::SetCursorPos( { 0, 0 } );
-		ImGui::Image( mViewportTop->GetOrResizeSRV( static_cast<size_t>( viewSize.x ), static_cast<size_t>( viewSize.y ) ), viewSize );
-
-		ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
-		ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
-		{
-			ImGui::SetCursorPos( { 0, 0 } );
-			ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
-			const bool isHovered = ImGui::IsItemHovered();
-			const bool isActive = ImGui::IsItemActive();
-
-			ImVec2 viewportAbsPos( io.MousePos.x - viewOrigin.x, io.MousePos.y - viewOrigin.y );
-			ImVec2 viewportRelPos( viewportAbsPos.x - viewSize.x / 2.0f, viewportAbsPos.y - viewSize.y / 2.0f );
-
-			double xPos = mCenterX2D - viewportRelPos.x * mZoomScale2D;
-			double zPos = mCenterZ2D - viewportRelPos.y * mZoomScale2D;
-
-			double xSnapPos = std::round( xPos / mSubGridSize ) * mSubGridSize;
-			double zSnapPos = std::round( zPos / mSubGridSize ) * mSubGridSize;
-
-			if ( isHovered ) ImGui::SetTooltip(
-				"Mouse pos: (%.0f, %.0f)\n"
-				"Viewport abs pos: (%.0f, %.0f)\n"
-				"Viewport rel pos: (%.1f, %.1f)\n"
-				"World Pos: (x=%.2f, z=%.2f)\n"
-				"Snap Pos: (x=%.2f, z=%.2f)\n"
-				"Zoom Level: (%.3f)",
-				io.MousePos.x, io.MousePos.y,
-				viewportAbsPos.x, viewportAbsPos.y,
-				viewportRelPos.x, viewportRelPos.y,
-				xPos, zPos,
-				xSnapPos, zSnapPos,
-				mZoomScale2D
-			);
-
-			if ( isActive && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
-				mCenterX2D += io.MouseDelta.x * mZoomScale2D;
-				mCenterZ2D += io.MouseDelta.y * mZoomScale2D;
-			}
-
-			if ( isHovered ) {
-				mZoomLevel -= io.MouseWheel;
-				mZoomScale2D = sZoomLevelToScale( mZoomLevel );
-			}
-
-			
-			if ( isHovered ) {
-				ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-				ImVec2 gridPos;
-				gridPos.x = ( mCenterX2D - xSnapPos ) / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x;
-				gridPos.y = ( mCenterZ2D - zSnapPos ) / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y;
-
-				float offset = static_cast<float>( std::max( 2.0, mSubGridSize / mZoomScale2D ) );
-
-				//drawList->AddCircle( gridPos, 1.0f, IM_COL32( 255, 255, 255, 255 ) );
-				drawList->AddLine( { gridPos.x - offset, gridPos.y - offset }, { gridPos.x + offset, gridPos.y + offset }, IM_COL32( 255, 255, 255, 255 ) );
-				drawList->AddLine( { gridPos.x + offset, gridPos.y - offset }, { gridPos.x - offset, gridPos.y + offset }, IM_COL32( 255, 255, 255, 255 ) );
-			}
-		}
-		ImGui::PopStyleVar( 2 );
+		UpdateWireframe<EViewportType::TopXZ>();
 
 		DrawViewportOverlay( "Top (X/Z)" );
 
@@ -162,50 +174,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 	}
 
 	if ( ImGui::BeginChild( "FrontView", ImVec2( perspectiveViewSize.x, ImGui::GetContentRegionAvail().y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		ImVec2 viewSize = ImGui::GetWindowSize();
-		ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
-
-		ImGui::SetCursorPos( { 0, 0 } );
-		ImGui::Image( mViewportFront->GetOrResizeSRV( static_cast<size_t>( viewSize.x ), static_cast<size_t>( viewSize.y ) ), viewSize );
-
-		ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
-		ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
-		{
-			ImGui::SetCursorPos( { 0, 0 } );
-			ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
-			const bool isHovered = ImGui::IsItemHovered();
-			const bool isActive = ImGui::IsItemActive();
-
-			ImVec2 viewportAbsPos( io.MousePos.x - viewOrigin.x, io.MousePos.y - viewOrigin.y );
-			ImVec2 viewportRelPos( viewportAbsPos.x - viewSize.x / 2.0f, viewportAbsPos.y - viewSize.y / 2.0f );
-
-			double xPos = mCenterX2D - viewportRelPos.x * mZoomScale2D;
-			double yPos = mCenterY2D - viewportRelPos.y * mZoomScale2D;
-
-			if ( isHovered ) ImGui::SetTooltip(
-				"Mouse pos: (%.0f, %.0f)\n"
-				"Viewport abs pos: (%.0f, %.0f)\n"
-				"Viewport rel pos: (%.1f, %.1f)\n"
-				"World Pos: (x=%.2f, y=%.2f)\n"
-				"Zoom Level: (%.3f)",
-				io.MousePos.x, io.MousePos.y,
-				viewportAbsPos.x, viewportAbsPos.y,
-				viewportRelPos.x, viewportRelPos.y,
-				xPos, yPos,
-				mZoomScale2D
-			);
-
-			if ( isActive && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
-				mCenterX2D += io.MouseDelta.x * mZoomScale2D;
-				mCenterY2D += io.MouseDelta.y * mZoomScale2D;
-			}
-
-			if ( isHovered ) {
-				mZoomLevel -= io.MouseWheel;
-				mZoomScale2D = sZoomLevelToScale( mZoomLevel );
-			}
-		}
-		ImGui::PopStyleVar( 2 );
+		UpdateWireframe<EViewportType::FrontXY>();
 
 		DrawViewportOverlay( "Front (X/Y)" );
 
@@ -214,50 +183,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "SideView", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		ImVec2 viewSize = ImGui::GetWindowSize();
-		ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
-
-		ImGui::SetCursorPos( { 0, 0 } );
-		ImGui::Image( mViewportSide->GetOrResizeSRV( static_cast<size_t>( viewSize.x ), static_cast<size_t>( viewSize.y ) ), viewSize );
-
-		ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
-		ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
-		{
-			ImGui::SetCursorPos( { 0, 0 } );
-			ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
-			const bool isHovered = ImGui::IsItemHovered();
-			const bool isActive = ImGui::IsItemActive();
-
-			ImVec2 viewportAbsPos( io.MousePos.x - viewOrigin.x, io.MousePos.y - viewOrigin.y );
-			ImVec2 viewportRelPos( viewportAbsPos.x - viewSize.x / 2.0f, viewportAbsPos.y - viewSize.y / 2.0f );
-
-			double yPos = mCenterY2D - viewportRelPos.y * mZoomScale2D;
-			double zPos = mCenterZ2D - viewportRelPos.x * mZoomScale2D;
-
-			if ( isHovered ) ImGui::SetTooltip(
-				"Mouse pos: (%.0f, %.0f)\n"
-				"Viewport abs pos: (%.0f, %.0f)\n"
-				"Viewport rel pos: (%.1f, %.1f)\n"
-				"World Pos: (z=%.2f, y=%.2f)\n"
-				"Zoom Level: (%.3f)",
-				io.MousePos.x, io.MousePos.y,
-				viewportAbsPos.x, viewportAbsPos.y,
-				viewportRelPos.x, viewportRelPos.y,
-				zPos, yPos,
-				mZoomScale2D
-			);
-
-			if ( isActive && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
-				mCenterY2D += io.MouseDelta.y * mZoomScale2D;
-				mCenterZ2D += io.MouseDelta.x * mZoomScale2D;
-			}
-
-			if ( isHovered ) {
-				mZoomLevel -= io.MouseWheel;
-				mZoomScale2D = sZoomLevelToScale( mZoomLevel );
-			}
-		}
-		ImGui::PopStyleVar( 2 );
+		UpdateWireframe<EViewportType::SideYZ>();
 
 		DrawViewportOverlay( "Side (Y/Z)" );
 

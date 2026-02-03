@@ -9,7 +9,7 @@
 #include <imgui_internal.h>
 
 Cyclone::UI::MainUI::MainUI() noexcept :
-	mVerticalSyncEnabled( false )
+	mVerticalSyncEnabled( true )
 {}
 
 void Cyclone::UI::MainUI::Initialize( ID3D11Device3 *inDevice )

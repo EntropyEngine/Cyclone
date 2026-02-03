@@ -1,6 +1,7 @@
 #pragma once
 
 // Cyclone includes
+#include "Cyclone/Math/Vector.hpp"
 #include "Cyclone/UI/ViewportElement.hpp"
 
 // DX Includes
@@ -37,7 +38,7 @@ namespace Cyclone
 			void RenderSide( ID3D11DeviceContext3 *inDeviceContext );
 
 			template<size_t Axis>
-			double GetCenter2D()
+			double &GetCenter2D()
 			{
 				switch ( Axis ) {
 					case 0: return mCenterX2D;
@@ -75,15 +76,8 @@ namespace Cyclone
 			template<EViewportType T>
 			void RenderWireFrame( ID3D11DeviceContext3 *inDeviceContext ); // Implemented in ViewportManager.cpp
 
-			//template<EViewportType T>
-			//void UpdateWireframe()
-			//{
-			//	ImVec2 viewSize = ImGui::GetWindowSize();
-			//	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
-			//
-			//	ImGui::SetCursorPos( { 0, 0 } );
-			//	ImGui::Image( mViewportTop->GetOrResizeSRV( static_cast<size_t>( viewSize.x ), static_cast<size_t>( viewSize.y ) ), viewSize );
-			//}
+			template<EViewportType T> // Implemented in ViewportManager.cpp
+			void UpdateWireframe();
 
 		private:
 			inline void ComputeMinMax( double inDim, double inCenter2D, double &outMin, double &outMax )
