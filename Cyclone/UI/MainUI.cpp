@@ -17,7 +17,7 @@ void Cyclone::UI::MainUI::Initialize( ID3D11Device3 *inDevice )
 	mViewportManager = std::make_unique<Cyclone::UI::ViewportManager>( inDevice );
 }
 
-void Cyclone::UI::MainUI::Update( float inDeltaTime )
+void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::Level *inLevel )
 {
 	if ( ImGui::BeginMainMenuBar() ) {
 		if ( ImGui::BeginMenu( "File" ) ) {
@@ -67,7 +67,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime )
 
 }
 
-void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext )
+void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::Level *inLevel )
 {
 	mViewportManager->RenderPerspective( inDeviceContext );
 	mViewportManager->RenderTop( inDeviceContext );

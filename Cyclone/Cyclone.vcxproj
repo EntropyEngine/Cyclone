@@ -88,6 +88,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Core\Level.hpp" />
     <ClInclude Include="entt.hpp" />
     <ClInclude Include="main.h" />
     <ClInclude Include="framework.h" />
@@ -101,8 +102,10 @@
     <ClInclude Include="UI\MainUI.hpp" />
     <ClInclude Include="UI\ViewportElement.hpp" />
     <ClInclude Include="UI\ViewportManager.hpp" />
+    <ClInclude Include="UI\ViewportType.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Level.cpp" />
     <ClCompile Include="ImGui\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>

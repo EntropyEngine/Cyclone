@@ -6,6 +6,10 @@ namespace Cyclone
 		class MainUI;
 	}
 
+	namespace Core {
+		class Level;
+	}
+
 	class Application
 	{
 	public:
@@ -59,5 +63,6 @@ namespace Cyclone
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  mRenderTargetView;
 
 		std::unique_ptr<Cyclone::UI::MainUI>			mMainUI;
+		std::unique_ptr<Cyclone::Core::Level>			mLoadedLevel;
 	};
 }

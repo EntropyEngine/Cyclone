@@ -4,6 +4,7 @@
 
 // Cyclone includes
 #include "Cyclone/UI/MainUI.hpp"
+#include "Cyclone/Core/Level.hpp"
 
 // ImGui includes
 #include <imgui.h>
@@ -18,6 +19,9 @@ Cyclone::Application::Application() noexcept :
 {
 	// Create main UI
 	mMainUI = std::make_unique<Cyclone::UI::MainUI>();
+
+	// Create an empty level
+	mLoadedLevel = std::make_unique<Cyclone::Core::Level>();
 }
 
 Cyclone::Application::~Application()
@@ -95,14 +99,14 @@ void Cyclone::Application::Update( float inDeltaTime )
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-	mMainUI->Update( inDeltaTime );
+	mMainUI->Update( inDeltaTime, mLoadedLevel.get() );
 
 	ImGui::ShowDemoWindow();
 }
 
 void Cyclone::Application::Render()
 {
-	mMainUI->Render( mDeviceContext.Get() );
+	mMainUI->Render( mDeviceContext.Get(), mLoadedLevel.get() );
 
 	Clear();
 
