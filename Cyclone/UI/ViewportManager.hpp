@@ -38,12 +38,12 @@ namespace Cyclone
 			void RenderSide( ID3D11DeviceContext3 *inDeviceContext );
 
 			template<size_t Axis>
-			double &GetCenter2D()
+			double GetCenter2D()
 			{
 				switch ( Axis ) {
-					case 0: return mCenterX2D;
-					case 1: return mCenterY2D;
-					case 2: return mCenterZ2D;
+					case 0: return mCenter.GetX();
+					case 1: return mCenter.GetY();
+					case 2: return mCenter.GetZ();
 					default: __assume( false );
 				}
 			}
@@ -69,9 +69,10 @@ namespace Cyclone
 
 			double mMinGridSize = 8.0; // Min subgrid view size in pixels
 
-			double mCenterX2D = 0.0;
-			double mCenterY2D = 0.0;
-			double mCenterZ2D = 0.0;
+			Cyclone::Math::XLVector mCenter = Cyclone::Math::XLVector::sZero();
+			//double mCenterX2D = 0.0;
+			//double mCenterY2D = 0.0;
+			//double mCenterZ2D = 0.0;
 
 			template<EViewportType T>
 			void RenderWireFrame( ID3D11DeviceContext3 *inDeviceContext ); // Implemented in ViewportManager.cpp
@@ -99,22 +100,29 @@ namespace Cyclone
 			template<size_t SwizzleFixed, size_t SwizzleLine>
 			void DrawLineLoop( double inFixedMin, double inFixedMax, double inLineMin, double inLineMax, double inStep, DirectX::FXMVECTOR inColor )
 			{
-				double dFixedMin[3] = { -mCenterX2D, -mCenterY2D, -mCenterZ2D };
-				double dFixedMax[3] = { -mCenterX2D, -mCenterY2D, -mCenterZ2D };
+				Cyclone::Math::XLVector negativeCenter = -mCenter;
+				Cyclone::Math::XLVector fixedMin = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<SwizzleFixed>( inFixedMin );
+				Cyclone::Math::XLVector fixedMax = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<SwizzleFixed>( inFixedMax );
+
+				//double dFixedMin[3] = { -mCenterX2D, -mCenterY2D, -mCenterZ2D };
+				//double dFixedMax[3] = { -mCenterX2D, -mCenterY2D, -mCenterZ2D };
 				
-				dFixedMin[SwizzleFixed] += inFixedMin;
-				dFixedMax[SwizzleFixed] += inFixedMax;
+				//dFixedMin[SwizzleFixed] += inFixedMin;
+				//dFixedMax[SwizzleFixed] += inFixedMax;
 
 				for ( double line = std::round( inLineMin / inStep ) * inStep; line <= inLineMax; line += inStep ) {
-					double dVarMin[3] = { dFixedMin[0], dFixedMin[1], dFixedMin[2] };
-					double dVarMax[3] = { dFixedMax[0], dFixedMax[1], dFixedMax[2] };
+					//double dVarMin[3] = { dFixedMin[0], dFixedMin[1], dFixedMin[2] };
+					//double dVarMax[3] = { dFixedMax[0], dFixedMax[1], dFixedMax[2] };
 
-					dVarMin[SwizzleLine] += line;
-					dVarMax[SwizzleLine] += line;
+					//dVarMin[SwizzleLine] += line;
+					//dVarMax[SwizzleLine] += line;
+					Cyclone::Math::XLVector varLine = Cyclone::Math::XLVector::sZeroSetValueByIndex<SwizzleLine>( line );
+					Cyclone::Math::XLVector varMin = fixedMin + varLine;
+					Cyclone::Math::XLVector varMax = fixedMax + varLine;
 
 					mWireframeBatch->DrawLine(
-						{ DirectX::XMVectorSet( static_cast<float>( dVarMin[0] ), static_cast<float>( dVarMin[1] ), static_cast<float>( dVarMin[2] ), 0.0f ), inColor },
-						{ DirectX::XMVectorSet( static_cast<float>( dVarMax[0] ), static_cast<float>( dVarMax[1] ), static_cast<float>( dVarMax[2] ), 0.0f ), inColor }
+						{ varMin.ToXMVECTOR(), inColor},
+						{ varMax.ToXMVECTOR(), inColor }
 					);
 				}
 			}
@@ -124,15 +132,13 @@ namespace Cyclone
 			{
 				const DirectX::XMVECTOR colors[3] = { DirectX::Colors::DarkRed, DirectX::Colors::Green, DirectX::Colors::DarkBlue };
 
-				double dRebaseMin[3] = { -mCenterX2D, -mCenterY2D, -mCenterZ2D };
-				double dRebaseMax[3] = { -mCenterX2D, -mCenterY2D, -mCenterZ2D };
-
-				dRebaseMin[Axis] += inMin;
-				dRebaseMax[Axis] += inMax;
+				Cyclone::Math::XLVector negativeCenter = -mCenter;
+				Cyclone::Math::XLVector rebasedMin = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<Axis>( inMin );
+				Cyclone::Math::XLVector rebasedMax = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<Axis>( inMax );
 
 				mWireframeBatch->DrawLine(
-					{ DirectX::XMVectorSet( static_cast<float>( dRebaseMin[0] ), static_cast<float>( dRebaseMin[1] ), static_cast<float>( dRebaseMin[2] ), 0.0f ), colors[Axis] },
-					{ DirectX::XMVectorSet( static_cast<float>( dRebaseMax[0] ), static_cast<float>( dRebaseMax[1] ), static_cast<float>( dRebaseMax[2] ), 0.0f ), colors[Axis] }
+					{ rebasedMin.ToXMVECTOR(), colors[Axis]},
+					{ rebasedMax.ToXMVECTOR(), colors[Axis] }
 				);
 			}
 

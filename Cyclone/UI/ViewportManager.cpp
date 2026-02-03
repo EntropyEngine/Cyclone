@@ -119,8 +119,8 @@ void Cyclone::UI::ViewportManager::UpdateWireframe()
 		);
 
 		if ( isActive && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
-			GetCenter2D<AxisU>() += io.MouseDelta.x * mZoomScale2D;
-			GetCenter2D<AxisV>() += io.MouseDelta.y * mZoomScale2D;
+			mCenter += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * mZoomScale2D );
+			mCenter += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * mZoomScale2D );
 		}
 
 		if ( isHovered ) {
@@ -189,10 +189,17 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 
 		ImGui::EndChild();
 	}
+	// IMPORTANT
+	// TODO ADD VECTORIZED CLAMPING
+	// IMPORTANT
 
-	mCenterX2D = std::clamp( mCenterX2D, -mWorldLimit, mWorldLimit );
-	mCenterY2D = std::clamp( mCenterY2D, -mWorldLimit, mWorldLimit );
-	mCenterZ2D = std::clamp( mCenterZ2D, -mWorldLimit, mWorldLimit );
+	mCenter = Cyclone::Math::XLVector::sClamp( mCenter, Cyclone::Math::XLVector::sReplicate( -mWorldLimit ), Cyclone::Math::XLVector::sReplicate( mWorldLimit ) );
+
+	//mCenter = Cyclone::Math::XLVector(
+	//	std::clamp( mCenter.GetX(), -mWorldLimit, mWorldLimit ),
+	//	std::clamp( mCenter.GetY(), -mWorldLimit, mWorldLimit ),
+	//	std::clamp( mCenter.GetZ(), -mWorldLimit, mWorldLimit )
+	//);
 }
 
 void Cyclone::UI::ViewportManager::RenderPerspective( ID3D11DeviceContext3 *inDeviceContext )
