@@ -38,4 +38,6 @@ namespace DX
 	}
 }
 
+#include <entt.hpp>
+
 #endif //PCH_H
