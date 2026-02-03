@@ -108,7 +108,7 @@ namespace Cyclone
 					Cyclone::Math::XLVector varMax = fixedMax + varLine;
 
 					mWireframeGridBatch->DrawLine(
-						{ varMin.ToXMVECTOR(), inColor},
+						{ varMin.ToXMVECTOR(), inColor },
 						{ varMax.ToXMVECTOR(), inColor }
 					);
 				}
@@ -124,7 +124,7 @@ namespace Cyclone
 				Cyclone::Math::XLVector rebasedMax = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<Axis>( inMax );
 
 				mWireframeGridBatch->DrawLine(
-					{ rebasedMin.ToXMVECTOR(), colors[Axis]},
+					{ rebasedMin.ToXMVECTOR(), colors[Axis] },
 					{ rebasedMax.ToXMVECTOR(), colors[Axis] }
 				);
 			}
