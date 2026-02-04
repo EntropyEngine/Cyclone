@@ -12,15 +12,26 @@ Cyclone::UI::MainUI::MainUI() noexcept :
 	mVerticalSyncEnabled( true )
 {}
 
-void Cyclone::UI::MainUI::Initialize( ID3D11Device3 *inDevice )
+void Cyclone::UI::MainUI::Initialize()
 {
-	mViewportManager = std::make_unique<Cyclone::UI::ViewportManager>( inDevice );
+	mViewportManager = std::make_unique<Cyclone::UI::ViewportManager>();
+}
+
+void Cyclone::UI::MainUI::SetDevice( ID3D11Device3 *inDevice )
+{
+	mViewportManager->SetDevice( inDevice );
 }
 
 void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::Level *inLevel )
 {
 	if ( ImGui::BeginMainMenuBar() ) {
 		if ( ImGui::BeginMenu( "File" ) ) {
+			ImGui::EndMenu();
+		}
+
+		if ( ImGui::BeginMenu( "Viewports" ) ) {
+			ImGui::MenuItem( "Enable VSync", nullptr, &mVerticalSyncEnabled );
+			mViewportManager->MenuBarUpdate();
 			ImGui::EndMenu();
 		}
 

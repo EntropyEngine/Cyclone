@@ -37,6 +37,8 @@ void Cyclone::Application::Initialize( HWND inWindow, int inWidth, int inHeight 
 	mOutputWidth = inWidth;
 	mOutputHeight = inHeight;
 
+	mMainUI->Initialize();
+
 	CreateDevice();
 	CreateResources();
 
@@ -54,13 +56,13 @@ void Cyclone::Application::Initialize( HWND inWindow, int inWidth, int inHeight 
 	// Setup Platform/Renderer backends
 	ImGui_ImplWin32_Init( inWindow );
 	ImGui_ImplDX11_Init( mDevice.Get(), mDeviceContext.Get() );
-
-	mMainUI->Initialize( mDevice.Get() );
 }
 
 void Cyclone::Application::Tick()
 {
-	Update( 1.0f / 60 );
+	ImGuiIO& io = ImGui::GetIO();
+
+	Update( io.DeltaTime );
 	Render();
 }
 
@@ -217,6 +219,8 @@ void Cyclone::Application::CreateDevice()
 	DX::ThrowIfFailed( context.As( &mDeviceContext ) );
 
 	// TODO: Initialize device dependent objects here (independent of window size).
+	mMainUI->SetDevice( mDevice.Get() );
+	//mLoadedLevel->SetDevice( mDevice.Get() );
 }
 
 void Cyclone::Application::CreateResources()

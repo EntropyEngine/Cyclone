@@ -2,17 +2,20 @@
 
 #include "Cyclone/UI/ViewportElement.hpp"
 
-Cyclone::UI::ViewportElement::ViewportElement( ID3D11Device3 *inDevice, DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor )
+Cyclone::UI::ViewportElement::ViewportElement( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor )
 {
 	mTargetMSAA = std::make_unique<DX::MSAAHelper>( inBackBufferFormat, inDepthBufferFormat, 4 );
 	mTargetRT = std::make_unique<DX::RenderTexture>( inBackBufferFormat );
 	mClearColor = inClearColor;
 
-	mTargetMSAA->SetDevice( inDevice );
-	mTargetRT->SetDevice( inDevice );
-
 	mWidth = 0;
 	mHeight = 0;
+}
+
+void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 * inDevice )
+{
+	mTargetMSAA->SetDevice( inDevice );
+	mTargetRT->SetDevice( inDevice );
 }
 
 ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetOrResizeSRV( size_t inWidth, size_t inHeight )

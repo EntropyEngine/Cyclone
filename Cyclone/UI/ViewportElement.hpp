@@ -11,13 +11,15 @@ namespace Cyclone
 		class ViewportElement
 		{
 		public:
-			ViewportElement( ID3D11Device3 *inDevice, DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor );
+			ViewportElement( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor );
 
 			ViewportElement( ViewportElement && ) = default;
 			ViewportElement &operator= ( ViewportElement && ) = default;
 
 			ViewportElement( ViewportElement const & ) = delete;
 			ViewportElement &operator= ( ViewportElement const & ) = delete;
+
+			void SetDevice( ID3D11Device3 *inDevice );
 
 			ID3D11ShaderResourceView *GetOrResizeSRV( size_t inWidth, size_t inHeight );
 			void Clear( ID3D11DeviceContext3 *inDeviceContext );

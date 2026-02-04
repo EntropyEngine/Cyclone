@@ -28,7 +28,8 @@ namespace Cyclone
 			MainUI( MainUI const & ) = delete;
 			MainUI &operator= ( MainUI const & ) = delete;
 
-			void Initialize( ID3D11Device3 *inDevice );
+			void Initialize();
+			void SetDevice( ID3D11Device3 *inDevice );
 
 			void Update( float inDeltaTime, Cyclone::Core::Level *inLevel );
 			void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::Level *inLevel );

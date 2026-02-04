@@ -27,12 +27,20 @@ namespace
 	}
 }
 
-Cyclone::UI::ViewportManager::ViewportManager( ID3D11Device3 *inDevice )
+Cyclone::UI::ViewportManager::ViewportManager()
 {
-	mViewportPerspective = std::make_unique<ViewportElement>( inDevice, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::CornflowerBlue );
-	mViewportTop = std::make_unique<ViewportElement>( inDevice, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
-	mViewportFront = std::make_unique<ViewportElement>( inDevice, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
-	mViewportSide = std::make_unique<ViewportElement>( inDevice, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
+	mViewportPerspective = std::make_unique<ViewportElement>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::CornflowerBlue );
+	mViewportTop = std::make_unique<ViewportElement>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
+	mViewportFront = std::make_unique<ViewportElement>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
+	mViewportSide = std::make_unique<ViewportElement>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
+}
+
+void Cyclone::UI::ViewportManager::SetDevice( ID3D11Device3 *inDevice )
+{
+	mViewportPerspective->SetDevice( inDevice );
+	mViewportTop->SetDevice( inDevice );
+	mViewportFront->SetDevice( inDevice );
+	mViewportSide->SetDevice( inDevice );
 
 	mCommonStates = std::make_unique<DirectX::CommonStates>( inDevice );
 
@@ -45,6 +53,11 @@ Cyclone::UI::ViewportManager::ViewportManager( ID3D11Device3 *inDevice )
 	inDevice->GetImmediateContext3( &deviceContext );
 
 	mWireframeGridBatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>( deviceContext );
+}
+
+void Cyclone::UI::ViewportManager::MenuBarUpdate()
+{
+	if ( ImGui::MenuItem( "Autosize Viewports", "Ctrl+A") ) mShouldAutosize = true;
 }
 
 void Cyclone::UI::ViewportManager::ToolbarUpdate()
@@ -160,6 +173,11 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 	ImGuiWindowFlags viewportFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking;
 
 	ImVec2 perspectiveViewSize;
+
+	if ( mShouldAutosize || ImGui::IsKeyChordPressed( ImGuiKey_A | ImGuiMod_Ctrl ) ) {
+		mShouldAutosize = false;
+		ImGui::SetNextWindowSize( { ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y / 2 } );
+	}
 
 	ImGui::SetNextWindowSizeConstraints( { 64.0f, 64.0f }, { ImGui::GetContentRegionAvail().x - 64.0f, ImGui::GetContentRegionAvail().y - 64.0f } );
 	if ( ImGui::BeginChild( "PerspectiveView", ImVec2( ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.5f ), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY, viewportFlags ) ) {

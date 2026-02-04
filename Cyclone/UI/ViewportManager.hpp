@@ -22,7 +22,7 @@ namespace Cyclone
 			static double sZoomLevelToScale( int inLevel ) { return std::pow( 10.0, static_cast<double>( inLevel ) / 20.0 - 1.0 ); }
 
 		public:
-			ViewportManager( ID3D11Device3 *inDevice );
+			ViewportManager();
 
 			ViewportManager( ViewportManager && ) = default;
 			ViewportManager &operator= ( ViewportManager && ) = default;
@@ -30,6 +30,9 @@ namespace Cyclone
 			ViewportManager( ViewportManager const & ) = delete;
 			ViewportManager &operator= ( ViewportManager const & ) = delete;
 
+			void SetDevice( ID3D11Device3 *inDevice );
+
+			void MenuBarUpdate();
 			void ToolbarUpdate();
 			void Update( float inDeltaTime );
 
@@ -59,6 +62,8 @@ namespace Cyclone
 			std::unique_ptr<DirectX::BasicEffect>	  mWireframeGridEffect;
 			Microsoft::WRL::ComPtr<ID3D11InputLayout> mWireframeGridInputLayout;
 			std::unique_ptr<DirectX::CommonStates>	  mCommonStates;
+
+			bool   mShouldAutosize = false;
 
 			int    mZoomLevel = 0;
 			double mZoomScale2D = sZoomLevelToScale( mZoomLevel ); // Pixels to meters
