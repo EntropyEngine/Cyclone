@@ -38,6 +38,7 @@ int APIENTRY wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstanc
 {
 	UNREFERENCED_PARAMETER( hPrevInstance );
 	UNREFERENCED_PARAMETER( lpCmdLine );
+	UNREFERENCED_PARAMETER( nCmdShow );
 
 	// Verify CPU support
 	if ( !DirectX::XMVerifyCPUSupport() ) return 1;
