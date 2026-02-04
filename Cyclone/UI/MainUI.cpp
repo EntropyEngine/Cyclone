@@ -22,7 +22,7 @@ void Cyclone::UI::MainUI::SetDevice( ID3D11Device3 *inDevice )
 	mViewportManager->SetDevice( inDevice );
 }
 
-void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::Level *inLevel )
+void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::Level *inLevel, Cyclone::Core::EntityInterface *inEntityInterface )
 {
 	if ( ImGui::BeginMainMenuBar() ) {
 		if ( ImGui::BeginMenu( "File" ) ) {
@@ -78,7 +78,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::Level *inLev
 
 }
 
-void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::Level *inLevel )
+void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::Level *inLevel, const Cyclone::Core::EntityInterface *inEntityInterface )
 {
 	mViewportManager->RenderPerspective( inDeviceContext );
 	mViewportManager->RenderTop( inDeviceContext );

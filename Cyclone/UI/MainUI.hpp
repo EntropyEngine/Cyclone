@@ -7,6 +7,7 @@ namespace Cyclone
 {
 	namespace Core {
 		class Level;
+		class EntityInterface;
 	}
 
 	namespace UI
@@ -31,8 +32,8 @@ namespace Cyclone
 			void Initialize();
 			void SetDevice( ID3D11Device3 *inDevice );
 
-			void Update( float inDeltaTime, Cyclone::Core::Level *inLevel );
-			void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::Level *inLevel );
+			void Update( float inDeltaTime, Cyclone::Core::Level *inLevel, Cyclone::Core::EntityInterface *inEntityInterface );
+			void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::Level *inLevel, const Cyclone::Core::EntityInterface *inEntityInterface );
 
 			bool IsVerticalSyncEnabled() const noexcept { return mVerticalSyncEnabled; }
 

@@ -88,6 +88,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Core\EntityInterface.hpp" />
     <ClInclude Include="Core\Level.hpp" />
     <ClInclude Include="entt.hpp" />
     <ClInclude Include="main.h" />
@@ -105,6 +106,7 @@
     <ClInclude Include="UI\ViewportType.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\EntityInterface.cpp" />
     <ClCompile Include="Core\Level.cpp" />
     <ClCompile Include="ImGui\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>

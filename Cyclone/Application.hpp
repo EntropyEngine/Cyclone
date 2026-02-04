@@ -8,6 +8,7 @@ namespace Cyclone
 
 	namespace Core {
 		class Level;
+		class EntityInterface;
 	}
 
 	class Application
@@ -64,5 +65,6 @@ namespace Cyclone
 
 		std::unique_ptr<Cyclone::UI::MainUI>			mMainUI;
 		std::unique_ptr<Cyclone::Core::Level>			mLoadedLevel;
+		std::unique_ptr<Cyclone::Core::EntityInterface>	mEntityInterface;
 	};
 }

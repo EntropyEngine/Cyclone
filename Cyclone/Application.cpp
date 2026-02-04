@@ -5,6 +5,7 @@
 // Cyclone includes
 #include "Cyclone/UI/MainUI.hpp"
 #include "Cyclone/Core/Level.hpp"
+#include "Cyclone/Core/EntityInterface.hpp"
 
 // ImGui includes
 #include <imgui.h>
@@ -22,6 +23,9 @@ Cyclone::Application::Application() noexcept :
 
 	// Create an empty level
 	mLoadedLevel = std::make_unique<Cyclone::Core::Level>();
+
+	// Create the entity interface
+	mEntityInterface = std::make_unique<Cyclone::Core::EntityInterface>();
 }
 
 Cyclone::Application::~Application()
@@ -42,6 +46,7 @@ void Cyclone::Application::Initialize( HWND inWindow, int inWidth, int inHeight 
 	// Initialize systems
 	mMainUI->Initialize();
 	mLoadedLevel->Initialize();
+	mEntityInterface->Initialize();
 
 	// Create DX resources
 	CreateDevice();
@@ -106,14 +111,14 @@ void Cyclone::Application::Update( float inDeltaTime )
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-	mMainUI->Update( inDeltaTime, mLoadedLevel.get() );
+	mMainUI->Update( inDeltaTime, mLoadedLevel.get(), mEntityInterface.get() );
 
 	ImGui::ShowDemoWindow();
 }
 
 void Cyclone::Application::Render()
 {
-	mMainUI->Render( mDeviceContext.Get(), mLoadedLevel.get() );
+	mMainUI->Render( mDeviceContext.Get(), mLoadedLevel.get(), mEntityInterface.get() );
 
 	Clear();
 
@@ -238,7 +243,6 @@ void Cyclone::Application::CreateResources()
 	const UINT backBufferWidth = static_cast<UINT>( mOutputWidth );
 	const UINT backBufferHeight = static_cast<UINT>( mOutputHeight );
 	const DXGI_FORMAT backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
-	const DXGI_FORMAT depthBufferFormat = DXGI_FORMAT_UNKNOWN;
 	constexpr UINT backBufferCount = 2;
 
 	// If the swap chain already exists, resize it, otherwise create one.
@@ -315,6 +319,8 @@ void Cyclone::Application::OnDeviceLost()
 	mSwapChain.Reset();
 	mDeviceContext.Reset();
 	mDevice.Reset();
+
+	mLoadedLevel->ReleaseResources();
 
 	CreateDevice();
 

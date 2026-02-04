@@ -68,6 +68,9 @@
     <ClInclude Include="UI\ViewportType.hpp">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="Core\EntityInterface.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -114,6 +117,9 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="Core\Level.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\EntityInterface.cpp">
       <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>

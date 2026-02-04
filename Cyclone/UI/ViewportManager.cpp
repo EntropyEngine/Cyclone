@@ -168,8 +168,6 @@ void Cyclone::UI::ViewportManager::UpdateWireframe()
 
 void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 {
-	ImGuiIO &io = ImGui::GetIO();
-
 	ImGuiWindowFlags viewportFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking;
 
 	ImVec2 perspectiveViewSize;
