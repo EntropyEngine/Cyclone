@@ -4,8 +4,7 @@
 
 // Cyclone includes
 #include "Cyclone/UI/MainUI.hpp"
-#include "Cyclone/Core/Level.hpp"
-#include "Cyclone/Core/EntityInterface.hpp"
+#include "Cyclone/Core/LevelInterface.hpp"
 
 // ImGui includes
 #include <imgui.h>
@@ -21,11 +20,8 @@ Cyclone::Application::Application() noexcept :
 	// Create main UI
 	mMainUI = std::make_unique<Cyclone::UI::MainUI>();
 
-	// Create an empty level
-	mLoadedLevel = std::make_unique<Cyclone::Core::Level>();
-
-	// Create the entity interface
-	mEntityInterface = std::make_unique<Cyclone::Core::EntityInterface>();
+	// Create the level interface
+	mLevelInterface = std::make_unique<Cyclone::Core::LevelInterface>();
 }
 
 Cyclone::Application::~Application()
@@ -45,8 +41,7 @@ void Cyclone::Application::Initialize( HWND inWindow, int inWidth, int inHeight 
 
 	// Initialize systems
 	mMainUI->Initialize();
-	mLoadedLevel->Initialize();
-	mEntityInterface->Initialize();
+	mLevelInterface->Initialize();
 
 	// Create DX resources
 	CreateDevice();
@@ -111,14 +106,14 @@ void Cyclone::Application::Update( float inDeltaTime )
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-	mMainUI->Update( inDeltaTime, mLoadedLevel.get(), mEntityInterface.get() );
+	mMainUI->Update( inDeltaTime, mLevelInterface.get() );
 
 	ImGui::ShowDemoWindow();
 }
 
 void Cyclone::Application::Render()
 {
-	mMainUI->Render( mDeviceContext.Get(), mLoadedLevel.get(), mEntityInterface.get() );
+	mMainUI->Render( mDeviceContext.Get(), mLevelInterface.get() );
 
 	Clear();
 
@@ -230,7 +225,7 @@ void Cyclone::Application::CreateDevice()
 
 	// Set system devices
 	mMainUI->SetDevice( mDevice.Get() );
-	mLoadedLevel->SetDevice( mDevice.Get() );
+	mLevelInterface->SetDevice( mDevice.Get() );
 }
 
 void Cyclone::Application::CreateResources()
@@ -320,7 +315,7 @@ void Cyclone::Application::OnDeviceLost()
 	mDeviceContext.Reset();
 	mDevice.Reset();
 
-	mLoadedLevel->ReleaseResources();
+	mLevelInterface->ReleaseResources();
 
 	CreateDevice();
 

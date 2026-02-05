@@ -4,8 +4,7 @@
 #include "Cyclone/UI/ViewportManager.hpp"
 
 namespace Cyclone::Core {
-	class Level;
-	class EntityInterface;
+	class LevelInterface;
 }
 
 namespace Cyclone::UI
@@ -30,8 +29,8 @@ namespace Cyclone::UI
 		void Initialize();
 		void SetDevice( ID3D11Device3 *inDevice );
 
-		void Update( float inDeltaTime, Cyclone::Core::Level *inLevel, Cyclone::Core::EntityInterface *inEntityInterface );
-		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::Level *inLevel, const Cyclone::Core::EntityInterface *inEntityInterface );
+		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inEntityInterface );
+		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inEntityInterface );
 
 		bool IsVerticalSyncEnabled() const noexcept { return mVerticalSyncEnabled; }
 
