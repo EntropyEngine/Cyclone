@@ -86,6 +86,12 @@
     <ClInclude Include="Core\Entity\PointDebug.hpp">
       <Filter>Core\Entity</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Component\EntityType.hpp">
+      <Filter>Core\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Entity\EntityTypeRegistry.hpp">
+      <Filter>Core\Entity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -138,6 +144,9 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="Core\Entity\PointDebug.cpp">
+      <Filter>Core\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Entity\EntityTypeRegistry.cpp">
       <Filter>Core\Entity</Filter>
     </ClCompile>
   </ItemGroup>

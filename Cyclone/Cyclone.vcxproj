@@ -88,7 +88,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Core\Component\EntityType.hpp" />
     <ClInclude Include="Core\Component\Position.hpp" />
+    <ClInclude Include="Core\Entity\EntityTypeRegistry.hpp" />
     <ClInclude Include="Core\Entity\PointDebug.hpp" />
     <ClInclude Include="Core\LevelInterface.hpp" />
     <ClInclude Include="Core\Level.hpp" />
@@ -108,6 +110,7 @@
     <ClInclude Include="UI\ViewportType.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Entity\EntityTypeRegistry.cpp" />
     <ClCompile Include="Core\Entity\PointDebug.cpp" />
     <ClCompile Include="Core\LevelInterface.cpp" />
     <ClCompile Include="Core\Level.cpp" />

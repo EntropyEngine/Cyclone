@@ -2,8 +2,8 @@
 
 #include "Cyclone/UI/MainUI.hpp"
 
-#include "Cyclone/Core/Component/Position.hpp"
 #include "Cyclone/Core/LevelInterface.hpp"
+#include "Cyclone/Core/Entity/EntityTypeRegistry.hpp"
 
 // ImGui includes
 #include <imgui.h>
@@ -83,21 +83,25 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	ImGui::SetNextWindowSize( { 256, viewport->WorkSize.y - kToolbarHeight } );
 	if ( ImGui::Begin( "Outliner", nullptr, windowFlags ) ) {
 
-		if ( ImGui::BeginTable( "Entity List", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp ) ) {
+		if ( ImGui::BeginTable( "Entity List", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp ) ) {
 
 			ImGui::TableSetupColumn( "EntityID" );
+			ImGui::TableSetupColumn( "EntityType" );
 			ImGui::TableSetupColumn( "Position" );
 			ImGui::TableHeadersRow();
 
 			const entt::registry &cregistry = inEntityInterface->GetRegistry();
-			cregistry.view<Cyclone::Core::Component::Position>().each( []( const entt::entity inEntity, const Cyclone::Core::Component::Position &inPosition ) {
+			cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position>().each( []( const entt::entity inEntity, const Cyclone::Core::Component::EntityType &inEntityType, const Cyclone::Core::Component::Position &inPosition ) {
 				ImGui::TableNextRow();
 
 				ImGui::TableSetColumnIndex( 0 );
 				ImGui::Text( "%d", inEntity );
 
 				ImGui::TableSetColumnIndex( 1 );
-				ImGui::Text( "% 7.2f, % 7.2f, % 7.2f", inPosition.GetX(), inPosition.GetY(), inPosition.GetZ() );
+				ImGui::Text( Cyclone::Core::Entity::GetEntityTypeName( inEntityType ) );
+
+				ImGui::TableSetColumnIndex( 2 );
+				ImGui::Text( "% 7.2f\n% 7.2f\n% 7.2f", inPosition.GetX(), inPosition.GetY(), inPosition.GetZ() );
 			} );
 
 			ImGui::EndTable();

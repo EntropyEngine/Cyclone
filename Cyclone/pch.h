@@ -39,5 +39,6 @@ namespace DX
 }
 
 #include <entt.hpp>
+using namespace entt::literals;
 
 #endif //PCH_H
