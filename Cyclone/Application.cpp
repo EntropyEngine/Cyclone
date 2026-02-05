@@ -107,8 +107,6 @@ void Cyclone::Application::Update( float inDeltaTime )
 	ImGui::NewFrame();
 
 	mMainUI->Update( inDeltaTime, mLevelInterface.get() );
-
-	ImGui::ShowDemoWindow();
 }
 
 void Cyclone::Application::Render()

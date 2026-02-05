@@ -19,6 +19,11 @@ namespace Cyclone::UI
 		static constexpr const char *kSubGridLevelText[] = { "1cm", "5cm", "10cm", "25cm", "50cm", "1m", "2.5m", "5m", "10m" };
 		static double sZoomLevelToScale( int inLevel ) { return std::pow( 10.0, static_cast<double>( inLevel ) / 20.0 - 1.0 ); }
 
+		static constexpr float kMouseSensitivity = 0.01f;
+		static constexpr float kKeyboardSensitivity = 5.0f;
+		static constexpr float kCameraDollySensitivity = 5.0f;
+		static constexpr float kHorizontalFOV = DirectX::XM_PIDIV2;
+
 	public:
 		ViewportManager();
 
@@ -43,9 +48,9 @@ namespace Cyclone::UI
 		double GetCenter2D()
 		{
 			switch ( Axis ) {
-				case 0: return mCenter.GetX();
-				case 1: return mCenter.GetY();
-				case 2: return mCenter.GetZ();
+				case 0: return mCenter2D.GetX();
+				case 1: return mCenter2D.GetY();
+				case 2: return mCenter2D.GetZ();
 				default: __assume( false );
 			}
 		}
@@ -73,13 +78,18 @@ namespace Cyclone::UI
 
 		double mMinGridSize = 8.0; // Min subgrid view size in pixels
 
-		Cyclone::Math::XLVector mCenter = Cyclone::Math::XLVector::sZero();
+		float					mCameraPitch = 0.0f;
+		float					mCameraYaw = 0.0f;
+		Cyclone::Math::XLVector mCenter3D = Cyclone::Math::XLVector( 3, 3, -6 );
+		Cyclone::Math::XLVector mCenter2D = Cyclone::Math::XLVector::sZero();
 
-		template<EViewportType T>
-		void RenderWireframe( ID3D11DeviceContext3 *inDeviceContext ); // Implemented in ViewportManager.cpp
+		void UpdatePerspective( float inDeltaTime );
 
 		template<EViewportType T> // Implemented in ViewportManager.cpp
 		void UpdateWireframe();
+
+		template<EViewportType T>
+		void RenderWireframe( ID3D11DeviceContext3 *inDeviceContext ); // Implemented in ViewportManager.cpp
 
 	private:
 		inline void ComputeMinMax( double inDim, double inCenter2D, double &outMin, double &outMax )
@@ -101,7 +111,7 @@ namespace Cyclone::UI
 		template<size_t SwizzleFixed, size_t SwizzleLine>
 		void DrawLineLoop( double inFixedMin, double inFixedMax, double inLineMin, double inLineMax, double inStep, DirectX::FXMVECTOR inColor )
 		{
-			Cyclone::Math::XLVector negativeCenter = -mCenter;
+			Cyclone::Math::XLVector negativeCenter = -mCenter2D;
 			Cyclone::Math::XLVector fixedMin = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<SwizzleFixed>( inFixedMin );
 			Cyclone::Math::XLVector fixedMax = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<SwizzleFixed>( inFixedMax );
 
@@ -122,7 +132,7 @@ namespace Cyclone::UI
 		{
 			const DirectX::XMVECTOR colors[3] = { DirectX::Colors::DarkRed, DirectX::Colors::Green, DirectX::Colors::DarkBlue };
 
-			Cyclone::Math::XLVector negativeCenter = -mCenter;
+			Cyclone::Math::XLVector negativeCenter = -mCenter2D;
 			Cyclone::Math::XLVector rebasedMin = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<Axis>( inMin );
 			Cyclone::Math::XLVector rebasedMax = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<Axis>( inMax );
 
@@ -141,9 +151,23 @@ namespace Cyclone::UI
 		template<> ViewportElement *GetViewport<EViewportType::FrontXY>()	  { return mViewportFront.get(); }
 		template<> ViewportElement *GetViewport<EViewportType::SideYZ>()	  { return mViewportSide.get(); }
 
+		template<EViewportType T>
+		const ViewportElement *GetViewport() const;
+
+		template<> const ViewportElement *GetViewport<EViewportType::Perspective>() const { return mViewportPerspective.get(); }
+		template<> const ViewportElement *GetViewport<EViewportType::TopXZ>() const		  { return mViewportTop.get(); }
+		template<> const ViewportElement *GetViewport<EViewportType::FrontXY>() const	  { return mViewportFront.get(); }
+		template<> const ViewportElement *GetViewport<EViewportType::SideYZ>() const	  { return mViewportSide.get(); }
+
 
 		template<EViewportType T>
 		DirectX::XMMATRIX XM_CALLCONV GetViewMatrix() const;
+
+		template<> DirectX::XMMATRIX XM_CALLCONV GetViewMatrix<EViewportType::Perspective>() const
+		{
+			return DirectX::XMMatrixLookToRH( DirectX::g_XMZero, DirectX::XMVector3Transform( DirectX::g_XMIdentityR2, DirectX::XMMatrixRotationRollPitchYaw( mCameraPitch, mCameraYaw, 0.0f ) ), DirectX::g_XMIdentityR1 );
+			//return DirectX::XMMatrixLookToRH( DirectX::g_XMZero, -DirectX::g_XMIdentityR1, DirectX::g_XMIdentityR2 );
+		}
 
 		template<> DirectX::XMMATRIX XM_CALLCONV GetViewMatrix<EViewportType::TopXZ>() const
 		{
@@ -161,10 +185,20 @@ namespace Cyclone::UI
 		}
 
 		template<EViewportType T>
-		DirectX::XMMATRIX XM_CALLCONV GetProjMatrix()
+		DirectX::XMMATRIX XM_CALLCONV GetProjMatrix() const
 		{
-			ViewportElement *viewport = GetViewport<T>();
+			const ViewportElement *viewport = GetViewport<T>();
 			return DirectX::XMMatrixOrthographicRH( static_cast<float>( viewport->GetWidth() * mZoomScale2D ), static_cast<float>( viewport->GetHeight() * mZoomScale2D ), 1.0f, static_cast<float>( 4 * mWorldLimit ) );
+		}
+
+		template<>
+		DirectX::XMMATRIX XM_CALLCONV GetProjMatrix<EViewportType::Perspective>() const
+		{
+			const ViewportElement *viewport = GetViewport<EViewportType::Perspective>();
+
+			float aspectRatio = static_cast<float>( viewport->GetWidth() ) / static_cast<float>( viewport->GetHeight() );
+			float fovY = 2.0f * std::atan( std::tan( kHorizontalFOV / 2 ) / aspectRatio );
+			return DirectX::XMMatrixPerspectiveFovRH( fovY, aspectRatio, 0.1f, static_cast<float>( 2 * mWorldLimit ) );
 		}
 	};
 }

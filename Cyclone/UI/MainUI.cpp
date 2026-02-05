@@ -24,6 +24,9 @@ void Cyclone::UI::MainUI::SetDevice( ID3D11Device3 *inDevice )
 
 void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inEntityInterface )
 {
+	static bool showDemoMenu = false;
+	if ( showDemoMenu ) ImGui::ShowDemoWindow();
+
 	if ( ImGui::BeginMainMenuBar() ) {
 		if ( ImGui::BeginMenu( "File" ) ) {
 			ImGui::EndMenu();
@@ -32,6 +35,12 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 		if ( ImGui::BeginMenu( "Viewports" ) ) {
 			ImGui::MenuItem( "Enable VSync", nullptr, &mVerticalSyncEnabled );
 			mViewportManager->MenuBarUpdate();
+			ImGui::EndMenu();
+		}
+
+		if ( ImGui::BeginMenu( "Debug" ) ) {
+			ImGui::MenuItem( "Show Demo Menu", nullptr, &showDemoMenu );
+
 			ImGui::EndMenu();
 		}
 
