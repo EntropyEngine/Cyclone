@@ -26,6 +26,7 @@ namespace Cyclone::Core
 		entt::entity			GetSelectedEntity() const			{ return mSelectedEntity; }
 		const std::set<entt::entity> & GetSelectedEntities() const	{ return mSelectedEntities; }
 
+		// TODO: refactor to external selection object
 		void					SetSelectedEntity( entt::entity inEntity );
 		void					AddSelectedEntity( entt::entity inEntity );
 		void					DeselectEntity( entt::entity inEntity );
@@ -35,6 +36,7 @@ namespace Cyclone::Core
 
 		std::unique_ptr<Level>	mLevel;
 
+		// TODO: refactor to external selection object
 		entt::entity			mSelectedEntity;
 		std::set<entt::entity>	mSelectedEntities;
 	};

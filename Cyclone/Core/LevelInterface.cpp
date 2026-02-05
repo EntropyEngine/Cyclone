@@ -2,6 +2,8 @@
 
 #include "Cyclone/Core/LevelInterface.hpp"
 
+#include "Cyclone/Core/Entity/PointDebug.hpp"
+
 Cyclone::Core::LevelInterface::LevelInterface()
 {
 	mLevel = std::make_unique<Level>();
@@ -14,6 +16,11 @@ void Cyclone::Core::LevelInterface::Initialize()
 
 	mSelectedEntity = entt::null;
 	mSelectedEntities.clear();
+
+	Entity::PointDebug().Create( GetRegistry(), { 0.0, 0.0, 0.0 } );
+	Entity::PointDebug().Create( GetRegistry(), { 0.0, 0.0, 2.0 } );
+	Entity::PointDebug().Create( GetRegistry(), { 0.0, 2.0, 0.0 } );
+	Entity::PointDebug().Create( GetRegistry(), { 2.0, 0.0, 0.0 } );
 }
 
 void Cyclone::Core::LevelInterface::SetDevice( ID3D11Device3 *inDevice )

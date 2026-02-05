@@ -23,6 +23,15 @@
     <Filter Include="Core">
       <UniqueIdentifier>{07f8c1f5-3979-4c09-954d-cde11d1909f8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Entity">
+      <UniqueIdentifier>{f54eb121-078a-4545-88f8-c7dffe8d9fef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Component">
+      <UniqueIdentifier>{64a47ce6-055c-4e52-83bb-8ab7fa881bc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="natvis">
+      <UniqueIdentifier>{e31a2c59-68bd-4184-8318-1e301d0e36ac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -70,6 +79,12 @@
     </ClInclude>
     <ClInclude Include="Core\LevelInterface.hpp">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Component\Position.hpp">
+      <Filter>Core\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Entity\PointDebug.hpp">
+      <Filter>Core\Entity</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -122,6 +137,9 @@
     <ClCompile Include="Core\LevelInterface.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Entity\PointDebug.cpp">
+      <Filter>Core\Entity</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Cyclone.rc">
@@ -138,5 +156,40 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="natvis\config.natvis">
+      <Filter>natvis</Filter>
+    </Natvis>
+    <Natvis Include="natvis\container.natvis">
+      <Filter>natvis</Filter>
+    </Natvis>
+    <Natvis Include="natvis\core.natvis">
+      <Filter>natvis</Filter>
+    </Natvis>
+    <Natvis Include="natvis\entity.natvis">
+      <Filter>natvis</Filter>
+    </Natvis>
+    <Natvis Include="natvis\graph.natvis">
+      <Filter>natvis</Filter>
+    </Natvis>
+    <Natvis Include="natvis\locator.natvis">
+      <Filter>natvis</Filter>
+    </Natvis>
+    <Natvis Include="natvis\meta.natvis">
+      <Filter>natvis</Filter>
+    </Natvis>
+    <Natvis Include="natvis\poly.natvis">
+      <Filter>natvis</Filter>
+    </Natvis>
+    <Natvis Include="natvis\process.natvis">
+      <Filter>natvis</Filter>
+    </Natvis>
+    <Natvis Include="natvis\resource.natvis">
+      <Filter>natvis</Filter>
+    </Natvis>
+    <Natvis Include="natvis\signal.natvis">
+      <Filter>natvis</Filter>
+    </Natvis>
   </ItemGroup>
 </Project>
