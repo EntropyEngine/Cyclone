@@ -57,6 +57,12 @@ namespace Cyclone::Math
 			return _mm256_cvtpd_ps( mVector );
 		}
 
+		// Cast from 32 bit
+		static XLVector XM_CALLCONV sFromXMVECTOR( DirectX::FXMVECTOR inV )
+		{
+			return _mm256_cvtps_pd( inV );
+		}
+
 		// FP64 addition
 		XLVector operator + ( XLVector inRhs ) const
 		{
