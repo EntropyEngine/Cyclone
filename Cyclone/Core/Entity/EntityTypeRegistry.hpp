@@ -10,45 +10,28 @@ namespace Cyclone::Core::Entity
 	{
 	public:
 		using EntityType = Cyclone::Core::Component::EntityType;
-		using EntityCategory = Cyclone::Core::Component::EntityCategory;
 
 		static EntityTypeRegistry sInstance;
 
 		static const char *GetEntityTypeName( EntityType inEntityType )
 		{
-			const auto &it = sInstance.mEntityTypes.find( inEntityType );
-			if ( it != sInstance.mEntityTypes.end() ) {
-				return it->second;
-			}
-			return nullptr;
+			return entt::resolve( static_cast<entt::id_type>( inEntityType ) ).data( "entity_type"_hs ).get( {} ).cast<entt::hashed_string>().data();
 		}
 
-		static const char *GetEntityCategoryName( EntityCategory inEntityCategory )
+		static const char *GetEntityTypeCategoryName( EntityType inEntityType )
 		{
-			const auto &it = sInstance.mEntityCategories.find( inEntityCategory );
-			if ( it != sInstance.mEntityCategories.end() ) {
-				return it->second;
-			}
-			return nullptr;
+			return entt::resolve( static_cast<entt::id_type>( inEntityType ) ).data( "category"_hs ).get( {} ).cast<entt::hashed_string>().data();
 		}
 
 	protected:
 		EntityTypeRegistry();
 
-		std::map<EntityType, const char *> mEntityTypes;
-		std::map<EntityCategory, const char *> mEntityCategories;
-
-		std::map<EntityType, EntityCategory> mEntityTypeToCategory;
-
 		template<typename T>
 		void RegisterEntityClass()
 		{
-			constexpr auto entityType = static_cast<EntityType>( T::kEntityType.value() );
-			constexpr auto entityCategory = static_cast<EntityCategory>( T::kEntityCategory.value() );
-
-			mEntityTypes.emplace( entityType, T::kEntityType.data() );
-			mEntityCategories.emplace( entityCategory, T::kEntityCategory.data() );
-			mEntityTypeToCategory.emplace( entityType, entityCategory );
+			entt::meta_factory<T>{}.type( T::kEntityType )
+				.data<&T::kEntityType>( "entity_type"_hs )
+				.data<&T::kEntityCategory>( "category"_hs );
 		}
 	};
 }
