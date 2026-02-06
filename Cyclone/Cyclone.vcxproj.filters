@@ -32,6 +32,9 @@
     <Filter Include="natvis">
       <UniqueIdentifier>{e31a2c59-68bd-4184-8318-1e301d0e36ac}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Util">
+      <UniqueIdentifier>{9d713508-6f3b-43ab-a11b-586b393bdfb9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -91,6 +94,9 @@
     </ClInclude>
     <ClInclude Include="Core\Entity\EntityTypeRegistry.hpp">
       <Filter>Core\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Util\NonCopyable.hpp">
+      <Filter>Util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
