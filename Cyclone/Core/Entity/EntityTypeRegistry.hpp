@@ -9,20 +9,23 @@ namespace Cyclone::Core::Entity
 	class EntityTypeRegistry : public Cyclone::Util::NonCopyable
 	{
 	public:
+		using EntityType = Cyclone::Core::Component::EntityType;
+		using EntityCategory = Cyclone::Core::Component::EntityCategory;
+
 		static EntityTypeRegistry sInstance;
 
-		static const char *GetEntityTypeName( Cyclone::Core::Component::EntityType inEntityType )
+		static const char *GetEntityTypeName( EntityType inEntityType )
 		{
-			const auto &it = sInstance.mEntityTypes.find( static_cast<entt::hashed_string::hash_type>( inEntityType ) );
+			const auto &it = sInstance.mEntityTypes.find( inEntityType );
 			if ( it != sInstance.mEntityTypes.end() ) {
 				return it->second;
 			}
 			return nullptr;
 		}
 
-		static const char *GetEntityCategoryName( Cyclone::Core::Component::EntityCategory inEntityCategory )
+		static const char *GetEntityCategoryName( EntityCategory inEntityCategory )
 		{
-			const auto &it = sInstance.mEntityCategories.find( static_cast<entt::hashed_string::hash_type>( inEntityCategory ) );
+			const auto &it = sInstance.mEntityCategories.find( inEntityCategory );
 			if ( it != sInstance.mEntityCategories.end() ) {
 				return it->second;
 			}
@@ -32,17 +35,20 @@ namespace Cyclone::Core::Entity
 	protected:
 		EntityTypeRegistry();
 
-		std::map<entt::hashed_string::hash_type, const char *> mEntityTypes;
-		std::map<entt::hashed_string::hash_type, const char *> mEntityCategories;
+		std::map<EntityType, const char *> mEntityTypes;
+		std::map<EntityCategory, const char *> mEntityCategories;
 
-		std::map<entt::hashed_string::hash_type, entt::hashed_string::hash_type> mEntityTypeToCategory;
+		std::map<EntityType, EntityCategory> mEntityTypeToCategory;
 
 		template<typename T>
 		void RegisterEntityClass()
 		{
-			mEntityTypes.emplace( T::kEntityType.value(), T::kEntityType.data() );
-			mEntityCategories.emplace( T::kEntityCategory.value(), T::kEntityCategory.data() );
-			mEntityTypeToCategory.emplace( T::kEntityType.value(), T::kEntityCategory.value() );
+			constexpr auto entityType = static_cast<EntityType>( T::kEntityType.value() );
+			constexpr auto entityCategory = static_cast<EntityCategory>( T::kEntityCategory.value() );
+
+			mEntityTypes.emplace( entityType, T::kEntityType.data() );
+			mEntityCategories.emplace( entityCategory, T::kEntityCategory.data() );
+			mEntityTypeToCategory.emplace( entityType, entityCategory );
 		}
 	};
 }
