@@ -11,6 +11,9 @@
 #include <imgui_impl_dx11.h>
 #include <imgui_internal.h>
 
+// STL
+#include <format>
+
 Cyclone::UI::MainUI::MainUI() noexcept :
 	mVerticalSyncEnabled( true )
 {}
@@ -85,20 +88,35 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 
 		if ( ImGui::BeginTable( "Entity List", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp ) ) {
 
-			ImGui::TableSetupColumn( "EntityID" );
-			ImGui::TableSetupColumn( "EntityType" );
+			ImGui::TableSetupColumn( "ID" );
+			ImGui::TableSetupColumn( "Type" );
 			ImGui::TableSetupColumn( "Position" );
 			ImGui::TableHeadersRow();
 
 			const entt::registry &cregistry = inEntityInterface->GetRegistry();
-			cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position>().each( []( const entt::entity inEntity, const Cyclone::Core::Component::EntityType &inEntityType, const Cyclone::Core::Component::Position &inPosition ) {
+			cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position>().each( [&inEntityInterface]( const entt::entity inEntity, const Cyclone::Core::Component::EntityType &inEntityType, const Cyclone::Core::Component::Position &inPosition ) {
 				ImGui::TableNextRow();
 
 				ImGui::TableSetColumnIndex( 0 );
-				ImGui::Text( "%d", inEntity );
+				ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
+				if ( inEntityInterface->GetSelectedEntity() == inEntity ) selectionFlags |= ImGuiSelectableFlags_Highlight;
+
+				if ( ImGui::Selectable( std::format( "{}", static_cast<size_t>( inEntity ) ).c_str(), inEntityInterface->GetSelectedEntities().contains( inEntity ), selectionFlags ) ) {
+					if ( ImGui::GetIO().KeyCtrl ) {
+						if ( inEntityInterface->GetSelectedEntity() == inEntity ) {
+							inEntityInterface->DeselectEntity( inEntity );
+						}
+						else {
+							inEntityInterface->AddSelectedEntity( inEntity );
+						}
+					}
+					else {
+						inEntityInterface->SetSelectedEntity( inEntity );
+					}
+				};
 
 				ImGui::TableSetColumnIndex( 1 );
-				ImGui::Text( Cyclone::Core::Entity::GetEntityTypeName( inEntityType ) );
+				ImGui::Text( Cyclone::Core::Entity::EntityTypeRegistry::GetEntityTypeName( inEntityType ) );
 
 				ImGui::TableSetColumnIndex( 2 );
 				ImGui::Text( "% 7.2f\n% 7.2f\n% 7.2f", inPosition.GetX(), inPosition.GetY(), inPosition.GetZ() );

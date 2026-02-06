@@ -56,6 +56,6 @@ void Cyclone::Core::LevelInterface::AddSelectedEntity( entt::entity inEntity )
 
 void Cyclone::Core::LevelInterface::DeselectEntity( entt::entity inEntity )
 {
-	mSelectedEntity = entt::null;
+	if ( inEntity == mSelectedEntity ) mSelectedEntity = entt::null;
 	mSelectedEntities.erase( inEntity );
 }
