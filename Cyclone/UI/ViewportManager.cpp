@@ -63,7 +63,7 @@ void Cyclone::UI::ViewportManager::MenuBarUpdate()
 void Cyclone::UI::ViewportManager::ToolbarUpdate()
 {
 	ImGui::PushStyleVarX( ImGuiStyleVar_SelectableTextAlign, 1.0f );
-	ImGui::PushStyleVar( ImGuiStyleVar_FrameRounding, 12.0f );
+	ImGui::PushStyleVar( ImGuiStyleVar_FrameRounding, 4.0f );
 
 	ImGui::SetNextItemWidth( 128.0f );
 	std::string subGridLevelPreview = std::format( "Grid Snap: {}", kSubGridLevelText[mSubGridSizeIndex] );
