@@ -98,6 +98,9 @@
     <ClInclude Include="Util\NonCopyable.hpp">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="UI\Outliner.hpp">
+      <Filter>UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -154,6 +157,9 @@
     </ClCompile>
     <ClCompile Include="Core\Entity\EntityTypeRegistry.cpp">
       <Filter>Core\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Outliner.cpp">
+      <Filter>UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

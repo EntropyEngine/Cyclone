@@ -105,6 +105,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Application.hpp" />
     <ClInclude Include="UI\MainUI.hpp" />
+    <ClInclude Include="UI\Outliner.hpp" />
     <ClInclude Include="UI\ViewportElement.hpp" />
     <ClInclude Include="UI\ViewportManager.hpp" />
     <ClInclude Include="UI\ViewportType.hpp" />
@@ -152,6 +153,7 @@
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="RenderTexture.cpp" />
     <ClCompile Include="UI\MainUI.cpp" />
+    <ClCompile Include="UI\Outliner.cpp" />
     <ClCompile Include="UI\ViewportElement.cpp" />
     <ClCompile Include="UI\ViewportManager.cpp" />
   </ItemGroup>

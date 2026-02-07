@@ -7,6 +7,7 @@ namespace Cyclone::Core {
 namespace Cyclone::UI
 {
 	class ViewportManager;
+	class Outliner;
 
 	class MainUI
 	{
@@ -37,5 +38,6 @@ namespace Cyclone::UI
 		bool mVerticalSyncEnabled;
 
 		std::unique_ptr<Cyclone::UI::ViewportManager> mViewportManager;
+		std::unique_ptr<Cyclone::UI::Outliner> mOutliner;
 	};
 }
