@@ -1,7 +1,11 @@
 #include "pch.h"
-
 #include "Cyclone/UI/MainUI.hpp"
 
+// Cyclone UI includes
+#include "Cyclone/UI/ViewportManager.hpp"
+#include "Cyclone/UI/Outliner.hpp"
+
+// Cyclone Core includes
 #include "Cyclone/Core/LevelInterface.hpp"
 #include "Cyclone/Core/Entity/EntityTypeRegistry.hpp"
 
@@ -16,6 +20,9 @@
 
 Cyclone::UI::MainUI::MainUI() noexcept :
 	mVerticalSyncEnabled( true )
+{}
+
+Cyclone::UI::MainUI::~MainUI()
 {}
 
 void Cyclone::UI::MainUI::Initialize()

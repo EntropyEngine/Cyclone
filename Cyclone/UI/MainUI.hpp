@@ -1,14 +1,13 @@
 #pragma once
 
-// Cyclone includes
-#include "Cyclone/UI/ViewportManager.hpp"
-
 namespace Cyclone::Core {
 	class LevelInterface;
 }
 
 namespace Cyclone::UI
 {
+	class ViewportManager;
+
 	class MainUI
 	{
 	private:
@@ -18,7 +17,7 @@ namespace Cyclone::UI
 
 	public:
 		MainUI() noexcept;
-		~MainUI() = default;
+		~MainUI();
 
 		MainUI( MainUI && ) = default;
 		MainUI &operator= ( MainUI && ) = default;
