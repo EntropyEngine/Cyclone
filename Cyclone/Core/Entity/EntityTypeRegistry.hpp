@@ -18,6 +18,11 @@ namespace Cyclone::Core::Entity
 			return entt::resolve( static_cast<entt::id_type>( inEntityType ) ).data( "entity_type"_hs ).get( {} ).cast<entt::hashed_string>().data();
 		}
 
+		static entt::hashed_string GetEntityTypeCategory( EntityType inEntityType )
+		{
+			return entt::resolve( static_cast<entt::id_type>( inEntityType ) ).data( "category"_hs ).get( {} ).cast<entt::hashed_string>();
+		}
+
 		static const char *GetEntityTypeCategoryName( EntityType inEntityType )
 		{
 			return entt::resolve( static_cast<entt::id_type>( inEntityType ) ).data( "category"_hs ).get( {} ).cast<entt::hashed_string>().data();
