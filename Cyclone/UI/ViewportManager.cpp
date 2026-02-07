@@ -140,7 +140,7 @@ void Cyclone::UI::ViewportManager::UpdatePerspective( float inDeltaTime )
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportManager::UpdateWireframe( Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	ImVec2 viewSize = ImGui::GetWindowSize();
 	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
@@ -158,14 +158,14 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( Cyclone::Core::LevelInterfac
 	const bool isHovered = ImGui::IsItemHovered();
 	const bool isActive = ImGui::IsItemActive();
 
-	ImVec2 viewportAbsPos( io.MousePos.x - viewOrigin.x, io.MousePos.y - viewOrigin.y );
-	ImVec2 viewportRelPos( viewportAbsPos.x - viewSize.x / 2.0f, viewportAbsPos.y - viewSize.y / 2.0f );
+	ImVec2 viewportAbsMousePos( io.MousePos.x - viewOrigin.x, io.MousePos.y - viewOrigin.y );
+	ImVec2 viewportRelMousePos( viewportAbsMousePos.x - viewSize.x / 2.0f, viewportAbsMousePos.y - viewSize.y / 2.0f );
 
-	double uPos = GetCenter2D<AxisU>() - viewportRelPos.x * mZoomScale2D;
-	double vPos = GetCenter2D<AxisV>() - viewportRelPos.y * mZoomScale2D;
+	double worldMouseU = GetCenter2D<AxisU>() - viewportRelMousePos.x * mZoomScale2D;
+	double worldMouseV = GetCenter2D<AxisV>() - viewportRelMousePos.y * mZoomScale2D;
 
-	double uSnapPos = std::round( uPos / mSubGridSize ) * mSubGridSize;
-	double vSnapPos = std::round( vPos / mSubGridSize ) * mSubGridSize;
+	double worldSnapU = std::round( worldMouseU / mSubGridSize ) * mSubGridSize;
+	double worldSnapV = std::round( worldMouseV / mSubGridSize ) * mSubGridSize;
 
 	const char *uStr = std::array{ "x", "y", "z" }[AxisU];
 	const char *vStr = std::array{ "x", "y", "z" }[AxisV];
@@ -180,10 +180,10 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( Cyclone::Core::LevelInterfac
 		"Snap Pos: (%s=%.2f, %s=%.2f)\n"
 		"Zoom Level: (%.3f)",
 		io.MousePos.x, io.MousePos.y,
-		viewportAbsPos.x, viewportAbsPos.y,
-		viewportRelPos.x, viewportRelPos.y,
-		uStr, uPos, vStr, vPos,
-		uStr, uSnapPos, vStr, vSnapPos,
+		viewportAbsMousePos.x, viewportAbsMousePos.y,
+		viewportRelMousePos.x, viewportRelMousePos.y,
+		uStr, worldMouseU, vStr, worldMouseV,
+		uStr, worldSnapU, vStr, worldSnapV,
 		mZoomScale2D
 	);
 	ImGui::PopStyleVar( 2 );
@@ -193,17 +193,25 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( Cyclone::Core::LevelInterfac
 		mCenter2D += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * mZoomScale2D );
 	}
 
-	if ( isHovered ) {
+	if ( isHovered && io.MouseWheel ) {
 		mZoomLevel -= ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 );
-		mZoomScale2D = sZoomLevelToScale( mZoomLevel );
+		double newZoomScale2D = sZoomLevelToScale( mZoomLevel );
+
+		double uPosNew = GetCenter2D<AxisU>() - viewportRelMousePos.x * newZoomScale2D;
+		double vPosNew = GetCenter2D<AxisV>() - viewportRelMousePos.y * newZoomScale2D;
+
+		mCenter2D += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( std::lerp( worldMouseU, worldSnapU, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - uPosNew );
+		mCenter2D += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( std::lerp( worldMouseV, worldSnapV, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - vPosNew );
+
+		mZoomScale2D = newZoomScale2D;
 	}
 
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
 	if ( isHovered ) {
 		ImVec2 gridPos;
-		gridPos.x = static_cast<float>( ( GetCenter2D<AxisU>() - uSnapPos ) / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
-		gridPos.y = static_cast<float>( ( GetCenter2D<AxisV>() - vSnapPos ) / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
+		gridPos.x = static_cast<float>( ( GetCenter2D<AxisU>() - worldSnapU ) / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
+		gridPos.y = static_cast<float>( ( GetCenter2D<AxisV>() - worldSnapV ) / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
 
 		float offset = static_cast<float>( std::max( 2.0, mSubGridSize / mZoomScale2D ) );
 
@@ -251,6 +259,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( Cyclone::Core::LevelInterfac
 		if ( offset * 2 <= localBoxMax.x - localBoxMin.x && offset * 2 <= localBoxMax.y - localBoxMin.y ) {
 			drawList->AddLine( { localPos.x - offset, localPos.y - offset }, { localPos.x + offset, localPos.y + offset }, entityColor, 1.414f );
 			drawList->AddLine( { localPos.x + offset, localPos.y - offset }, { localPos.x - offset, localPos.y + offset }, entityColor, 1.414f );
+			drawList->AddText( { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, "Text" );
 		}
 
 		drawList->AddRect( localBoxMin, localBoxMax, entityColor );
@@ -281,14 +290,14 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "TopView", ImVec2( ImGui::GetContentRegionAvail().x, perspectiveViewSize.y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		UpdateWireframe<EViewportType::TopXZ>( inLevelInterface );
+		UpdateWireframe<EViewportType::TopXZ>( inDeltaTime, inLevelInterface );
 
 		DrawViewportOverlay( "Top (X/Z)" );
 	}
 	ImGui::EndChild();
 
 	if ( ImGui::BeginChild( "FrontView", ImVec2( perspectiveViewSize.x, ImGui::GetContentRegionAvail().y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		UpdateWireframe<EViewportType::FrontXY>( inLevelInterface );
+		UpdateWireframe<EViewportType::FrontXY>( inDeltaTime, inLevelInterface );
 
 		DrawViewportOverlay( "Front (X/Y)" );
 	}
@@ -296,7 +305,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "SideView", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		UpdateWireframe<EViewportType::SideYZ>( inLevelInterface );
+		UpdateWireframe<EViewportType::SideYZ>( inDeltaTime, inLevelInterface );
 
 		DrawViewportOverlay( "Side (Y/Z)" );
 

@@ -28,6 +28,8 @@ namespace Cyclone::UI
 		static constexpr float kCameraDollySensitivity = 5.0f;
 		static constexpr float kHorizontalFOV = DirectX::XM_PIDIV2;
 
+		static constexpr float kAccelerateToSnap = 10.0f;
+
 	public:
 		ViewportManager();
 
@@ -90,7 +92,7 @@ namespace Cyclone::UI
 		void UpdatePerspective( float inDeltaTime );
 
 		template<EViewportType T> // Implemented in ViewportManager.cpp
-		void UpdateWireframe( Cyclone::Core::LevelInterface *inLevelInterface );
+		void UpdateWireframe( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 
 		template<EViewportType T>
 		void RenderWireframe( ID3D11DeviceContext3 *inDeviceContext ); // Implemented in ViewportManager.cpp
