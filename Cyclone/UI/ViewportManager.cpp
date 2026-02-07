@@ -207,6 +207,8 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	}
 
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	drawList->ChannelsSplit( 3 );
+	drawList->ChannelsSetCurrent( 0 );
 
 	if ( isHovered ) {
 		ImVec2 gridPos;
@@ -220,18 +222,31 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 		drawList->AddLine( { gridPos.x + offset, gridPos.y - offset }, { gridPos.x - offset, gridPos.y + offset }, IM_COL32( 255, 255, 255, 255 ) );
 	}
 
+	// Get smaller font for debug text
+	ImFont* narrowFont = io.Fonts->Fonts[1];
+	float fontSize = ImGui::GetFontSize();
+
 	// Iterate over all entities
 	const entt::registry &cregistry = inLevelInterface->GetRegistry();
 	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
 	for ( const entt::entity entity : view ) {
 
-		auto entityColor = IM_COL32( 128, 0, 128, 255 );
+		auto entityColor = IM_COL32( 221, 24, 221, 255 );
 
 		bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
 		bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
 
-		if ( entityIsSelected ) entityColor = IM_COL32( 255, 255, 0, 255 );
-		else if ( entityInSelection ) entityColor = IM_COL32( 255, 128, 0, 255 );
+		if ( entityIsSelected ) {
+			entityColor = IM_COL32( 255, 255, 0, 255 );
+			drawList->ChannelsSetCurrent( 2 );
+		}
+		else if ( entityInSelection ) {
+			entityColor = IM_COL32( 255, 128, 0, 255 );
+			drawList->ChannelsSetCurrent( 1 );
+		}
+		else {
+			drawList->ChannelsSetCurrent( 0 );
+		}
 
 		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
 		const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
@@ -259,11 +274,14 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 		if ( offset * 2 <= localBoxMax.x - localBoxMin.x && offset * 2 <= localBoxMax.y - localBoxMin.y ) {
 			drawList->AddLine( { localPos.x - offset, localPos.y - offset }, { localPos.x + offset, localPos.y + offset }, entityColor, 1.414f );
 			drawList->AddLine( { localPos.x + offset, localPos.y - offset }, { localPos.x - offset, localPos.y + offset }, entityColor, 1.414f );
-			drawList->AddText( { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, "Text" );
+			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, Cyclone::Core::Entity::EntityTypeRegistry::GetEntityTypeName( entityType ) );
+			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, std::format( "id={}", static_cast<size_t>( entity ) ).c_str() );
 		}
 
 		drawList->AddRect( localBoxMin, localBoxMax, entityColor );
 	}
+
+	drawList->ChannelsMerge();
 }
 
 void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
