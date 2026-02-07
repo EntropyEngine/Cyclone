@@ -11,6 +11,10 @@
 #include <Effects.h>
 #include <CommonStates.h>
 
+namespace Cyclone::Core {
+	class LevelInterface;
+}
+
 namespace Cyclone::UI
 {
 	class ViewportManager
@@ -37,7 +41,7 @@ namespace Cyclone::UI
 
 		void MenuBarUpdate();
 		void ToolbarUpdate();
-		void Update( float inDeltaTime );
+		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 
 		void RenderPerspective( ID3D11DeviceContext3 *inDeviceContext );
 		void RenderTop( ID3D11DeviceContext3 *inDeviceContext );
@@ -86,7 +90,7 @@ namespace Cyclone::UI
 		void UpdatePerspective( float inDeltaTime );
 
 		template<EViewportType T> // Implemented in ViewportManager.cpp
-		void UpdateWireframe();
+		void UpdateWireframe( Cyclone::Core::LevelInterface *inLevelInterface );
 
 		template<EViewportType T>
 		void RenderWireframe( ID3D11DeviceContext3 *inDeviceContext ); // Implemented in ViewportManager.cpp

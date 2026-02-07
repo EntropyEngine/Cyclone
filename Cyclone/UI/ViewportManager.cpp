@@ -1,6 +1,8 @@
 #include "pch.h"
-
 #include "Cyclone/UI/ViewportManager.hpp"
+
+// Cyclone core includes
+#include "Cyclone/Core/LevelInterface.hpp"
 
 // STL Includes
 #include <format>
@@ -137,7 +139,7 @@ void Cyclone::UI::ViewportManager::UpdatePerspective( float inDeltaTime )
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportManager::UpdateWireframe()
+void Cyclone::UI::ViewportManager::UpdateWireframe( Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	ImVec2 viewSize = ImGui::GetWindowSize();
 	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
@@ -211,7 +213,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe()
 	}
 }
 
-void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
+void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	ImGuiWindowFlags viewportFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking;
 
@@ -236,7 +238,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "TopView", ImVec2( ImGui::GetContentRegionAvail().x, perspectiveViewSize.y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		UpdateWireframe<EViewportType::TopXZ>();
+		UpdateWireframe<EViewportType::TopXZ>( inLevelInterface );
 
 		DrawViewportOverlay( "Top (X/Z)" );
 
@@ -244,7 +246,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 	}
 
 	if ( ImGui::BeginChild( "FrontView", ImVec2( perspectiveViewSize.x, ImGui::GetContentRegionAvail().y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		UpdateWireframe<EViewportType::FrontXY>();
+		UpdateWireframe<EViewportType::FrontXY>( inLevelInterface );
 
 		DrawViewportOverlay( "Front (X/Y)" );
 
@@ -253,7 +255,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime )
 
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "SideView", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		UpdateWireframe<EViewportType::SideYZ>();
+		UpdateWireframe<EViewportType::SideYZ>( inLevelInterface );
 
 		DrawViewportOverlay( "Side (Y/Z)" );
 

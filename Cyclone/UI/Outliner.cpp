@@ -12,7 +12,7 @@
 // STL
 #include <format>
 
-void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inEntityInterface )
+void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	if ( ImGui::BeginTable( "Entity List", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp ) ) {
 
@@ -21,34 +21,38 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inEntityInter
 		ImGui::TableSetupColumn( "Position" );
 		ImGui::TableHeadersRow();
 
-		const entt::registry &cregistry = inEntityInterface->GetRegistry();
-		cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position>().each( [&inEntityInterface]( const entt::entity inEntity, const Cyclone::Core::Component::EntityType &inEntityType, const Cyclone::Core::Component::Position &inPosition ) {
+		const entt::registry &cregistry = inLevelInterface->GetRegistry();
+		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position>();
+		for ( const entt::entity entity : view ) {
+			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+			const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
+
 			ImGui::TableNextRow();
 
 			ImGui::TableSetColumnIndex( 0 );
 			ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
-			if ( inEntityInterface->GetSelectedEntity() == inEntity ) selectionFlags |= ImGuiSelectableFlags_Highlight;
+			if ( inLevelInterface->GetSelectedEntity() == entity ) selectionFlags |= ImGuiSelectableFlags_Highlight;
 
-			if ( ImGui::Selectable( std::format( "{}", static_cast<size_t>( inEntity ) ).c_str(), inEntityInterface->GetSelectedEntities().contains( inEntity ), selectionFlags ) ) {
+			if ( ImGui::Selectable( std::format( "{}", static_cast<size_t>( entity ) ).c_str(), inLevelInterface->GetSelectedEntities().contains( entity ), selectionFlags ) ) {
 				if ( ImGui::GetIO().KeyCtrl ) {
-					if ( inEntityInterface->GetSelectedEntity() == inEntity ) {
-						inEntityInterface->DeselectEntity( inEntity );
+					if ( inLevelInterface->GetSelectedEntity() == entity ) {
+						inLevelInterface->DeselectEntity( entity );
 					}
 					else {
-						inEntityInterface->AddSelectedEntity( inEntity );
+						inLevelInterface->AddSelectedEntity( entity );
 					}
 				}
 				else {
-					inEntityInterface->SetSelectedEntity( inEntity );
+					inLevelInterface->SetSelectedEntity( entity );
 				}
 			};
 
 			ImGui::TableSetColumnIndex( 1 );
-			ImGui::Text( Cyclone::Core::Entity::EntityTypeRegistry::GetEntityTypeName( inEntityType ) );
+			ImGui::Text( Cyclone::Core::Entity::EntityTypeRegistry::GetEntityTypeName( entityType ) );
 
 			ImGui::TableSetColumnIndex( 2 );
-			ImGui::Text( "% 7.2f\n% 7.2f\n% 7.2f", inPosition.GetX(), inPosition.GetY(), inPosition.GetZ() );
-		} );
+			ImGui::Text( "% 7.2f\n% 7.2f\n% 7.2f", position.GetX(), position.GetY(), position.GetZ() );
+		}
 
 		ImGui::EndTable();
 	}

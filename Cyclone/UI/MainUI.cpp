@@ -30,7 +30,7 @@ void Cyclone::UI::MainUI::SetDevice( ID3D11Device3 *inDevice )
 	mViewportManager->SetDevice( inDevice );
 }
 
-void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inEntityInterface )
+void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	static bool showDemoMenu = false;
 	if ( showDemoMenu ) ImGui::ShowDemoWindow();
@@ -79,7 +79,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f } );
 	ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f } );
 	if ( ImGui::Begin( "MainWindow", nullptr, windowFlags | ImGuiWindowFlags_NoDecoration ) ) {
-		mViewportManager->Update( inDeltaTime );
+		mViewportManager->Update( inDeltaTime, inLevelInterface );
 	}
 	ImGui::End();
 	ImGui::PopStyleVar( 2 );
@@ -87,7 +87,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	ImGui::SetNextWindowPos( { viewport->WorkPos.x + viewport->WorkSize.x - kOutlinerWidth, viewport->WorkPos.y + kToolbarHeight } );
 	ImGui::SetNextWindowSize( { 256, viewport->WorkSize.y - kToolbarHeight } );
 	if ( ImGui::Begin( "Outliner", nullptr, windowFlags ) ) {
-		mOutliner->Update( inEntityInterface );
+		mOutliner->Update( inLevelInterface );
 	}
 	ImGui::End();
 
@@ -95,7 +95,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 
 }
 
-void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inEntityInterface )
+void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	mViewportManager->RenderPerspective( inDeviceContext );
 	mViewportManager->RenderTop( inDeviceContext );

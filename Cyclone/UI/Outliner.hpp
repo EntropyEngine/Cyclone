@@ -9,6 +9,6 @@ namespace Cyclone::UI
 	class Outliner
 	{
 	public:
-		void Update( Cyclone::Core::LevelInterface *inEntityInterface );
+		void Update( Cyclone::Core::LevelInterface *inLevelInterface );
 	};
 }

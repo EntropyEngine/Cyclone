@@ -29,8 +29,8 @@ namespace Cyclone::UI
 		void Initialize();
 		void SetDevice( ID3D11Device3 *inDevice );
 
-		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inEntityInterface );
-		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inEntityInterface );
+		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
+		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface );
 
 		bool IsVerticalSyncEnabled() const noexcept { return mVerticalSyncEnabled; }
 
