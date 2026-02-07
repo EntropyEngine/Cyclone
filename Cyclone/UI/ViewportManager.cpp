@@ -3,6 +3,7 @@
 
 // Cyclone core includes
 #include "Cyclone/Core/LevelInterface.hpp"
+#include "Cyclone/Core/Entity/EntityTypeRegistry.hpp"
 
 // STL Includes
 #include <format>
@@ -197,10 +198,9 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( Cyclone::Core::LevelInterfac
 		mZoomScale2D = sZoomLevelToScale( mZoomLevel );
 	}
 
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
 	if ( isHovered ) {
-		ImDrawList* drawList = ImGui::GetWindowDrawList();
-
 		ImVec2 gridPos;
 		gridPos.x = static_cast<float>( ( GetCenter2D<AxisU>() - uSnapPos ) / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
 		gridPos.y = static_cast<float>( ( GetCenter2D<AxisV>() - vSnapPos ) / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
@@ -210,6 +210,50 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( Cyclone::Core::LevelInterfac
 		//drawList->AddCircle( gridPos, offset / 2, IM_COL32( 255, 255, 255, 255 ) );
 		drawList->AddLine( { gridPos.x - offset, gridPos.y - offset }, { gridPos.x + offset, gridPos.y + offset }, IM_COL32( 255, 255, 255, 255 ) );
 		drawList->AddLine( { gridPos.x + offset, gridPos.y - offset }, { gridPos.x - offset, gridPos.y + offset }, IM_COL32( 255, 255, 255, 255 ) );
+	}
+
+	// Iterate over all entities
+	const entt::registry &cregistry = inLevelInterface->GetRegistry();
+	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
+	for ( const entt::entity entity : view ) {
+
+		auto entityColor = IM_COL32( 128, 0, 128, 255 );
+
+		bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
+		bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
+
+		if ( entityIsSelected ) entityColor = IM_COL32( 255, 255, 0, 255 );
+		else if ( entityInSelection ) entityColor = IM_COL32( 255, 128, 0, 255 );
+
+		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+		const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
+		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
+
+		Cyclone::Math::XLVector rebasedEntityPosition = ( mCenter2D - position );
+		Cyclone::Math::XLVector rebasedBoundingBoxMin = rebasedEntityPosition - boundingBox.mCenter - boundingBox.mExtent;
+		Cyclone::Math::XLVector rebasedBoundingBoxMax = rebasedEntityPosition - boundingBox.mCenter + boundingBox.mExtent;
+
+		ImVec2 localBoxMin;
+		localBoxMin.x = static_cast<float>( rebasedBoundingBoxMin.mScalar[AxisU] / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
+		localBoxMin.y = static_cast<float>( rebasedBoundingBoxMin.mScalar[AxisV] / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
+
+		ImVec2 localBoxMax;
+		localBoxMax.x = static_cast<float>( rebasedBoundingBoxMax.mScalar[AxisU] / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
+		localBoxMax.y = static_cast<float>( rebasedBoundingBoxMax.mScalar[AxisV] / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
+
+		ImVec2 localPos;
+		localPos.x = static_cast<float>( rebasedEntityPosition.mScalar[AxisU] / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
+		localPos.y = static_cast<float>( rebasedEntityPosition.mScalar[AxisV] / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
+
+		float offset = 8.0f;
+
+		// Only draw X if smaller than bounding box
+		if ( offset * 2 <= localBoxMax.x - localBoxMin.x && offset * 2 <= localBoxMax.y - localBoxMin.y ) {
+			drawList->AddLine( { localPos.x - offset, localPos.y - offset }, { localPos.x + offset, localPos.y + offset }, entityColor, 1.414f );
+			drawList->AddLine( { localPos.x + offset, localPos.y - offset }, { localPos.x - offset, localPos.y + offset }, entityColor, 1.414f );
+		}
+
+		drawList->AddRect( localBoxMin, localBoxMax, entityColor );
 	}
 }
 
@@ -232,26 +276,23 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 		UpdatePerspective( inDeltaTime );
 
 		DrawViewportOverlay( "Perspective" );
-
-		ImGui::EndChild();
 	}
+	ImGui::EndChild();
 
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "TopView", ImVec2( ImGui::GetContentRegionAvail().x, perspectiveViewSize.y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
 		UpdateWireframe<EViewportType::TopXZ>( inLevelInterface );
 
 		DrawViewportOverlay( "Top (X/Z)" );
-
-		ImGui::EndChild();
 	}
+	ImGui::EndChild();
 
 	if ( ImGui::BeginChild( "FrontView", ImVec2( perspectiveViewSize.x, ImGui::GetContentRegionAvail().y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
 		UpdateWireframe<EViewportType::FrontXY>( inLevelInterface );
 
 		DrawViewportOverlay( "Front (X/Y)" );
-
-		ImGui::EndChild();
 	}
+	ImGui::EndChild();
 
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "SideView", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders, viewportFlags ) ) {
@@ -259,8 +300,8 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 
 		DrawViewportOverlay( "Side (Y/Z)" );
 
-		ImGui::EndChild();
 	}
+	ImGui::EndChild();
 
 	mCenter2D = Cyclone::Math::XLVector::sClamp( mCenter2D, Cyclone::Math::XLVector::sReplicate( -mWorldLimit ), Cyclone::Math::XLVector::sReplicate( mWorldLimit ) );
 }

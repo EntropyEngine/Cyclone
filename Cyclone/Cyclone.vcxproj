@@ -88,6 +88,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Core\Component\BoundingBox.hpp" />
     <ClInclude Include="Core\Component\EntityType.hpp" />
     <ClInclude Include="Core\Component\Position.hpp" />
     <ClInclude Include="Core\Entity\EntityTypeRegistry.hpp" />

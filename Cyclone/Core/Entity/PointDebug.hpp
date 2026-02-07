@@ -2,6 +2,7 @@
 
 #include "Cyclone/Core/Component/EntityType.hpp"
 #include "Cyclone/Core/Component/Position.hpp"
+#include "Cyclone/Core/Component/BoundingBox.hpp"
 
 namespace Cyclone::Core::Entity
 {
@@ -21,6 +22,9 @@ namespace Cyclone::Core::Entity
 
 			// Attach a Position component
 			inRegistry.emplace<Cyclone::Core::Component::Position>( entity, inPosition );
+
+			// Attach default center and extents (25cm radius)
+			inRegistry.emplace<Cyclone::Core::Component::BoundingBox>( entity, Cyclone::Math::XLVector::sZero(), Cyclone::Math::XLVector::sReplicate( 0.25 ) );
 
 			return entity;
 		}
