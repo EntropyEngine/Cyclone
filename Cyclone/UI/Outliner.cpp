@@ -31,11 +31,14 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 			ImGui::TableSetColumnIndex( 0 );
 			ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
-			if ( inLevelInterface->GetSelectedEntity() == entity ) selectionFlags |= ImGuiSelectableFlags_Highlight;
 
-			if ( ImGui::Selectable( std::format( "{}", static_cast<size_t>( entity ) ).c_str(), inLevelInterface->GetSelectedEntities().contains( entity ), selectionFlags ) ) {
+			bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
+			bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
+
+			if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
+			if ( ImGui::Selectable( std::format( "{}", static_cast<size_t>( entity ) ).c_str(), entityInSelection, selectionFlags ) ) {
 				if ( ImGui::GetIO().KeyCtrl ) {
-					if ( inLevelInterface->GetSelectedEntity() == entity ) {
+					if ( entityIsSelected ) {
 						inLevelInterface->DeselectEntity( entity );
 					}
 					else {
