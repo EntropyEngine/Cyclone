@@ -11,6 +11,7 @@ namespace Cyclone::Core::Entity
 	public:
 		static constexpr entt::hashed_string kEntityType = "point_debug"_hs;
 		static constexpr entt::hashed_string kEntityCategory = "point"_hs;
+		//static constexpr uint32_t kDebugColor = 0xffdd1800;
 
 		entt::entity Create( entt::registry &inRegistry, const Cyclone::Math::XLVector inPosition )
 		{

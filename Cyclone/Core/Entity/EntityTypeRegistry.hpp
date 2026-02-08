@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Cyclone/Core/Entity/PointDebug.hpp"
+#include "Cyclone/Core/Component/EntityType.hpp"
 
 #include "Cyclone/Util/NonCopyable.hpp"
 
@@ -37,6 +37,16 @@ namespace Cyclone::Core::Entity
 			entt::meta_factory<T>{}.type( T::kEntityType )
 				.data<&T::kEntityType>( "entity_type"_hs )
 				.data<&T::kEntityCategory>( "category"_hs );
+
+			if constexpr ( requires { T::kDebugColor; } ) {
+				entt::meta_factory<T>{}.type( T::kEntityType ).data<&T::kDebugColor>( "debug_color"_hs );
+			}
+			else {
+				switch ( T::kEntityCategory.value() ) {
+					case "point"_hs.value():	entt::meta_factory<T>{}.type( T::kEntityType ).data<0xffdd18dd>( "debug_color"_hs ); break;
+					default:					entt::meta_factory<T>{}.type( T::kEntityType ).data<0xffffffff>( "debug_color"_hs ); break;
+				}
+			}
 		}
 	};
 }

@@ -5,6 +5,11 @@
 #include "Cyclone/Core/LevelInterface.hpp"
 #include "Cyclone/Core/Entity/EntityTypeRegistry.hpp"
 
+// Cyclone components
+#include "Cyclone/Core/Component/EntityType.hpp"
+#include "Cyclone/Core/Component/Position.hpp"
+#include "Cyclone/Core/Component/BoundingBox.hpp"
+
 // STL Includes
 #include <format>
 
@@ -231,7 +236,11 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
 	for ( const entt::entity entity : view ) {
 
-		auto entityColor = IM_COL32( 221, 24, 221, 255 );
+		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+		const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
+		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
+
+		auto entityColor = entt::resolve( static_cast<entt::id_type>( entityType ) ).data( "debug_color"_hs ).get( {} ).cast<uint32_t>();
 
 		bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
 		bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
@@ -247,10 +256,6 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 		else {
 			drawList->ChannelsSetCurrent( 0 );
 		}
-
-		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-		const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
-		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
 
 		Cyclone::Math::XLVector rebasedEntityPosition = ( mCenter2D - position );
 		Cyclone::Math::XLVector rebasedBoundingBoxMin = rebasedEntityPosition - boundingBox.mCenter - boundingBox.mExtent;

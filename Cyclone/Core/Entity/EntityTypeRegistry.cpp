@@ -8,5 +8,6 @@ Cyclone::Core::Entity::EntityTypeRegistry Cyclone::Core::Entity::EntityTypeRegis
 
 Cyclone::Core::Entity::EntityTypeRegistry::EntityTypeRegistry()
 {
+	OutputDebugStringA( "Registering entities!\n" );
 	RegisterEntityClass<PointDebug>();
 }

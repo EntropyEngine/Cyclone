@@ -5,6 +5,10 @@
 #include "Cyclone/Core/LevelInterface.hpp"
 #include "Cyclone/Core/Entity/EntityTypeRegistry.hpp"
 
+// Cyclone components
+#include "Cyclone/Core/Component/EntityType.hpp"
+#include "Cyclone/Core/Component/Position.hpp"
+
 // ImGui includes
 #include <imgui.h>
 #include <imgui_internal.h>
