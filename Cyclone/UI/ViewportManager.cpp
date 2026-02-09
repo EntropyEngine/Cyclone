@@ -34,7 +34,7 @@ namespace
 		ImGui::Text( inText );
 	}
 
-	void DrawBoundingBox( DirectX::PrimitiveBatch<DirectX::VertexPositionColor> *inBatch, DirectX::FXMVECTOR inRebasedBoxCenter, DirectX::FXMVECTOR inBoxExtent, DirectX::FXMVECTOR inBoxColor )
+	void XM_CALLCONV DrawWireframeBoundingBox( DirectX::PrimitiveBatch<DirectX::VertexPositionColor> *inBatch, DirectX::FXMVECTOR inRebasedBoxCenter, DirectX::FXMVECTOR inBoxExtent, DirectX::FXMVECTOR inBoxColor )
 	{
 		DirectX::XMMATRIX matWorld = DirectX::XMMatrixScalingFromVector( inBoxExtent );
 		matWorld.r[3] = DirectX::XMVectorSelect( matWorld.r[3], inRebasedBoxCenter, DirectX::g_XMSelect1110 );
@@ -421,22 +421,60 @@ void Cyclone::UI::ViewportManager::RenderPerspective( ID3D11DeviceContext3 *inDe
 	mWireframeGridEffect->Apply( inDeviceContext );
 
 	mWireframeGridBatch->Begin();
+	{
+		mWireframeGridBatch->DrawLine(
+			{ ( -mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkRed },
+			{ ( -mCenter3D + Cyclone::Math::XLVector::sZeroSetValueByIndex<0>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkRed }
+		);
 
-	mWireframeGridBatch->DrawLine(
-		{ ( -mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkRed },
-		{ ( -mCenter3D + Cyclone::Math::XLVector::sZeroSetValueByIndex<0>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkRed }
-	);
+		mWireframeGridBatch->DrawLine(
+			{ ( -mCenter3D ).ToXMVECTOR(), DirectX::Colors::Green },
+			{ ( -mCenter3D + Cyclone::Math::XLVector::sZeroSetValueByIndex<1>( 1 ) ).ToXMVECTOR(), DirectX::Colors::Green }
+		);
 
-	mWireframeGridBatch->DrawLine(
-		{ ( -mCenter3D ).ToXMVECTOR(), DirectX::Colors::Green },
-		{ ( -mCenter3D + Cyclone::Math::XLVector::sZeroSetValueByIndex<1>( 1 ) ).ToXMVECTOR(), DirectX::Colors::Green }
-	);
+		mWireframeGridBatch->DrawLine(
+			{ ( -mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkBlue },
+			{ ( -mCenter3D + Cyclone::Math::XLVector::sZeroSetValueByIndex<2>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkBlue }
+		);
+	}
+	mWireframeGridBatch->End();
 
-	mWireframeGridBatch->DrawLine(
-		{ ( -mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkBlue },
-		{ ( -mCenter3D + Cyclone::Math::XLVector::sZeroSetValueByIndex<2>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkBlue }
-	);
+	// Switch to depth buffer
+	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
 
+	mWireframeGridBatch->Begin();
+	{
+		// Iterate over all entities
+		const entt::registry &cregistry = inLevelInterface->GetRegistry();
+		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
+		for ( const entt::entity entity : view ) {
+
+			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+			const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
+			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
+
+			bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
+			bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
+
+			uint32_t entityColorU32;
+			if ( entityIsSelected ) {
+				entityColorU32 = IM_COL32( 255, 255, 0, 255 );
+			}
+			else if ( entityInSelection ) {
+				entityColorU32 = IM_COL32( 255, 128, 0, 255 );
+			}
+			else {
+				entityColorU32 = entt::resolve( static_cast<entt::id_type>( entityType ) ).data( "debug_color"_hs ).get( {} ).cast<uint32_t>();
+			}
+
+			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
+
+			Cyclone::Math::XLVector rebasedEntityPosition = ( position - mCenter3D );
+			Cyclone::Math::XLVector rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
+
+			DrawWireframeBoundingBox( mWireframeGridBatch.get(), rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+		}
+	}
 	mWireframeGridBatch->End();
 
 	viewport->Resolve( inDeviceContext );
@@ -542,11 +580,8 @@ void Cyclone::UI::ViewportManager::RenderWireframe( ID3D11DeviceContext3 *inDevi
 			Cyclone::Math::XLVector rebasedEntityPosition = ( position - mCenter2D );
 			Cyclone::Math::XLVector rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
-			DrawBoundingBox( mWireframeGridBatch.get(), rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+			DrawWireframeBoundingBox( mWireframeGridBatch.get(), rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
 		}
-
-
-
 	}
 	mWireframeGridBatch->End();
 

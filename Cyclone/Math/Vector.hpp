@@ -26,30 +26,30 @@ namespace Cyclone::Math
 
 		XLVector( double inX, double inY, double inZ ) : XLVector( inX, inY, inZ, 0.0 ) {};
 
-		static XLVector sZero() { return _mm256_setzero_pd(); }
+		static XLVector XM_CALLCONV sZero() { return _mm256_setzero_pd(); }
 
 		template<size_t Axis>
-		static XLVector sZeroSetValueByIndex( double inV );
-		template<> XLVector sZeroSetValueByIndex<0>( double inV ) { return XLVector( inV, 0.0, 0.0, 0.0 ); }
-		template<> XLVector sZeroSetValueByIndex<1>( double inV ) { return XLVector( 0.0, inV, 0.0, 0.0 ); }
-		template<> XLVector sZeroSetValueByIndex<2>( double inV ) { return XLVector( 0.0, 0.0, inV, 0.0 ); }
-		template<> XLVector sZeroSetValueByIndex<3>( double inV ) { return XLVector( 0.0, 0.0, 0.0, inV ); }
+		static XLVector XM_CALLCONV sZeroSetValueByIndex( double inV );
+		template<> XLVector XM_CALLCONV sZeroSetValueByIndex<0>( double inV ) { return XLVector( inV, 0.0, 0.0, 0.0 ); }
+		template<> XLVector XM_CALLCONV sZeroSetValueByIndex<1>( double inV ) { return XLVector( 0.0, inV, 0.0, 0.0 ); }
+		template<> XLVector XM_CALLCONV sZeroSetValueByIndex<2>( double inV ) { return XLVector( 0.0, 0.0, inV, 0.0 ); }
+		template<> XLVector XM_CALLCONV sZeroSetValueByIndex<3>( double inV ) { return XLVector( 0.0, 0.0, 0.0, inV ); }
 
-		static XLVector sReplicate( double inV ) { return _mm256_set1_pd( inV ); }
+		static XLVector XM_CALLCONV sReplicate( double inV ) { return _mm256_set1_pd( inV ); }
 
-		static XLVector sMin( XLVector inLhs, XLVector inRhs ) { return _mm256_min_pd( inLhs.mVector, inRhs.mVector ); }
-		static XLVector sMax( XLVector inLhs, XLVector inRhs ) { return _mm256_max_pd( inLhs.mVector, inRhs.mVector ); }
-		static XLVector sClamp( XLVector inV, XLVector inMin, XLVector inMax ) { return sMax( sMin( inV, inMax ), inMin ); }
+		static XLVector XM_CALLCONV sMin( XLVector inLhs, XLVector inRhs ) { return _mm256_min_pd( inLhs.mVector, inRhs.mVector ); }
+		static XLVector XM_CALLCONV sMax( XLVector inLhs, XLVector inRhs ) { return _mm256_max_pd( inLhs.mVector, inRhs.mVector ); }
+		static XLVector XM_CALLCONV sClamp( XLVector inV, XLVector inMin, XLVector inMax ) { return sMax( sMin( inV, inMax ), inMin ); }
 
-		double GetX() const { return _mm_cvtsd_f64( _mm256_castpd256_pd128( mVector ) ); }
-		double GetY() const { return mScalar[1]; }
-		double GetZ() const { return mScalar[2]; }
-		double GetW() const { return mScalar[3]; }
+		double XM_CALLCONV GetX() const { return _mm_cvtsd_f64( _mm256_castpd256_pd128( mVector ) ); }
+		double XM_CALLCONV GetY() const { return mScalar[1]; }
+		double XM_CALLCONV GetZ() const { return mScalar[2]; }
+		double XM_CALLCONV GetW() const { return mScalar[3]; }
 
-		double SetX( double inX ) { mScalar[0] = inX; }
-		double SetY( double inY ) { mScalar[1] = inY; }
-		double SetZ( double inZ ) { mScalar[2] = inZ; }
-		double SetW( double inW ) { mScalar[3] = inW; }
+		double XM_CALLCONV SetX( double inX ) { mScalar[0] = inX; }
+		double XM_CALLCONV SetY( double inY ) { mScalar[1] = inY; }
+		double XM_CALLCONV SetZ( double inZ ) { mScalar[2] = inZ; }
+		double XM_CALLCONV SetW( double inW ) { mScalar[3] = inW; }
 
 		// Cast to 32 bit
 		DirectX::XMVECTOR XM_CALLCONV ToXMVECTOR() const
@@ -64,45 +64,45 @@ namespace Cyclone::Math
 		}
 
 		// FP64 addition
-		XLVector operator + ( XLVector inRhs ) const
+		XLVector XM_CALLCONV operator + ( XLVector inRhs ) const
 		{
 			return _mm256_add_pd( mVector, inRhs.mVector );
 		}
 
 		// FP64 inplace addition
-		XLVector &operator += ( XLVector inRhs )
+		XLVector & XM_CALLCONV operator += ( XLVector inRhs )
 		{
 			mVector = _mm256_add_pd( mVector, inRhs.mVector );
 			return *this;
 		}
 
 		// Unary negation
-		XLVector operator - () const
+		XLVector XM_CALLCONV operator - () const
 		{
 			return _mm256_sub_pd( _mm256_setzero_pd(), mVector );
 		}
 
 		// FP64 subtration
-		XLVector operator - ( XLVector inRhs ) const
+		XLVector XM_CALLCONV operator - ( XLVector inRhs ) const
 		{
 			return _mm256_sub_pd( mVector, inRhs.mVector );
 		}
 
 		// FP64 inplace subtration
-		XLVector &operator -= ( XLVector inRhs )
+		XLVector & XM_CALLCONV operator -= ( XLVector inRhs )
 		{
 			mVector = _mm256_sub_pd( mVector, inRhs.mVector );
 			return *this;
 		}
 
 		// FP64 multiplication
-		XLVector operator * ( XLVector inRhs )
+		XLVector XM_CALLCONV operator * ( XLVector inRhs )
 		{
 			return _mm256_mul_pd( mVector, inRhs.mVector );
 		}
 
 		// FP64 inplace multiplication
-		XLVector operator *= ( XLVector inRhs )
+		XLVector & XM_CALLCONV operator *= ( XLVector inRhs )
 		{
 			mVector = _mm256_mul_pd( mVector, inRhs.mVector );
 			return *this;
