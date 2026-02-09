@@ -21,6 +21,8 @@ void Cyclone::Core::LevelInterface::Initialize()
 	Entity::PointDebug().Create( GetRegistry(), { 0.0, 0.0, 2.0 } );
 	Entity::PointDebug().Create( GetRegistry(), { 0.0, 2.0, 0.0 } );
 	Entity::PointDebug().Create( GetRegistry(), { 2.0, 0.0, 0.0 } );
+
+	GetRegistry().storage<Cyclone::Core::Component::Position>( "delta"_hs );
 }
 
 void Cyclone::Core::LevelInterface::SetDevice( ID3D11Device3 *inDevice )

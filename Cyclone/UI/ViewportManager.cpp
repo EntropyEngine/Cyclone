@@ -203,9 +203,10 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	ImGuiIO &io = ImGui::GetIO();
 
 	ImGui::SetCursorPos( { 0, 0 } );
+	ImGui::SetNextItemAllowOverlap();
 	ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
-	const bool isHovered = ImGui::IsItemHovered();
-	const bool isActive = ImGui::IsItemActive();
+	const bool isCanvasHovered = ImGui::IsItemHovered( ImGuiHoveredFlags_AllowWhenOverlappedByItem );
+	const bool isCanvasActive = ImGui::IsItemActive();
 
 	ImVec2 viewportAbsMousePos( io.MousePos.x - viewOrigin.x, io.MousePos.y - viewOrigin.y );
 	ImVec2 viewportRelMousePos( viewportAbsMousePos.x - viewSize.x / 2.0f, viewportAbsMousePos.y - viewSize.y / 2.0f );
@@ -221,7 +222,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
 	ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
-	if ( isHovered ) ImGui::SetTooltip(
+	if ( isCanvasHovered ) ImGui::SetTooltip(
 		"Mouse pos: (%.0f, %.0f)\n"
 		"Viewport abs pos: (%.0f, %.0f)\n"
 		"Viewport rel pos: (%.1f, %.1f)\n"
@@ -237,12 +238,12 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	);
 	ImGui::PopStyleVar( 2 );
 
-	if ( isActive && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
+	if ( isCanvasHovered && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
 		mCenter2D += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * mZoomScale2D );
 		mCenter2D += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * mZoomScale2D );
 	}
 
-	if ( isHovered && io.MouseWheel ) {
+	if ( isCanvasHovered && io.MouseWheel ) {
 		mZoomLevel -= ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 );
 		double newZoomScale2D = sZoomLevelToScale( mZoomLevel );
 
@@ -260,7 +261,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	drawList->ChannelsSplit( 3 );
 	drawList->ChannelsSetCurrent( 0 );
 
-	if ( isHovered ) {
+	if ( isCanvasHovered ) {
 		ImVec2 gridPos;
 		gridPos.x = static_cast<float>( ( GetCenter2D<AxisU>() - worldSnapU ) / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
 		gridPos.y = static_cast<float>( ( GetCenter2D<AxisV>() - worldSnapV ) / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
@@ -280,6 +281,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	ImVec2 selectedBoxMax = viewOrigin;
 
 	// Iterate over all entities
+	entt::registry &registry = inLevelInterface->GetRegistry();
 	const entt::registry &cregistry = inLevelInterface->GetRegistry();
 	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
 	for ( const entt::entity entity : view ) {
@@ -287,6 +289,8 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
 		const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
 		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
+
+
 
 		auto entityColor = entt::resolve( static_cast<entt::id_type>( entityType ) ).data( "debug_color"_hs ).get( {} ).cast<uint32_t>();
 
@@ -358,6 +362,33 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 			drawList->AddLine( { selectedBoxMin.x, y }, { selectedBoxMin.x, y + 8 }, IM_COL32( 255, 255, 0, 255 ), 2 );
 			drawList->AddLine( { selectedBoxMax.x - 1, y - 1 }, { selectedBoxMax.x - 1, y + 7 }, IM_COL32( 255, 255, 0, 255 ), 2 );
 		}
+
+		ImGui::SetCursorPos( { selectedBoxMin.x - viewOrigin.x, selectedBoxMin.y - viewOrigin.y } );
+		if ( ImGui::InvisibleButton( "Yeet", { selectedBoxMax.x - selectedBoxMin.x, selectedBoxMax.y - selectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft ) ) {
+			registry.storage<Cyclone::Core::Component::Position>( "delta"_hs ).clear();
+		};
+		const bool isSelectionHovered = ImGui::IsItemHovered();
+		const bool isSelectionActive = ImGui::IsItemActive();
+
+		if ( isSelectionActive ) {
+			ImVec2 selectionMouseDrag = ImGui::GetMouseDragDelta( ImGuiMouseButton_Left, 0.0f );
+			
+			ImGui::SetTooltip( "Mouse Drag: (%f, %f)", selectionMouseDrag.x, selectionMouseDrag.y );
+			//OutputDebugStringA( "Clicked\n" );
+
+			auto &&positionDeltaStorage = registry.storage<Cyclone::Core::Component::Position>( "delta"_hs );
+			
+			if ( !positionDeltaStorage.contains( inLevelInterface->GetSelectedEntity() ) ) {
+				positionDeltaStorage.emplace( inLevelInterface->GetSelectedEntity(), registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() ) );
+			}
+
+			registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() ) = Cyclone::Core::Component::Position( positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ) +
+				Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * mZoomScale2D ) +
+				Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * mZoomScale2D ) );
+		}
+		//else {
+		//	registry.storage<Cyclone::Core::Component::Position>( "delta"_hs ).clear();
+		//}
 	}
 }
 
