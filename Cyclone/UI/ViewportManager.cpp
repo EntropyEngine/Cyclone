@@ -131,7 +131,7 @@ void Cyclone::UI::ViewportManager::UpdatePerspective( float inDeltaTime )
 	}
 
 	if ( isHovered ) {
-		float scroll = ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 );
+		float scroll = io.MouseWheel;
 		scroll *= kCameraDollySensitivity;
 		if ( scroll ) {
 			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw( mCameraPitch, mCameraYaw, 0.0f );
@@ -199,7 +199,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	}
 
 	if ( isHovered && io.MouseWheel ) {
-		mZoomLevel -= ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 );
+		mZoomLevel -= io.MouseWheel;
 		double newZoomScale2D = sZoomLevelToScale( mZoomLevel );
 
 		double uPosNew = GetCenter2D<AxisU>() - viewportRelMousePos.x * newZoomScale2D;

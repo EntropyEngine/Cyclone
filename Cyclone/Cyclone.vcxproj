@@ -110,6 +110,7 @@
     <ClInclude Include="UI\ViewportElement.hpp" />
     <ClInclude Include="UI\ViewportManager.hpp" />
     <ClInclude Include="UI\ViewportType.hpp" />
+    <ClInclude Include="Util\Color.hpp" />
     <ClInclude Include="Util\NonCopyable.hpp" />
   </ItemGroup>
   <ItemGroup>

@@ -2,7 +2,9 @@
 
 #include "Cyclone/Core/Component/EntityType.hpp"
 
+// Cyclone Utils
 #include "Cyclone/Util/NonCopyable.hpp"
+#include "Cyclone/Util/Color.hpp"
 
 namespace Cyclone::Core::Entity
 {
@@ -34,17 +36,17 @@ namespace Cyclone::Core::Entity
 		template<typename T>
 		void RegisterEntityClass()
 		{
-			entt::meta_factory<T>{}.type( T::kEntityType )
-				.data<&T::kEntityType>( "entity_type"_hs )
-				.data<&T::kEntityCategory>( "category"_hs );
+			auto factory = entt::meta_factory<T>{}.type( T::kEntityType );
+			factory = factory.data<&T::kEntityType>( "entity_type"_hs );
+			factory = factory.data<&T::kEntityCategory>( "category"_hs );
 
 			if constexpr ( requires { T::kDebugColor; } ) {
-				entt::meta_factory<T>{}.type( T::kEntityType ).data<&T::kDebugColor>( "debug_color"_hs );
+				factory = factory.data<&T::kDebugColor>( "debug_color"_hs );
 			}
 			else {
 				switch ( T::kEntityCategory.value() ) {
-					case "point"_hs.value():	entt::meta_factory<T>{}.type( T::kEntityType ).data<0xffdd18dd>( "debug_color"_hs ); break;
-					default:					entt::meta_factory<T>{}.type( T::kEntityType ).data<0xffffffff>( "debug_color"_hs ); break;
+					case "point"_hs.value():	factory = factory.data<Cyclone::Util::ColorU32( 0xDD, 0x18, 0xDD )>( "debug_color"_hs ); break;
+					default:					factory = factory.data<Cyclone::Util::ColorU32( 0xFF, 0xFF, 0xFF )>( "debug_color"_hs ); break;
 				}
 			}
 		}

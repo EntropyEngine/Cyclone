@@ -1,8 +1,12 @@
 #pragma once
 
+// Cyclone Compontents
 #include "Cyclone/Core/Component/EntityType.hpp"
 #include "Cyclone/Core/Component/Position.hpp"
 #include "Cyclone/Core/Component/BoundingBox.hpp"
+
+// Cyclone Utils
+#include "Cyclone/Util/Color.hpp"
 
 namespace Cyclone::Core::Entity
 {
