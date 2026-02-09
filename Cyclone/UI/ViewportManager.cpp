@@ -256,6 +256,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	}
 
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	drawList->Flags |= ImDrawListFlags_AntiAliasedLines;
 	drawList->ChannelsSplit( 3 );
 	drawList->ChannelsSetCurrent( 0 );
 
@@ -344,14 +345,19 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	drawList->ChannelsMerge();
 
 	if ( !inLevelInterface->GetSelectedEntities().empty() ) {
-		drawList->AddRect(
-			{ selectedBoxMin.x - 1, selectedBoxMin.y - 1 },
-			{ selectedBoxMax.x + 1, selectedBoxMax.y + 1 },
-			IM_COL32( 255, 0, 0, 255 ),
-			0,
-			0,
-			1
-		);
+		//selectedBoxMin = { selectedBoxMin.x - 1, selectedBoxMin.y - 1 };
+		//selectedBoxMax = { selectedBoxMax.x + 1, selectedBoxMax.y + 1 };
+		drawList->AddRect( selectedBoxMin, selectedBoxMax, IM_COL32( 255, 0, 0, 255 ), 0, 0, 2 );
+
+		for ( float x = selectedBoxMin.x; x < selectedBoxMax.x - 8; x += 16 ) {
+			drawList->AddLine( { x, selectedBoxMin.y }, { x + 8, selectedBoxMin.y }, IM_COL32( 255, 255, 0, 255 ), 2 );
+			drawList->AddLine( { x - 1, selectedBoxMax.y - 1 }, { x + 7, selectedBoxMax.y - 1 }, IM_COL32( 255, 255, 0, 255 ), 2 );
+		}
+
+		for ( float y = selectedBoxMin.y; y < selectedBoxMax.y - 8; y += 16 ) {
+			drawList->AddLine( { selectedBoxMin.x, y }, { selectedBoxMin.x, y + 8 }, IM_COL32( 255, 255, 0, 255 ), 2 );
+			drawList->AddLine( { selectedBoxMax.x - 1, y - 1 }, { selectedBoxMax.x - 1, y + 7 }, IM_COL32( 255, 255, 0, 255 ), 2 );
+		}
 	}
 }
 
