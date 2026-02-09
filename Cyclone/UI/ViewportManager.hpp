@@ -45,10 +45,10 @@ namespace Cyclone::UI
 		void ToolbarUpdate();
 		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 
-		void RenderPerspective( ID3D11DeviceContext3 *inDeviceContext );
-		void RenderTop( ID3D11DeviceContext3 *inDeviceContext );
-		void RenderFront( ID3D11DeviceContext3 *inDeviceContext );
-		void RenderSide( ID3D11DeviceContext3 *inDeviceContext );
+		void RenderPerspective( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface );
+		void RenderTop( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface );
+		void RenderFront( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface );
+		void RenderSide( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface );
 
 		template<size_t Axis>
 		double GetCenter2D()
@@ -95,7 +95,7 @@ namespace Cyclone::UI
 		void UpdateWireframe( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 
 		template<EViewportType T>
-		void RenderWireframe( ID3D11DeviceContext3 *inDeviceContext ); // Implemented in ViewportManager.cpp
+		void RenderWireframe( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface ); // Implemented in ViewportManager.cpp
 
 	private:
 		inline void ComputeMinMax( double inDim, double inCenter2D, double &outMin, double &outMax )

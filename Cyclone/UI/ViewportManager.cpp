@@ -199,7 +199,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	}
 
 	if ( isHovered && io.MouseWheel ) {
-		mZoomLevel -= io.MouseWheel;
+		mZoomLevel -= ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 );
 		double newZoomScale2D = sZoomLevelToScale( mZoomLevel );
 
 		double uPosNew = GetCenter2D<AxisU>() - viewportRelMousePos.x * newZoomScale2D;
@@ -283,7 +283,9 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, std::format( "id={}", static_cast<size_t>( entity ) ).c_str() );
 		}
 
-		drawList->AddRect( localBoxMin, localBoxMax, entityColor );
+		if ( entityInSelection ) {
+			drawList->AddRect( localBoxMin, localBoxMax, entityColor, 0, 0, 2 );
+		}
 	}
 
 	drawList->ChannelsMerge();
@@ -338,7 +340,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	mCenter2D = Cyclone::Math::XLVector::sClamp( mCenter2D, Cyclone::Math::XLVector::sReplicate( -mWorldLimit ), Cyclone::Math::XLVector::sReplicate( mWorldLimit ) );
 }
 
-void Cyclone::UI::ViewportManager::RenderPerspective( ID3D11DeviceContext3 *inDeviceContext )
+void Cyclone::UI::ViewportManager::RenderPerspective( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	constexpr EViewportType T = EViewportType::Perspective;
 
@@ -376,24 +378,24 @@ void Cyclone::UI::ViewportManager::RenderPerspective( ID3D11DeviceContext3 *inDe
 	viewport->Resolve( inDeviceContext );
 }
 
-void Cyclone::UI::ViewportManager::RenderTop( ID3D11DeviceContext3 *inDeviceContext )
+void Cyclone::UI::ViewportManager::RenderTop( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	RenderWireframe<EViewportType::TopXZ>( inDeviceContext );
+	RenderWireframe<EViewportType::TopXZ>( inDeviceContext, inLevelInterface );
 }
 
-void Cyclone::UI::ViewportManager::RenderFront( ID3D11DeviceContext3 *inDeviceContext )
+void Cyclone::UI::ViewportManager::RenderFront( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	RenderWireframe<EViewportType::FrontXY>( inDeviceContext );
+	RenderWireframe<EViewportType::FrontXY>( inDeviceContext, inLevelInterface );
 }
 
-void Cyclone::UI::ViewportManager::RenderSide( ID3D11DeviceContext3 *inDeviceContext )
+void Cyclone::UI::ViewportManager::RenderSide( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	RenderWireframe<EViewportType::SideYZ>( inDeviceContext );
+	RenderWireframe<EViewportType::SideYZ>( inDeviceContext, inLevelInterface );
 }
 
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportManager::RenderWireframe( ID3D11DeviceContext3 *inDeviceContext )
+void Cyclone::UI::ViewportManager::RenderWireframe( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
@@ -411,35 +413,116 @@ void Cyclone::UI::ViewportManager::RenderWireframe( ID3D11DeviceContext3 *inDevi
 	mWireframeGridEffect->Apply( inDeviceContext );
 
 	mWireframeGridBatch->Begin();
+	{
+		double minU, maxU, minV, maxV;
+		GetMinMaxUV<T>( minU, maxU, minV, maxV );
 
-	double minU, maxU, minV, maxV;
-	GetMinMaxUV<T>( minU, maxU, minV, maxV );
+		double subgridStep = mSubGridSize;
+		double gridStep = mSubGridSize * 10;
 
-	double subgridStep = mSubGridSize;
-	double gridStep = mSubGridSize * 10;
+		while ( subgridStep / mZoomScale2D < mMinGridSize ) {
+			subgridStep *= 10;
+		}
 
-	while ( subgridStep / mZoomScale2D < mMinGridSize ) {
-		subgridStep *= 10;
+		while ( gridStep / mZoomScale2D < mMinGridSize * 5 ) {
+			gridStep *= 10;
+		}
+
+		if ( subgridStep / mZoomScale2D > mMinGridSize ) {
+			DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, subgridStep, DirectX::ColorsLinear::DimGray );
+			DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, subgridStep, DirectX::ColorsLinear::DimGray );
+		}
+
+		DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, gridStep, DirectX::Colors::DimGray );
+		DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, gridStep, DirectX::Colors::DimGray );
+
+		DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, 1000, DirectX::Colors::Gray );
+		DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, 1000, DirectX::Colors::Gray );
+
+		DrawAxisLine<AxisU>( minU, maxU );
+		DrawAxisLine<AxisV>( minV, maxV );
 	}
+	mWireframeGridBatch->End();
 
-	while ( gridStep / mZoomScale2D < mMinGridSize * 5 ) {
-		gridStep *= 10;
+
+	// Switch to depth buffer
+	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
+
+	mWireframeGridBatch->Begin();
+	{
+		// Iterate over all entities
+		const entt::registry &cregistry = inLevelInterface->GetRegistry();
+		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
+		for ( const entt::entity entity : view ) {
+
+			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+			const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
+			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
+
+			bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
+			bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
+
+			uint32_t entityColorU32;
+			if ( entityIsSelected ) {
+				entityColorU32 = IM_COL32( 255, 255, 0, 255 );
+			}
+			else if ( entityInSelection ) {
+				entityColorU32 = IM_COL32( 255, 128, 0, 255 );
+			}
+			else {
+				entityColorU32 = entt::resolve( static_cast<entt::id_type>( entityType ) ).data( "debug_color"_hs ).get( {} ).cast<uint32_t>();
+			}
+
+			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
+
+			Cyclone::Math::XLVector rebasedEntityPosition = ( position - mCenter2D );
+			Cyclone::Math::XLVector rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
+
+			DirectX::XMMATRIX matWorld = DirectX::XMMatrixScalingFromVector( boundingBox.mExtent.ToXMVECTOR() );
+			matWorld.r[3] = DirectX::XMVectorSelect( matWorld.r[3], rebasedBoundingBoxPosition.ToXMVECTOR(), DirectX::g_XMSelect1110 );
+
+			static const DirectX::XMVECTORF32 s_verts[8] =
+			{
+				{ { { -1.f, -1.f, -1.f, 0.f } } },
+				{ { {  1.f, -1.f, -1.f, 0.f } } },
+				{ { {  1.f, -1.f,  1.f, 0.f } } },
+				{ { { -1.f, -1.f,  1.f, 0.f } } },
+				{ { { -1.f,  1.f, -1.f, 0.f } } },
+				{ { {  1.f,  1.f, -1.f, 0.f } } },
+				{ { {  1.f,  1.f,  1.f, 0.f } } },
+				{ { { -1.f,  1.f,  1.f, 0.f } } }
+			};
+
+			static const WORD s_indices[] =
+			{
+				0, 1,
+				1, 2,
+				2, 3,
+				3, 0,
+				4, 5,
+				5, 6,
+				6, 7,
+				7, 4,
+				0, 4,
+				1, 5,
+				2, 6,
+				3, 7
+			};
+
+			DirectX::VertexPositionColor verts[8];
+
+			for (size_t i = 0; i < 8; ++i) {
+				DirectX::XMVECTOR v = DirectX::XMVector3Transform( s_verts[i], matWorld );
+				DirectX::XMStoreFloat3( &verts[i].position, v );
+				DirectX::XMStoreFloat4( &verts[i].color, entityColorV );
+			}
+
+			mWireframeGridBatch->DrawIndexed( D3D_PRIMITIVE_TOPOLOGY_LINELIST, s_indices, static_cast<UINT>( std::size( s_indices ) ), verts, 8 );
+		}
+
+
+
 	}
-
-	if ( subgridStep / mZoomScale2D > mMinGridSize ) {
-		DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, subgridStep, DirectX::ColorsLinear::DimGray );
-		DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, subgridStep, DirectX::ColorsLinear::DimGray );
-	}
-
-	DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, gridStep, DirectX::Colors::DimGray );
-	DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, gridStep, DirectX::Colors::DimGray );
-
-	DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, 1000, DirectX::Colors::Gray );
-	DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, 1000, DirectX::Colors::Gray );
-
-	DrawAxisLine<AxisU>( minU, maxU );
-	DrawAxisLine<AxisV>( minV, maxV );
-
 	mWireframeGridBatch->End();
 
 	viewport->Resolve( inDeviceContext );

@@ -97,8 +97,8 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 
 void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	mViewportManager->RenderPerspective( inDeviceContext );
-	mViewportManager->RenderTop( inDeviceContext );
-	mViewportManager->RenderFront( inDeviceContext );
-	mViewportManager->RenderSide( inDeviceContext );
+	mViewportManager->RenderPerspective( inDeviceContext, inLevelInterface );
+	mViewportManager->RenderTop( inDeviceContext, inLevelInterface );
+	mViewportManager->RenderFront( inDeviceContext, inLevelInterface );
+	mViewportManager->RenderSide( inDeviceContext, inLevelInterface );
 }
