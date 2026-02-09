@@ -231,6 +231,9 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	ImFont* narrowFont = io.Fonts->Fonts[1];
 	float fontSize = ImGui::GetFontSize();
 
+	ImVec2 selectedBoxMin = { viewOrigin.x + viewSize.x, viewOrigin.y + viewSize.y };
+	ImVec2 selectedBoxMax = viewOrigin;
+
 	// Iterate over all entities
 	const entt::registry &cregistry = inLevelInterface->GetRegistry();
 	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
@@ -285,10 +288,27 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 
 		if ( entityInSelection ) {
 			drawList->AddRect( localBoxMin, localBoxMax, entityColor, 0, 0, 2 );
+
+			selectedBoxMin.x = std::min( selectedBoxMin.x, localBoxMin.x );
+			selectedBoxMin.y = std::min( selectedBoxMin.y, localBoxMin.y );
+
+			selectedBoxMax.x = std::max( selectedBoxMax.x, localBoxMax.x );
+			selectedBoxMax.y = std::max( selectedBoxMax.y, localBoxMax.y );
 		}
 	}
 
 	drawList->ChannelsMerge();
+
+	if ( !inLevelInterface->GetSelectedEntities().empty() ) {
+		drawList->AddRect(
+			{ selectedBoxMin.x - 1, selectedBoxMin.y - 1 },
+			{ selectedBoxMax.x + 1, selectedBoxMax.y + 1 },
+			IM_COL32( 255, 0, 0, 255 ),
+			0,
+			0,
+			1
+		);
+	}
 }
 
 void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
