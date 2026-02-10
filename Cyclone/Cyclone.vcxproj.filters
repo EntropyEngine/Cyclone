@@ -35,6 +35,9 @@
     <Filter Include="Util">
       <UniqueIdentifier>{9d713508-6f3b-43ab-a11b-586b393bdfb9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Tool">
+      <UniqueIdentifier>{f8428dff-85bb-4f05-ba33-8c1d64e05c59}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -103,6 +106,10 @@
     </ClInclude>
     <ClInclude Include="Core\Component\BoundingBox.hpp">
       <Filter>Core\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="Util\Color.hpp" />
+    <ClInclude Include="Core\Tool\BaseTool.hpp">
+      <Filter>Core\Tool</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
