@@ -107,10 +107,10 @@ void Cyclone::UI::ViewportManager::SetDevice( ID3D11Device3 *inDevice )
 
 	DX::ThrowIfFailed( DirectX::CreateInputLayoutFromEffect<DirectX::VertexPositionColor>( inDevice, mWireframeGridEffect.get(), mWireframeGridInputLayout.ReleaseAndGetAddressOf() ) );
 
-	ID3D11DeviceContext3 *deviceContext = nullptr;
-	inDevice->GetImmediateContext3( &deviceContext );
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext3> deviceContext;
+	inDevice->GetImmediateContext3( deviceContext.GetAddressOf() );
 
-	mWireframeGridBatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>( deviceContext );
+	mWireframeGridBatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>( deviceContext.Get() );
 }
 
 void Cyclone::UI::ViewportManager::MenuBarUpdate()

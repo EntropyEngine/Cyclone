@@ -47,7 +47,7 @@ namespace Cyclone
 
 		void CreateDevice();
 		void CreateResources();
-
+		void ReleaseResources();
 		void OnDeviceLost();
 
 		// Device resources.

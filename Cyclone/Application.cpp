@@ -30,7 +30,11 @@ Cyclone::Application::~Application()
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
+	mMainUI.reset();
+
 	mDeviceContext->Flush();
+
+	ReleaseResources();
 }
 
 void Cyclone::Application::Initialize( HWND inWindow, int inWidth, int inHeight )
@@ -281,6 +285,7 @@ void Cyclone::Application::CreateResources()
 		swapChainDesc.SampleDesc.Quality = 0;
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swapChainDesc.BufferCount = backBufferCount;
+		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
 		DXGI_SWAP_CHAIN_FULLSCREEN_DESC fsSwapChainDesc = {};
 		fsSwapChainDesc.Windowed = TRUE;
@@ -307,16 +312,21 @@ void Cyclone::Application::CreateResources()
 	DX::ThrowIfFailed( mDevice->CreateRenderTargetView( backBuffer.Get(), nullptr, mRenderTargetView.ReleaseAndGetAddressOf() ) );
 }
 
-void Cyclone::Application::OnDeviceLost()
+void Cyclone::Application::ReleaseResources()
 {
+	mLevelInterface->ReleaseResources();
+
 	mRenderTargetView.Reset();
 	mSwapChain.Reset();
+	mDeviceContext->Flush();
 	mDeviceContext.Reset();
 	mDevice.Reset();
 
-	mLevelInterface->ReleaseResources();
+}
 
+void Cyclone::Application::OnDeviceLost()
+{
+	ReleaseResources();
 	CreateDevice();
-
 	CreateResources();
 }

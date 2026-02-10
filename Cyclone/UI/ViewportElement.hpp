@@ -10,6 +10,7 @@ namespace Cyclone::UI
 	{
 	public:
 		ViewportElement( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor );
+		~ViewportElement();
 
 		ViewportElement( ViewportElement && ) = default;
 		ViewportElement &operator= ( ViewportElement && ) = default;

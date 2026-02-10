@@ -8,6 +8,10 @@
 
 #include <imgui.h>
 
+#ifdef _DEBUG
+#include <dxgidebug.h>
+#endif
+
 #define MAX_LOADSTRING 100
 
 // Global Variables
@@ -81,6 +85,13 @@ int APIENTRY wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstanc
 	}
 
 	gApplication.reset();
+
+#ifdef _DEBUG
+	Microsoft::WRL::ComPtr<IDXGIDebug> debugDev;
+	HRESULT hr = DXGIGetDebugInterface1( 0, IID_PPV_ARGS( debugDev.GetAddressOf() ) );
+	hr = debugDev->ReportLiveObjects( DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL );
+	debugDev.Reset();
+#endif
 
 	return (int) msg.wParam;
 }

@@ -12,6 +12,12 @@ Cyclone::UI::ViewportElement::ViewportElement( DXGI_FORMAT inBackBufferFormat, D
 	mHeight = 0;
 }
 
+Cyclone::UI::ViewportElement::~ViewportElement()
+{
+	mTargetMSAA->ReleaseDevice();
+	mTargetRT->ReleaseDevice();
+}
+
 void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 * inDevice )
 {
 	mTargetMSAA->SetDevice( inDevice );
