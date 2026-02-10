@@ -86,6 +86,9 @@ namespace Cyclone::UI
 		int	   mSubGridSizeIndex = 5;
 		double mSubGridSize = kSubGridLevels[mSubGridSizeIndex]; // Grid spacing in meters
 
+		enum class EGridSnapType { ToGrid, ByGrid, None };
+		EGridSnapType mGridSnapType = EGridSnapType::ToGrid;
+
 		double mMinGridSize = 8.0; // Min subgrid view size in pixels
 
 		float					mCameraPitch = 0.0f;

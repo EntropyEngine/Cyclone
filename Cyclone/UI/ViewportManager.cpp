@@ -120,31 +120,79 @@ void Cyclone::UI::ViewportManager::MenuBarUpdate()
 
 void Cyclone::UI::ViewportManager::ToolbarUpdate()
 {
+	ImVec2 viewSize = ImGui::GetWindowSize();
+
 	ImGui::PushStyleVarX( ImGuiStyleVar_SelectableTextAlign, 1.0f );
 	ImGui::PushStyleVar( ImGuiStyleVar_FrameRounding, 4.0f );
 
-	ImGui::SetNextItemWidth( 128.0f );
-	std::string subGridLevelPreview = std::format( "Grid Snap: {}", kSubGridLevelText[mSubGridSizeIndex] );
-	if ( ImGui::BeginCombo( "##SubGridLevel", subGridLevelPreview.c_str(), ImGuiComboFlags_HeightLarge ) ) {
-		for ( int i = 0; i < std::size( kSubGridLevels ); ++i ) {
-			const bool isSelected = mSubGridSizeIndex == i;
-			if ( ImGui::Selectable( kSubGridLevelText[i], isSelected ) ) {
-				mSubGridSizeIndex = i;
+	const float textOffset = 6.0f;
+	const float itemOffset = 3.0f;
+
+	const float textSpacing = 5.0f;
+	const float childSpacing = 8.0f;
+
+	ImGui::SetCursorPos( { 5, 5 } );
+
+	ImGui::BeginChild( "##GridSizeChunk", { 0, viewSize.y - 10 }, ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_FrameStyle );
+	{
+		ImGui::SetCursorPosY( textOffset );
+		ImGui::Text( "Grid:" );
+
+		ImGui::SameLine( 0.0f, textSpacing );
+
+		ImGui::SetCursorPosY( itemOffset );
+		ImGui::SetNextItemWidth( 52.0f );
+		std::string subGridLevelPreview = std::format( "{}", kSubGridLevelText[mSubGridSizeIndex] );
+		if ( ImGui::BeginCombo( "##SubGridLevel", subGridLevelPreview.c_str(), ImGuiComboFlags_HeightLarge ) ) {
+			for ( int i = 0; i < std::size( kSubGridLevels ); ++i ) {
+				const bool isSelected = mSubGridSizeIndex == i;
+				if ( ImGui::Selectable( kSubGridLevelText[i], isSelected ) ) {
+					mSubGridSizeIndex = i;
+				}
+				if ( isSelected ) ImGui::SetItemDefaultFocus();
 			}
-			if ( isSelected ) ImGui::SetItemDefaultFocus();
+
+			ImGui::EndCombo();
 		}
 
-		ImGui::EndCombo();
+		// Adjust grid size with [ and ]
+		mSubGridSizeIndex -= ImGui::IsKeyPressed( ImGuiKey_LeftBracket, false );
+		mSubGridSizeIndex += ImGui::IsKeyPressed( ImGuiKey_RightBracket, false );
+		mSubGridSizeIndex = std::clamp( mSubGridSizeIndex, 0, static_cast<int>( std::size( kSubGridLevels ) ) - 1 );
+
+		// Propogate any grid level changes to the actual value
+		mSubGridSize = kSubGridLevels[mSubGridSizeIndex];
 	}
+	ImGui::EndChild();
+
+	ImGui::SameLine( 0.0f, childSpacing );
+
+	ImGui::BeginChild( "##GridSnapChunk", { 0, viewSize.y - 10 }, ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_FrameStyle );
+	{
+		ImGui::SetCursorPosY( textOffset );
+		ImGui::Text( "Snap:" );
+
+		ImGui::SameLine( 0.0f, textSpacing );
+
+		ImGui::SetCursorPosY( itemOffset );
+		if ( ImGui::RadioButton( "To Grid", mGridSnapType == EGridSnapType::ToGrid ) ) mGridSnapType = EGridSnapType::ToGrid;
+
+		ImGui::SameLine();
+
+		ImGui::SetCursorPosY( itemOffset );
+		if ( ImGui::RadioButton( "By Grid", mGridSnapType == EGridSnapType::ByGrid ) ) mGridSnapType = EGridSnapType::ByGrid;
+
+		ImGui::SameLine();
+
+		ImGui::SetCursorPosY( itemOffset );
+		if ( ImGui::RadioButton( "None ", mGridSnapType == EGridSnapType::None ) ) mGridSnapType = EGridSnapType::None;
+		
+	}
+	ImGui::EndChild();
+
 	ImGui::PopStyleVar( 2 );
 
-	// Adjust grid size with [ and ]
-	mSubGridSizeIndex -= ImGui::IsKeyPressed( ImGuiKey_LeftBracket, false );
-	mSubGridSizeIndex += ImGui::IsKeyPressed( ImGuiKey_RightBracket, false );
-	mSubGridSizeIndex = std::clamp( mSubGridSizeIndex, 0, static_cast<int>( std::size( kSubGridLevels ) ) - 1 );
-
-	// Propogate any grid level changes to the actual value
-	mSubGridSize = kSubGridLevels[mSubGridSizeIndex];
+	
 }
 
 void Cyclone::UI::ViewportManager::UpdatePerspective( float inDeltaTime )
@@ -368,7 +416,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 		}
 
 		ImGui::SetCursorPos( { selectedBoxMin.x - viewOrigin.x, selectedBoxMin.y - viewOrigin.y } );
-		if ( ImGui::InvisibleButton( "Selection", { selectedBoxMax.x - selectedBoxMin.x, selectedBoxMax.y - selectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft ) );;
+		ImGui::InvisibleButton( "Selection", { selectedBoxMax.x - selectedBoxMin.x, selectedBoxMax.y - selectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft );
 		const bool isSelectionHovered = ImGui::IsItemHovered();
 		const bool isSelectionActive = ImGui::IsItemActive();
 
@@ -378,8 +426,6 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 			ImGui::SetTooltip( "Mouse Drag: (%f, %f)", selectionMouseDrag.x, selectionMouseDrag.y );
 			//OutputDebugStringA( "Clicked\n" );
 
-			bool snapType = true;
-
 			auto &&positionDeltaStorage = registry.storage<Cyclone::Core::Component::Position>( "delta"_hs );
 			
 			if ( !positionDeltaStorage.contains( inLevelInterface->GetSelectedEntity() ) ) {
@@ -388,7 +434,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 
 			Cyclone::Core::Component::Position positionDelta{ Cyclone::Math::XLVector::sZero() };
 
-			if ( snapType ) {
+			if ( mGridSnapType == EGridSnapType::ByGrid ) {
 				positionDelta = Cyclone::Core::Component::Position(
 					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
 					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
@@ -402,7 +448,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 				//	Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mZoomScale2D / mSubGridSize ) * mSubGridSize )
 				//);
 			}
-			else {
+			else if ( mGridSnapType == EGridSnapType::ToGrid ) {
 				positionDelta = Cyclone::Core::Component::Position(
 					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
 					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
@@ -417,6 +463,15 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 				//positionDelta += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( worldSnapU - currentPosition.mScalar[AxisU] );
 				//positionDelta += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( worldSnapV - currentPosition.mScalar[AxisV] );
 			}
+			else {
+				positionDelta = Cyclone::Core::Component::Position(
+					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * mZoomScale2D ) +
+					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * mZoomScale2D ) +
+					positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ) -
+					registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() )
+				);
+			}
+
 			for ( const entt::entity entity : inLevelInterface->GetSelectedEntities() ) {
 				registry.get<Cyclone::Core::Component::Position>( entity ) += positionDelta;
 			}
