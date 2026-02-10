@@ -4,6 +4,7 @@
 #include "Cyclone/Math/Vector.hpp"
 #include "Cyclone/UI/ViewportElement.hpp"
 #include "Cyclone/UI/ViewportType.hpp"
+#include "Cyclone/UI/ViewportContext.hpp"
 
 // DX Includes
 #include <PrimitiveBatch.h>

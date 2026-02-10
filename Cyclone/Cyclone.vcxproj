@@ -109,6 +109,7 @@
     <ClInclude Include="Application.hpp" />
     <ClInclude Include="UI\MainUI.hpp" />
     <ClInclude Include="UI\Outliner.hpp" />
+    <ClInclude Include="UI\ViewportContext.hpp" />
     <ClInclude Include="UI\ViewportElement.hpp" />
     <ClInclude Include="UI\ViewportManager.hpp" />
     <ClInclude Include="UI\ViewportType.hpp" />
