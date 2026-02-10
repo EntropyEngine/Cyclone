@@ -77,6 +77,12 @@ namespace
 
 		inBatch->DrawIndexed( D3D_PRIMITIVE_TOPOLOGY_LINELIST, s_indices, static_cast<UINT>( std::size( s_indices ) ), verts, 8 );
 	}
+
+	void DrawCross( ImDrawList *inDrawList, const ImVec2 &inOrigin, float inWidth, ImU32 inColor )
+	{
+		inDrawList->AddLine( { inOrigin.x - inWidth, inOrigin.y - inWidth }, { inOrigin.x + inWidth, inOrigin.y + inWidth }, inColor );
+		inDrawList->AddLine( { inOrigin.x + inWidth, inOrigin.y - inWidth }, { inOrigin.x - inWidth, inOrigin.y + inWidth }, inColor );
+	}
 }
 
 Cyclone::UI::ViewportManager::ViewportManager()
@@ -266,11 +272,9 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 		gridPos.x = static_cast<float>( ( GetCenter2D<AxisU>() - worldSnapU ) / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
 		gridPos.y = static_cast<float>( ( GetCenter2D<AxisV>() - worldSnapV ) / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
 
-		float offset = static_cast<float>( std::max( 2.0, mSubGridSize / mZoomScale2D ) );
-
-		//drawList->AddCircle( gridPos, offset / 2, IM_COL32( 255, 255, 255, 255 ) );
-		drawList->AddLine( { gridPos.x - offset, gridPos.y - offset }, { gridPos.x + offset, gridPos.y + offset }, IM_COL32( 255, 255, 255, 255 ) );
-		drawList->AddLine( { gridPos.x + offset, gridPos.y - offset }, { gridPos.x - offset, gridPos.y + offset }, IM_COL32( 255, 255, 255, 255 ) );
+		//float offset = static_cast<float>( std::max( 2.0, mSubGridSize / mZoomScale2D ) );
+		float offset = static_cast<float>( 2.0f );
+		DrawCross( drawList, gridPos, offset, IM_COL32( 255, 255, 255, 255 ) );
 	}
 
 	// Get smaller font for debug text
@@ -325,12 +329,12 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 		localPos.x = static_cast<float>( rebasedEntityPosition.mScalar[AxisU] / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
 		localPos.y = static_cast<float>( rebasedEntityPosition.mScalar[AxisV] / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
 
-		float offset = 8.0f;
-
 		// Only draw X if smaller than bounding box
-		if ( offset * 2 <= localBoxMax.x - localBoxMin.x && offset * 2 <= localBoxMax.y - localBoxMin.y ) {
-			drawList->AddLine( { localPos.x - offset, localPos.y - offset }, { localPos.x + offset, localPos.y + offset }, entityColor, 1.414f );
-			drawList->AddLine( { localPos.x + offset, localPos.y - offset }, { localPos.x - offset, localPos.y + offset }, entityColor, 1.414f );
+		if ( kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y ) {
+			DrawCross( drawList, localPos, kPositionHandleSize, entityColor );
+		}
+
+		if ( kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y ) {
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, Cyclone::Core::Entity::EntityTypeRegistry::GetEntityTypeName( entityType ) );
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, std::format( "id={}", static_cast<size_t>( entity ) ).c_str() );
 		}
@@ -374,15 +378,48 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 			ImGui::SetTooltip( "Mouse Drag: (%f, %f)", selectionMouseDrag.x, selectionMouseDrag.y );
 			//OutputDebugStringA( "Clicked\n" );
 
+			bool snapType = true;
+
 			auto &&positionDeltaStorage = registry.storage<Cyclone::Core::Component::Position>( "delta"_hs );
 			
 			if ( !positionDeltaStorage.contains( inLevelInterface->GetSelectedEntity() ) ) {
 				positionDeltaStorage.emplace( inLevelInterface->GetSelectedEntity(), registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() ) );
 			}
 
-			registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() ) = Cyclone::Core::Component::Position( positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ) +
-				Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * mZoomScale2D ) +
-				Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * mZoomScale2D ) );
+			Cyclone::Core::Component::Position positionDelta{ Cyclone::Math::XLVector::sZero() };
+
+			if ( snapType ) {
+				positionDelta = Cyclone::Core::Component::Position(
+					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
+					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
+					positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ) -
+					registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() )
+				);
+
+				//registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() ) = Cyclone::Core::Component::Position(
+				//	positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ) +
+				//	Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
+				//	Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mZoomScale2D / mSubGridSize ) * mSubGridSize )
+				//);
+			}
+			else {
+				positionDelta = Cyclone::Core::Component::Position(
+					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
+					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
+					positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ) -
+					registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() )
+				);
+
+				positionDelta.mScalar[AxisU] += std::round( positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ).mScalar[AxisU] / mSubGridSize ) * mSubGridSize - positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ).mScalar[AxisU];
+				positionDelta.mScalar[AxisV] += std::round( positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ).mScalar[AxisV] / mSubGridSize ) * mSubGridSize - positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ).mScalar[AxisV];
+
+				//const auto currentPosition = registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() );
+				//positionDelta += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( worldSnapU - currentPosition.mScalar[AxisU] );
+				//positionDelta += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( worldSnapV - currentPosition.mScalar[AxisV] );
+			}
+			for ( const entt::entity entity : inLevelInterface->GetSelectedEntities() ) {
+				registry.get<Cyclone::Core::Component::Position>( entity ) += positionDelta;
+			}
 		}
 		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) ) {
 			registry.storage<Cyclone::Core::Component::Position>( "delta"_hs ).clear();

@@ -30,6 +30,10 @@ namespace Cyclone::UI
 
 		static constexpr float kAccelerateToSnap = 10.0f;
 
+		static constexpr float kTransformHandleSize = 8.0f;
+		static constexpr float kPositionHandleSize = 4.0f;
+		static constexpr float kInformationVirtualSize = 8.0f; // Pretend the position handle was this size, if the handle is wider than the bounding box hide information
+
 	public:
 		ViewportManager();
 
