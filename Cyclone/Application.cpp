@@ -30,10 +30,6 @@ Cyclone::Application::~Application()
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
-	mMainUI.reset();
-
-	mDeviceContext->Flush();
-
 	ReleaseResources();
 }
 
