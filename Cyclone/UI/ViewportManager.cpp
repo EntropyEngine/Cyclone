@@ -364,9 +364,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 		}
 
 		ImGui::SetCursorPos( { selectedBoxMin.x - viewOrigin.x, selectedBoxMin.y - viewOrigin.y } );
-		if ( ImGui::InvisibleButton( "Yeet", { selectedBoxMax.x - selectedBoxMin.x, selectedBoxMax.y - selectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft ) ) {
-			registry.storage<Cyclone::Core::Component::Position>( "delta"_hs ).clear();
-		};
+		if ( ImGui::InvisibleButton( "Selection", { selectedBoxMax.x - selectedBoxMin.x, selectedBoxMax.y - selectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft ) );;
 		const bool isSelectionHovered = ImGui::IsItemHovered();
 		const bool isSelectionActive = ImGui::IsItemActive();
 
@@ -386,9 +384,9 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 				Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * mZoomScale2D ) +
 				Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * mZoomScale2D ) );
 		}
-		//else {
-		//	registry.storage<Cyclone::Core::Component::Position>( "delta"_hs ).clear();
-		//}
+		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) ) {
+			registry.storage<Cyclone::Core::Component::Position>( "delta"_hs ).clear();
+		}
 	}
 }
 
