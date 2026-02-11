@@ -646,14 +646,16 @@ void Cyclone::UI::ViewportManager::RenderWireframe( ID3D11DeviceContext3 *inDevi
 		GetMinMaxUV<T>( minU, maxU, minV, maxV );
 
 		double subgridStep = mSubGridSize;
-		double gridStep = mSubGridSize * 10;
+		double gridStep = std::pow( 10.0, std::ceil( std::log10( subgridStep * 4 ) ) ) / 2;
 
 		while ( subgridStep / mZoomScale2D < mMinGridSize ) {
-			subgridStep *= 10;
+			//subgridStep *= 10;
+			subgridStep = std::pow( 10.0, std::ceil( std::log10( subgridStep * 4 ) ) ) / 2;
 		}
 
 		while ( gridStep / mZoomScale2D < mMinGridSize * 5 ) {
-			gridStep *= 10;
+			//gridStep *= 10;
+			gridStep = std::pow( 10.0, std::ceil( std::log10( gridStep * 4 ) ) ) / 2;
 		}
 
 		if ( subgridStep / mZoomScale2D > mMinGridSize ) {
