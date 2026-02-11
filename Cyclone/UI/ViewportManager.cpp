@@ -144,12 +144,12 @@ void Cyclone::UI::ViewportManager::ToolbarUpdate()
 
 		ImGui::SetCursorPosY( itemOffset );
 		ImGui::SetNextItemWidth( 52.0f );
-		std::string subGridLevelPreview = std::format( "{}", kSubGridLevelText[mSubGridSizeIndex] );
+		std::string subGridLevelPreview = mGridContext.kGridSizeText[mGridContext.mGridSizeIndex];
 		if ( ImGui::BeginCombo( "##SubGridLevel", subGridLevelPreview.c_str(), ImGuiComboFlags_HeightLarge ) ) {
-			for ( int i = 0; i < std::size( kSubGridLevels ); ++i ) {
-				const bool isSelected = mSubGridSizeIndex == i;
-				if ( ImGui::Selectable( kSubGridLevelText[i], isSelected ) ) {
-					mSubGridSizeIndex = i;
+			for ( int i = 0; i < std::size( mGridContext.kGridSizes ); ++i ) {
+				const bool isSelected = mGridContext.mGridSizeIndex == i;
+				if ( ImGui::Selectable( mGridContext.kGridSizeText[i], isSelected ) ) {
+					mGridContext.SetGridSize( i );
 				}
 				if ( isSelected ) ImGui::SetItemDefaultFocus();
 			}
@@ -158,12 +158,8 @@ void Cyclone::UI::ViewportManager::ToolbarUpdate()
 		}
 
 		// Adjust grid size with [ and ]
-		mSubGridSizeIndex -= ImGui::IsKeyPressed( ImGuiKey_LeftBracket, false );
-		mSubGridSizeIndex += ImGui::IsKeyPressed( ImGuiKey_RightBracket, false );
-		mSubGridSizeIndex = std::clamp( mSubGridSizeIndex, 0, static_cast<int>( std::size( kSubGridLevels ) ) - 1 );
-
-		// Propogate any grid level changes to the actual value
-		mSubGridSize = kSubGridLevels[mSubGridSizeIndex];
+		if ( ImGui::IsKeyPressed( ImGuiKey_LeftBracket, false ) ) mGridContext.SetGridSize( mGridContext.mGridSizeIndex - 1 );
+		if ( ImGui::IsKeyPressed( ImGuiKey_RightBracket, false ) ) mGridContext.SetGridSize( mGridContext.mGridSizeIndex + 1 );
 	}
 	ImGui::EndChild();
 
@@ -177,17 +173,17 @@ void Cyclone::UI::ViewportManager::ToolbarUpdate()
 		ImGui::SameLine( 0.0f, textSpacing );
 
 		ImGui::SetCursorPosY( itemOffset );
-		if ( ImGui::RadioButton( "To Grid", mGridSnapType == EGridSnapType::ToGrid ) ) mGridSnapType = EGridSnapType::ToGrid;
+		if ( ImGui::RadioButton( "To Grid", mGridContext.mSnapType == ViewportGridContext::ESnapType::ToGrid ) ) mGridContext.mSnapType = ViewportGridContext::ESnapType::ToGrid;
 
 		ImGui::SameLine();
 
 		ImGui::SetCursorPosY( itemOffset );
-		if ( ImGui::RadioButton( "By Grid", mGridSnapType == EGridSnapType::ByGrid ) ) mGridSnapType = EGridSnapType::ByGrid;
+		if ( ImGui::RadioButton( "By Grid", mGridContext.mSnapType == ViewportGridContext::ESnapType::ByGrid ) ) mGridContext.mSnapType = ViewportGridContext::ESnapType::ByGrid;
 
 		ImGui::SameLine();
 
 		ImGui::SetCursorPosY( itemOffset );
-		if ( ImGui::RadioButton( "None ", mGridSnapType == EGridSnapType::None ) ) mGridSnapType = EGridSnapType::None;
+		if ( ImGui::RadioButton( "None ", mGridContext.mSnapType == ViewportGridContext::ESnapType::None ) ) mGridContext.mSnapType = ViewportGridContext::ESnapType::None;
 		
 	}
 	ImGui::EndChild();
@@ -213,8 +209,8 @@ void Cyclone::UI::ViewportManager::UpdatePerspective( float inDeltaTime )
 	const bool isActive = ImGui::IsItemActive();
 
 	if ( isActive && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
-		mCameraPitch += io.MouseDelta.y * kMouseSensitivity;
-		mCameraYaw -= io.MouseDelta.x * kMouseSensitivity;		
+		mPerspectiveContext.mCameraPitch += io.MouseDelta.y * kMouseSensitivity;
+		mPerspectiveContext.mCameraYaw -= io.MouseDelta.x * kMouseSensitivity;		
 
 		float forward = 0.0f;
 		float left = 0.0f;
@@ -228,8 +224,8 @@ void Cyclone::UI::ViewportManager::UpdatePerspective( float inDeltaTime )
 		left *= kKeyboardSensitivity * inDeltaTime;
 
 		if ( forward || left ) {
-			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw( mCameraPitch, mCameraYaw, 0.0f );
-			mCenter3D += XLVector::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::XMVectorSet( left, 0, forward, 0 ), rotationMatrix ) );
+			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw( mPerspectiveContext.mCameraPitch, mPerspectiveContext.mCameraYaw, 0.0f );
+			mPerspectiveContext.mCenter3D += XLVector::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::XMVectorSet( left, 0, forward, 0 ), rotationMatrix ) );
 		}
 	}
 
@@ -237,14 +233,14 @@ void Cyclone::UI::ViewportManager::UpdatePerspective( float inDeltaTime )
 		float scroll = io.MouseWheel;
 		scroll *= kCameraDollySensitivity;
 		if ( scroll ) {
-			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw( mCameraPitch, mCameraYaw, 0.0f );
-			mCenter3D += XLVector::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::XMVectorSet( 0, 0, scroll, 0 ), rotationMatrix ) );
+			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw( mPerspectiveContext.mCameraPitch, mPerspectiveContext.mCameraYaw, 0.0f );
+			mPerspectiveContext.mCenter3D += XLVector::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::XMVectorSet( 0, 0, scroll, 0 ), rotationMatrix ) );
 		}
 	}
 
 	constexpr float pitchLimit = DirectX::XM_PIDIV2 - 0.01f;
-	mCameraPitch = std::clamp( mCameraPitch, -pitchLimit, pitchLimit );
-	mCameraYaw = mCameraYaw - DirectX::XM_2PI * std::floor( mCameraYaw / DirectX::XM_2PI );
+	mPerspectiveContext.mCameraPitch = std::clamp( mPerspectiveContext.mCameraPitch, -pitchLimit, pitchLimit );
+	mPerspectiveContext.mCameraYaw = mPerspectiveContext.mCameraYaw - DirectX::XM_2PI * std::floor( mPerspectiveContext.mCameraYaw / DirectX::XM_2PI );
 }
 
 template<Cyclone::UI::EViewportType T>
@@ -270,11 +266,11 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	ImVec2 viewportAbsMousePos( io.MousePos.x - viewOrigin.x, io.MousePos.y - viewOrigin.y );
 	ImVec2 viewportRelMousePos( viewportAbsMousePos.x - viewSize.x / 2.0f, viewportAbsMousePos.y - viewSize.y / 2.0f );
 
-	double worldMouseU = GetCenter2D<AxisU>() - viewportRelMousePos.x * mZoomScale2D;
-	double worldMouseV = GetCenter2D<AxisV>() - viewportRelMousePos.y * mZoomScale2D;
+	double worldMouseU = mOrthographicContext.mCenter2D.Get<AxisU>() - viewportRelMousePos.x * mOrthographicContext.mZoomScale2D;
+	double worldMouseV = mOrthographicContext.mCenter2D.Get<AxisV>() - viewportRelMousePos.y * mOrthographicContext.mZoomScale2D;
 
-	double worldSnapU = std::round( worldMouseU / mSubGridSize ) * mSubGridSize;
-	double worldSnapV = std::round( worldMouseV / mSubGridSize ) * mSubGridSize;
+	double worldSnapU = std::round( worldMouseU / mGridContext.mGridSize ) * mGridContext.mGridSize;
+	double worldSnapV = std::round( worldMouseV / mGridContext.mGridSize ) * mGridContext.mGridSize;
 
 	const char *uStr = std::array{ "x", "y", "z" }[AxisU];
 	const char *vStr = std::array{ "x", "y", "z" }[AxisV];
@@ -293,26 +289,26 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 		viewportRelMousePos.x, viewportRelMousePos.y,
 		uStr, worldMouseU, vStr, worldMouseV,
 		uStr, worldSnapU, vStr, worldSnapV,
-		mZoomScale2D
+		mOrthographicContext.mZoomScale2D
 	);
 	ImGui::PopStyleVar( 2 );
 
 	if ( ( isCanvasHovered || isCanvasActive ) && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
-		mCenter2D += XLVector::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * mZoomScale2D );
-		mCenter2D += XLVector::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * mZoomScale2D );
+		mOrthographicContext.mCenter2D += XLVector::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * mOrthographicContext.mZoomScale2D );
+		mOrthographicContext.mCenter2D += XLVector::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * mOrthographicContext.mZoomScale2D );
 	}
 
 	if ( isCanvasHovered && io.MouseWheel ) {
-		mZoomLevel -= ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 );
-		double newZoomScale2D = sZoomLevelToScale( mZoomLevel );
+		int newZoomLevel = mOrthographicContext.mZoomLevel - ( ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 ) );
+		double newZoomScale2D = mOrthographicContext.sZoomLevelToScale( newZoomLevel );
 
-		double uPosNew = GetCenter2D<AxisU>() - viewportRelMousePos.x * newZoomScale2D;
-		double vPosNew = GetCenter2D<AxisV>() - viewportRelMousePos.y * newZoomScale2D;
+		double uPosNew = mOrthographicContext.mCenter2D.Get<AxisU>() - viewportRelMousePos.x * newZoomScale2D;
+		double vPosNew = mOrthographicContext.mCenter2D.Get<AxisV>() - viewportRelMousePos.y * newZoomScale2D;
 
-		mCenter2D += XLVector::sZeroSetValueByIndex<AxisU>( std::lerp( worldMouseU, worldSnapU, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - uPosNew );
-		mCenter2D += XLVector::sZeroSetValueByIndex<AxisV>( std::lerp( worldMouseV, worldSnapV, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - vPosNew );
+		mOrthographicContext.mCenter2D += XLVector::sZeroSetValueByIndex<AxisU>( std::lerp( worldMouseU, worldSnapU, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - uPosNew );
+		mOrthographicContext.mCenter2D += XLVector::sZeroSetValueByIndex<AxisV>( std::lerp( worldMouseV, worldSnapV, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - vPosNew );
 
-		mZoomScale2D = newZoomScale2D;
+		mOrthographicContext.UpdateZoomLevel( newZoomLevel );
 	}
 
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -322,8 +318,8 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 
 	if ( isCanvasHovered ) {
 		ImVec2 gridPos;
-		gridPos.x = static_cast<float>( ( GetCenter2D<AxisU>() - worldSnapU ) / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
-		gridPos.y = static_cast<float>( ( GetCenter2D<AxisV>() - worldSnapV ) / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
+		gridPos.x = static_cast<float>( ( mOrthographicContext.mCenter2D.Get<AxisU>() - worldSnapU ) / mOrthographicContext.mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
+		gridPos.y = static_cast<float>( ( mOrthographicContext.mCenter2D.Get<AxisV>() - worldSnapV ) / mOrthographicContext.mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
 
 		//float offset = static_cast<float>( std::max( 2.0, mSubGridSize / mZoomScale2D ) );
 		float offset = static_cast<float>( 2.0f );
@@ -337,7 +333,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	ImVec2 selectedBoxMin = { viewOrigin.x + viewSize.x, viewOrigin.y + viewSize.y };
 	ImVec2 selectedBoxMax = viewOrigin;
 
-	const double invZoom = 1.0 / mZoomScale2D;
+	const double invZoom = 1.0 / mOrthographicContext.mZoomScale2D;
 	const float offsetX = viewSize.x / 2.0f + viewOrigin.x;
 	const float offsetY = viewSize.y / 2.0f + viewOrigin.y;
 
@@ -370,7 +366,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 			drawList->ChannelsSetCurrent( 0 );
 		}
 
-		XLVector rebasedEntityPosition = ( mCenter2D - position );
+		XLVector rebasedEntityPosition = ( mOrthographicContext.mCenter2D - position );
 		XLVector rebasedBoundingBoxMin = rebasedEntityPosition - boundingBox.mCenter - boundingBox.mExtent;
 		XLVector rebasedBoundingBoxMax = rebasedEntityPosition - boundingBox.mCenter + boundingBox.mExtent;
 
@@ -445,30 +441,30 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 
 			Cyclone::Core::Component::Position positionDelta{ XLVector::sZero() };
 
-			if ( mGridSnapType == EGridSnapType::ByGrid ) {
+			if ( mGridContext.mSnapType == ViewportGridContext::ESnapType::ByGrid ) {
 				positionDelta = Cyclone::Core::Component::Position(
-					XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
-					XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
+					XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * mOrthographicContext.mZoomScale2D / mGridContext.mGridSize ) * mGridContext.mGridSize ) +
+					XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mOrthographicContext.mZoomScale2D / mGridContext.mGridSize ) * mGridContext.mGridSize ) +
 					startPosition -
 					registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() )
 				);
 			}
-			else if ( mGridSnapType == EGridSnapType::ToGrid ) {
+			else if ( mGridContext.mSnapType == ViewportGridContext::ESnapType::ToGrid ) {
 				positionDelta = Cyclone::Core::Component::Position(
-					XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
-					XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
+					XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * mOrthographicContext.mZoomScale2D / mGridContext.mGridSize ) * mGridContext.mGridSize ) +
+					XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mOrthographicContext.mZoomScale2D / mGridContext.mGridSize ) * mGridContext.mGridSize ) +
 					startPosition -
 					registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() )
 				);
 
 				positionDelta +=
-					XLVector::sZeroSetValueByIndex<AxisU>( std::round( startPosition.Get<AxisU>() / mSubGridSize ) * mSubGridSize - startPosition.Get<AxisU>() ) +
-					XLVector::sZeroSetValueByIndex<AxisV>( std::round( startPosition.Get<AxisV>() / mSubGridSize ) * mSubGridSize - startPosition.Get<AxisV>() );
+					XLVector::sZeroSetValueByIndex<AxisU>( std::round( startPosition.Get<AxisU>() / mGridContext.mGridSize ) * mGridContext.mGridSize - startPosition.Get<AxisU>() ) +
+					XLVector::sZeroSetValueByIndex<AxisV>( std::round( startPosition.Get<AxisV>() / mGridContext.mGridSize ) * mGridContext.mGridSize - startPosition.Get<AxisV>() );
 			}
 			else {
 				positionDelta = Cyclone::Core::Component::Position(
-					XLVector::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * mZoomScale2D ) +
-					XLVector::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * mZoomScale2D ) +
+					XLVector::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * mOrthographicContext.mZoomScale2D ) +
+					XLVector::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * mOrthographicContext.mZoomScale2D ) +
 					startPosition -
 					registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() )
 				);
@@ -523,7 +519,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	}
 	ImGui::EndChild();
 
-	mCenter2D = XLVector::sClamp( mCenter2D, XLVector::sReplicate( -mWorldLimit ), XLVector::sReplicate( mWorldLimit ) );
+	mOrthographicContext.mCenter2D = XLVector::sClamp( mOrthographicContext.mCenter2D, XLVector::sReplicate( -mGridContext.mWorldLimit ), XLVector::sReplicate( mGridContext.mWorldLimit ) );
 }
 
 void Cyclone::UI::ViewportManager::RenderPerspective( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
@@ -545,18 +541,18 @@ void Cyclone::UI::ViewportManager::RenderPerspective( ID3D11DeviceContext3 *inDe
 	mWireframeGridBatch->Begin();
 	{
 		mWireframeGridBatch->DrawLine(
-			{ ( -mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkRed },
-			{ ( -mCenter3D + XLVector::sZeroSetValueByIndex<0>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkRed }
+			{ ( -mPerspectiveContext.mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkRed },
+			{ ( -mPerspectiveContext.mCenter3D + XLVector::sZeroSetValueByIndex<0>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkRed }
 		);
 
 		mWireframeGridBatch->DrawLine(
-			{ ( -mCenter3D ).ToXMVECTOR(), DirectX::Colors::Green },
-			{ ( -mCenter3D + XLVector::sZeroSetValueByIndex<1>( 1 ) ).ToXMVECTOR(), DirectX::Colors::Green }
+			{ ( -mPerspectiveContext.mCenter3D ).ToXMVECTOR(), DirectX::Colors::Green },
+			{ ( -mPerspectiveContext.mCenter3D + XLVector::sZeroSetValueByIndex<1>( 1 ) ).ToXMVECTOR(), DirectX::Colors::Green }
 		);
 
 		mWireframeGridBatch->DrawLine(
-			{ ( -mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkBlue },
-			{ ( -mCenter3D + XLVector::sZeroSetValueByIndex<2>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkBlue }
+			{ ( -mPerspectiveContext.mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkBlue },
+			{ ( -mPerspectiveContext.mCenter3D + XLVector::sZeroSetValueByIndex<2>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkBlue }
 		);
 	}
 	mWireframeGridBatch->End();
@@ -591,7 +587,7 @@ void Cyclone::UI::ViewportManager::RenderPerspective( ID3D11DeviceContext3 *inDe
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
 
-			XLVector rebasedEntityPosition = ( position - mCenter3D );
+			XLVector rebasedEntityPosition = ( position - mPerspectiveContext.mCenter3D );
 			XLVector rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
 			DrawWireframeBoundingBox( mWireframeGridBatch.get(), rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
@@ -641,20 +637,20 @@ void Cyclone::UI::ViewportManager::RenderWireframe( ID3D11DeviceContext3 *inDevi
 		double minU, maxU, minV, maxV;
 		GetMinMaxUV<T>( minU, maxU, minV, maxV );
 
-		double subgridStep = mSubGridSize;
+		double subgridStep = mGridContext.mGridSize;
 		double gridStep = std::pow( 10.0, std::ceil( std::log10( subgridStep * 4 ) ) ) / 2;
 
-		while ( subgridStep / mZoomScale2D < mMinGridSize ) {
+		while ( subgridStep / mOrthographicContext.mZoomScale2D < mMinGridSize ) {
 			//subgridStep *= 10;
 			subgridStep = std::pow( 10.0, std::ceil( std::log10( subgridStep * 4 ) ) ) / 2;
 		}
 
-		while ( gridStep / mZoomScale2D < mMinGridSize * 5 ) {
+		while ( gridStep / mOrthographicContext.mZoomScale2D < mMinGridSize * 5 ) {
 			//gridStep *= 10;
 			gridStep = std::pow( 10.0, std::ceil( std::log10( gridStep * 4 ) ) ) / 2;
 		}
 
-		if ( subgridStep / mZoomScale2D > mMinGridSize ) {
+		if ( subgridStep / mOrthographicContext.mZoomScale2D > mMinGridSize ) {
 			DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, subgridStep, DirectX::ColorsLinear::DimGray );
 			DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, subgridStep, DirectX::ColorsLinear::DimGray );
 		}
@@ -701,7 +697,7 @@ void Cyclone::UI::ViewportManager::RenderWireframe( ID3D11DeviceContext3 *inDevi
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
 
-			XLVector rebasedEntityPosition = ( position - mCenter2D );
+			XLVector rebasedEntityPosition = ( position - mOrthographicContext.mCenter2D );
 			XLVector rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
 			DrawWireframeBoundingBox( mWireframeGridBatch.get(), rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
