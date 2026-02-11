@@ -202,6 +202,9 @@ void Cyclone::UI::ViewportManager::UpdatePerspective( float inDeltaTime )
 	ImVec2 viewSize = ImGui::GetWindowSize();
 	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
 
+	ImGui::SetCursorPos( { 0, 0 } );
+	ImGui::Image( GetViewport<EViewportType::Perspective>()->GetOrResizeSRV( static_cast<size_t>( viewSize.x ), static_cast<size_t>( viewSize.y ) ), viewSize );
+
 	ImGuiIO &io = ImGui::GetIO();
 
 	ImGui::SetCursorPos( { 0, 0 } );
@@ -294,7 +297,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 	);
 	ImGui::PopStyleVar( 2 );
 
-	if ( isCanvasHovered && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
+	if ( ( isCanvasHovered || isCanvasActive ) && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
 		mCenter2D += XLVector::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * mZoomScale2D );
 		mCenter2D += XLVector::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * mZoomScale2D );
 	}
@@ -483,7 +486,7 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 
 void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	ImGuiWindowFlags viewportFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking;
+	ImGuiWindowFlags viewportFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking;
 
 	ImVec2 perspectiveViewSize;
 
@@ -495,10 +498,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	ImGui::SetNextWindowSizeConstraints( { 64.0f, 64.0f }, { ImGui::GetContentRegionAvail().x - 64.0f, ImGui::GetContentRegionAvail().y - 64.0f } );
 	if ( ImGui::BeginChild( "PerspectiveView", ImVec2( ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.5f ), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY, viewportFlags ) ) {
 		perspectiveViewSize = ImGui::GetWindowSize();
-		ImGui::Image( mViewportPerspective->GetOrResizeSRV( static_cast<size_t>( perspectiveViewSize.x ), static_cast<size_t>( perspectiveViewSize.y ) ), perspectiveViewSize );
-
 		UpdatePerspective( inDeltaTime );
-
 		DrawViewportOverlay( "Perspective" );
 	}
 	ImGui::EndChild();
@@ -506,14 +506,12 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "TopView", ImVec2( ImGui::GetContentRegionAvail().x, perspectiveViewSize.y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
 		UpdateWireframe<EViewportType::TopXZ>( inDeltaTime, inLevelInterface );
-
 		DrawViewportOverlay( "Top (X/Z)" );
 	}
 	ImGui::EndChild();
 
 	if ( ImGui::BeginChild( "FrontView", ImVec2( perspectiveViewSize.x, ImGui::GetContentRegionAvail().y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
 		UpdateWireframe<EViewportType::FrontXY>( inDeltaTime, inLevelInterface );
-
 		DrawViewportOverlay( "Front (X/Y)" );
 	}
 	ImGui::EndChild();
@@ -521,9 +519,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "SideView", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders, viewportFlags ) ) {
 		UpdateWireframe<EViewportType::SideYZ>( inDeltaTime, inLevelInterface );
-
 		DrawViewportOverlay( "Side (Y/Z)" );
-
 	}
 	ImGui::EndChild();
 
