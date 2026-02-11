@@ -8,32 +8,20 @@ namespace Cyclone::Math
 {
 	struct alignas( 32 ) XLVector
 	{
-		union
-		{
-			__m256d mVector;
-			double mScalar[4];
-		};
+		__m256d mVector;
 
-		XLVector( __m256d inVector )
-		{
-			mVector = inVector;
-		}
-
-		XLVector( double inX, double inY, double inZ, double inW )
-		{
-			mVector = _mm256_set_pd( inW, inZ, inY, inX );
-		}
-
+		XLVector( __m256d inVector ) : mVector( inVector ) {}
+		XLVector( double inX, double inY, double inZ, double inW ) : mVector( _mm256_set_pd( inW, inZ, inY, inX ) ) {}
 		XLVector( double inX, double inY, double inZ ) : XLVector( inX, inY, inZ, 0.0 ) {};
 
 		static XLVector XM_CALLCONV sZero() { return _mm256_setzero_pd(); }
 
-		template<size_t Axis>
-		static XLVector XM_CALLCONV sZeroSetValueByIndex( double inV );
+		template<size_t Axis> static XLVector XM_CALLCONV sZeroSetValueByIndex( double inV );
 		template<> XLVector XM_CALLCONV sZeroSetValueByIndex<0>( double inV ) { return XLVector( inV, 0.0, 0.0, 0.0 ); }
 		template<> XLVector XM_CALLCONV sZeroSetValueByIndex<1>( double inV ) { return XLVector( 0.0, inV, 0.0, 0.0 ); }
 		template<> XLVector XM_CALLCONV sZeroSetValueByIndex<2>( double inV ) { return XLVector( 0.0, 0.0, inV, 0.0 ); }
 		template<> XLVector XM_CALLCONV sZeroSetValueByIndex<3>( double inV ) { return XLVector( 0.0, 0.0, 0.0, inV ); }
+
 
 		static XLVector XM_CALLCONV sReplicate( double inV ) { return _mm256_set1_pd( inV ); }
 
@@ -41,15 +29,30 @@ namespace Cyclone::Math
 		static XLVector XM_CALLCONV sMax( XLVector inLhs, XLVector inRhs ) { return _mm256_max_pd( inLhs.mVector, inRhs.mVector ); }
 		static XLVector XM_CALLCONV sClamp( XLVector inV, XLVector inMin, XLVector inMax ) { return sMax( sMin( inV, inMax ), inMin ); }
 
-		double XM_CALLCONV GetX() const { return _mm_cvtsd_f64( _mm256_castpd256_pd128( mVector ) ); }
-		double XM_CALLCONV GetY() const { return mScalar[1]; }
-		double XM_CALLCONV GetZ() const { return mScalar[2]; }
-		double XM_CALLCONV GetW() const { return mScalar[3]; }
 
-		double XM_CALLCONV SetX( double inX ) { mScalar[0] = inX; }
-		double XM_CALLCONV SetY( double inY ) { mScalar[1] = inY; }
-		double XM_CALLCONV SetZ( double inZ ) { mScalar[2] = inZ; }
-		double XM_CALLCONV SetW( double inW ) { mScalar[3] = inW; }
+		double XM_CALLCONV GetX() const { return _mm_cvtsd_f64( _mm256_castpd256_pd128( mVector ) ); }
+		double XM_CALLCONV GetY() const { return _mm_cvtsd_f64( _mm_permute_pd( _mm256_castpd256_pd128( mVector ), 0x01 ) ); }
+		double XM_CALLCONV GetZ() const { return _mm_cvtsd_f64( _mm256_extractf128_pd( mVector, 1 ) ); }
+		double XM_CALLCONV GetW() const { return _mm_cvtsd_f64( _mm_permute_pd( _mm256_extractf128_pd( mVector, 1 ), 0x01 ) ); }
+
+		template<size_t Axis> double XM_CALLCONV Get() const;
+		template<> double XM_CALLCONV Get<0>() const { return GetX(); }
+		template<> double XM_CALLCONV Get<1>() const { return GetY(); }
+		template<> double XM_CALLCONV Get<2>() const { return GetZ(); }
+		template<> double XM_CALLCONV Get<3>() const { return GetW(); }
+
+
+		void XM_CALLCONV SetX( double inX ) { mVector = _mm256_blend_pd( mVector, _mm256_set1_pd( inX ), 1 ); }
+		void XM_CALLCONV SetY( double inY ) { mVector = _mm256_blend_pd( mVector, _mm256_set1_pd( inY ), 2 ); }
+		void XM_CALLCONV SetZ( double inZ ) { mVector = _mm256_blend_pd( mVector, _mm256_set1_pd( inZ ), 4 ); }
+		void XM_CALLCONV SetW( double inW ) { mVector = _mm256_blend_pd( mVector, _mm256_set1_pd( inW ), 8 ); }
+
+		template<size_t Axis> void XM_CALLCONV Set( double inV );
+		template<> void XM_CALLCONV Set<0>( double inV ) { SetX( inV ); }
+		template<> void XM_CALLCONV Set<1>( double inV ) { SetY( inV ); }
+		template<> void XM_CALLCONV Set<2>( double inV ) { SetZ( inV ); }
+		template<> void XM_CALLCONV Set<3>( double inV ) { SetW( inV ); }
+
 
 		// Cast to 32 bit
 		DirectX::XMVECTOR XM_CALLCONV ToXMVECTOR() const
@@ -96,7 +99,7 @@ namespace Cyclone::Math
 		}
 
 		// FP64 multiplication
-		XLVector XM_CALLCONV operator * ( XLVector inRhs )
+		XLVector XM_CALLCONV operator * ( XLVector inRhs ) const
 		{
 			return _mm256_mul_pd( mVector, inRhs.mVector );
 		}

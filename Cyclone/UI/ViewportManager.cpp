@@ -366,16 +366,16 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 		Cyclone::Math::XLVector rebasedBoundingBoxMax = rebasedEntityPosition - boundingBox.mCenter + boundingBox.mExtent;
 
 		ImVec2 localBoxMin;
-		localBoxMin.x = static_cast<float>( rebasedBoundingBoxMin.mScalar[AxisU] / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
-		localBoxMin.y = static_cast<float>( rebasedBoundingBoxMin.mScalar[AxisV] / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
+		localBoxMin.x = static_cast<float>( rebasedBoundingBoxMin.Get<AxisU>() / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
+		localBoxMin.y = static_cast<float>( rebasedBoundingBoxMin.Get<AxisV>() / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
 
 		ImVec2 localBoxMax;
-		localBoxMax.x = static_cast<float>( rebasedBoundingBoxMax.mScalar[AxisU] / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
-		localBoxMax.y = static_cast<float>( rebasedBoundingBoxMax.mScalar[AxisV] / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
+		localBoxMax.x = static_cast<float>( rebasedBoundingBoxMax.Get<AxisU>() / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
+		localBoxMax.y = static_cast<float>( rebasedBoundingBoxMax.Get<AxisV>() / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
 
 		ImVec2 localPos;
-		localPos.x = static_cast<float>( rebasedEntityPosition.mScalar[AxisU] / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
-		localPos.y = static_cast<float>( rebasedEntityPosition.mScalar[AxisV] / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
+		localPos.x = static_cast<float>( rebasedEntityPosition.Get<AxisU>() / mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
+		localPos.y = static_cast<float>( rebasedEntityPosition.Get<AxisV>() / mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
 
 		// Only draw X if smaller than bounding box
 		if ( kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y ) {
@@ -432,42 +432,35 @@ void Cyclone::UI::ViewportManager::UpdateWireframe( float inDeltaTime, Cyclone::
 				positionDeltaStorage.emplace( inLevelInterface->GetSelectedEntity(), registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() ) );
 			}
 
+			Cyclone::Core::Component::Position startPosition = positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() );
+
 			Cyclone::Core::Component::Position positionDelta{ Cyclone::Math::XLVector::sZero() };
 
 			if ( mGridSnapType == EGridSnapType::ByGrid ) {
 				positionDelta = Cyclone::Core::Component::Position(
 					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
 					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
-					positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ) -
+					startPosition -
 					registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() )
 				);
-
-				//registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() ) = Cyclone::Core::Component::Position(
-				//	positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ) +
-				//	Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
-				//	Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mZoomScale2D / mSubGridSize ) * mSubGridSize )
-				//);
 			}
 			else if ( mGridSnapType == EGridSnapType::ToGrid ) {
 				positionDelta = Cyclone::Core::Component::Position(
 					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
 					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * mZoomScale2D / mSubGridSize ) * mSubGridSize ) +
-					positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ) -
+					startPosition -
 					registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() )
 				);
 
-				positionDelta.mScalar[AxisU] += std::round( positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ).mScalar[AxisU] / mSubGridSize ) * mSubGridSize - positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ).mScalar[AxisU];
-				positionDelta.mScalar[AxisV] += std::round( positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ).mScalar[AxisV] / mSubGridSize ) * mSubGridSize - positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ).mScalar[AxisV];
-
-				//const auto currentPosition = registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() );
-				//positionDelta += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( worldSnapU - currentPosition.mScalar[AxisU] );
-				//positionDelta += Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( worldSnapV - currentPosition.mScalar[AxisV] );
+				positionDelta +=
+					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( std::round( startPosition.Get<AxisU>() / mSubGridSize ) * mSubGridSize - startPosition.Get<AxisU>() ) +
+					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( std::round( startPosition.Get<AxisV>() / mSubGridSize ) * mSubGridSize - startPosition.Get<AxisV>() );
 			}
 			else {
 				positionDelta = Cyclone::Core::Component::Position(
 					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * mZoomScale2D ) +
 					Cyclone::Math::XLVector::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * mZoomScale2D ) +
-					positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() ) -
+					startPosition -
 					registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() )
 				);
 			}
