@@ -29,6 +29,10 @@ namespace Cyclone::Math
 		static XLVector XM_CALLCONV sMax( XLVector inLhs, XLVector inRhs ) { return _mm256_max_pd( inLhs.mVector, inRhs.mVector ); }
 		static XLVector XM_CALLCONV sClamp( XLVector inV, XLVector inMin, XLVector inMax ) { return sMax( sMin( inV, inMax ), inMin ); }
 
+		static XLVector XM_CALLCONV sRound( XLVector inV ) { return _mm256_round_pd( inV.mVector, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC ); }
+		static XLVector XM_CALLCONV sFloor( XLVector inV ) { return _mm256_round_pd( inV.mVector, _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC ); }
+		static XLVector XM_CALLCONV sCeil( XLVector inV ) { return _mm256_round_pd( inV.mVector, _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC ); }
+		static XLVector XM_CALLCONV sTrunc( XLVector inV ) { return _mm256_round_pd( inV.mVector, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC ); }
 
 		double XM_CALLCONV GetX() const { return _mm_cvtsd_f64( _mm256_castpd256_pd128( mVector ) ); }
 		double XM_CALLCONV GetY() const { return _mm_cvtsd_f64( _mm_permute_pd( _mm256_castpd256_pd128( mVector ), 0x01 ) ); }
