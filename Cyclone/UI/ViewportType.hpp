@@ -1,3 +1,5 @@
+#pragma once
+
 namespace Cyclone::UI
 {
 	enum class EViewportType

@@ -2,6 +2,9 @@
 
 #include "Cyclone/UI/ViewportElement.hpp"
 
+// DX Includes
+#include <DirectXHelpers.h>
+
 Cyclone::UI::ViewportElement::ViewportElement( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor )
 {
 	mTargetMSAA = std::make_unique<DX::MSAAHelper>( inBackBufferFormat, inDepthBufferFormat, 4 );
@@ -22,6 +25,16 @@ void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 * inDevice )
 {
 	mTargetMSAA->SetDevice( inDevice );
 	mTargetRT->SetDevice( inDevice );
+
+	mCommonStates = std::make_unique<DirectX::CommonStates>( inDevice );
+
+	mWireframeGridEffect = std::make_unique<DirectX::BasicEffect>( inDevice );
+	mWireframeGridEffect->SetVertexColorEnabled( true );
+	DX::ThrowIfFailed( DirectX::CreateInputLayoutFromEffect<DirectX::VertexPositionColor>( inDevice, mWireframeGridEffect.get(), mWireframeGridInputLayout.ReleaseAndGetAddressOf() ) );
+
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext3> deviceContext;
+	inDevice->GetImmediateContext3( deviceContext.GetAddressOf() );
+	mWireframeGridBatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>( deviceContext.Get() );
 }
 
 ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetOrResizeSRV( size_t inWidth, size_t inHeight )

@@ -116,6 +116,15 @@
     <ClInclude Include="Util\Color.hpp">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="UI\ViewportElementPerspective.hpp">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\ViewportElementOrthographic.hpp">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Util\Render.hpp">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -174,6 +183,12 @@
       <Filter>Core\Entity</Filter>
     </ClCompile>
     <ClCompile Include="UI\Outliner.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\ViewportElementPerspective.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\ViewportElementOrthographic.cpp">
       <Filter>UI</Filter>
     </ClCompile>
   </ItemGroup>

@@ -36,50 +36,6 @@ namespace
 		ImGui::Text( inText );
 	}
 
-	void XM_CALLCONV DrawWireframeBoundingBox( DirectX::PrimitiveBatch<DirectX::VertexPositionColor> *inBatch, DirectX::FXMVECTOR inRebasedBoxCenter, DirectX::FXMVECTOR inBoxExtent, DirectX::FXMVECTOR inBoxColor )
-	{
-		DirectX::XMMATRIX matWorld = DirectX::XMMatrixScalingFromVector( inBoxExtent );
-		matWorld.r[3] = DirectX::XMVectorSelect( matWorld.r[3], inRebasedBoxCenter, DirectX::g_XMSelect1110 );
-
-		static const DirectX::XMVECTORF32 s_verts[8] =
-		{
-			{ { { -1.f, -1.f, -1.f, 0.f } } },
-			{ { {  1.f, -1.f, -1.f, 0.f } } },
-			{ { {  1.f, -1.f,  1.f, 0.f } } },
-			{ { { -1.f, -1.f,  1.f, 0.f } } },
-			{ { { -1.f,  1.f, -1.f, 0.f } } },
-			{ { {  1.f,  1.f, -1.f, 0.f } } },
-			{ { {  1.f,  1.f,  1.f, 0.f } } },
-			{ { { -1.f,  1.f,  1.f, 0.f } } }
-		};
-
-		static const WORD s_indices[] =
-		{
-			0, 1,
-			1, 2,
-			2, 3,
-			3, 0,
-			4, 5,
-			5, 6,
-			6, 7,
-			7, 4,
-			0, 4,
-			1, 5,
-			2, 6,
-			3, 7
-		};
-
-		DirectX::VertexPositionColor verts[8];
-
-		for (size_t i = 0; i < 8; ++i) {
-			DirectX::XMVECTOR v = DirectX::XMVector3Transform( s_verts[i], matWorld );
-			DirectX::XMStoreFloat3( &verts[i].position, v );
-			DirectX::XMStoreFloat4( &verts[i].color, inBoxColor );
-		}
-
-		inBatch->DrawIndexed( D3D_PRIMITIVE_TOPOLOGY_LINELIST, s_indices, static_cast<UINT>( std::size( s_indices ) ), verts, 8 );
-	}
-
 	void DrawCross( ImDrawList *inDrawList, const ImVec2 &inOrigin, float inWidth, ImU32 inColor )
 	{
 		inDrawList->AddLine( { inOrigin.x - inWidth, inOrigin.y - inWidth }, { inOrigin.x + inWidth, inOrigin.y + inWidth }, inColor );
@@ -89,10 +45,10 @@ namespace
 
 Cyclone::UI::ViewportManager::ViewportManager()
 {
-	mViewportPerspective = std::make_unique<ViewportElement>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
-	mViewportTop = std::make_unique<ViewportElement>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
-	mViewportFront = std::make_unique<ViewportElement>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
-	mViewportSide = std::make_unique<ViewportElement>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
+	mViewportPerspective = std::make_unique<ViewportElementPerspective>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
+	mViewportTop = std::make_unique<ViewportElementOrthographic<EViewportType::TopXZ>>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
+	mViewportFront = std::make_unique<ViewportElementOrthographic<EViewportType::FrontXY>>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
+	mViewportSide = std::make_unique<ViewportElementOrthographic<EViewportType::SideYZ>>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
 }
 
 void Cyclone::UI::ViewportManager::SetDevice( ID3D11Device3 *inDevice )
@@ -524,186 +480,20 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 
 void Cyclone::UI::ViewportManager::RenderPerspective( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	constexpr EViewportType T = EViewportType::Perspective;
-
-	ViewportElement *viewport = GetViewport<T>();
-
-	viewport->Clear( inDeviceContext );
-	
-	inDeviceContext->OMSetBlendState( mCommonStates->Opaque(), nullptr, 0xFFFFFFFF );
-	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
-	inDeviceContext->RSSetState( mCommonStates->CullNone() );
-	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
-
-	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix<T>(), GetProjMatrix<T>() );
-	mWireframeGridEffect->Apply( inDeviceContext );
-
-	mWireframeGridBatch->Begin();
-	{
-		mWireframeGridBatch->DrawLine(
-			{ ( -mPerspectiveContext.mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkRed },
-			{ ( -mPerspectiveContext.mCenter3D + XLVector::sZeroSetValueByIndex<0>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkRed }
-		);
-
-		mWireframeGridBatch->DrawLine(
-			{ ( -mPerspectiveContext.mCenter3D ).ToXMVECTOR(), DirectX::Colors::Green },
-			{ ( -mPerspectiveContext.mCenter3D + XLVector::sZeroSetValueByIndex<1>( 1 ) ).ToXMVECTOR(), DirectX::Colors::Green }
-		);
-
-		mWireframeGridBatch->DrawLine(
-			{ ( -mPerspectiveContext.mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkBlue },
-			{ ( -mPerspectiveContext.mCenter3D + XLVector::sZeroSetValueByIndex<2>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkBlue }
-		);
-	}
-	mWireframeGridBatch->End();
-
-	// Switch to depth buffer
-	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
-
-	mWireframeGridBatch->Begin();
-	{
-		// Iterate over all entities
-		const entt::registry &cregistry = inLevelInterface->GetRegistry();
-		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
-		for ( const entt::entity entity : view ) {
-
-			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-			const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
-			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
-
-			bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
-			bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
-
-			uint32_t entityColorU32;
-			if ( entityIsSelected ) {
-				entityColorU32 = IM_COL32( 255, 255, 0, 255 );
-			}
-			else if ( entityInSelection ) {
-				entityColorU32 = IM_COL32( 255, 128, 0, 255 );
-			}
-			else {
-				entityColorU32 = entt::resolve( static_cast<entt::id_type>( entityType ) ).data( "debug_color"_hs ).get( {} ).cast<uint32_t>();
-			}
-
-			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
-
-			XLVector rebasedEntityPosition = ( position - mPerspectiveContext.mCenter3D );
-			XLVector rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
-
-			DrawWireframeBoundingBox( mWireframeGridBatch.get(), rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
-		}
-	}
-	mWireframeGridBatch->End();
-
-	viewport->Resolve( inDeviceContext );
+	mViewportPerspective->Render( inDeviceContext, inLevelInterface, mGridContext, mPerspectiveContext );
 }
 
 void Cyclone::UI::ViewportManager::RenderTop( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	RenderWireframe<EViewportType::TopXZ>( inDeviceContext, inLevelInterface );
+	mViewportTop->Render( inDeviceContext, inLevelInterface, mGridContext, mOrthographicContext );
 }
 
 void Cyclone::UI::ViewportManager::RenderFront( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	RenderWireframe<EViewportType::FrontXY>( inDeviceContext, inLevelInterface );
+	mViewportFront->Render( inDeviceContext, inLevelInterface, mGridContext, mOrthographicContext );
 }
 
 void Cyclone::UI::ViewportManager::RenderSide( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	RenderWireframe<EViewportType::SideYZ>( inDeviceContext, inLevelInterface );
-}
-
-
-template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportManager::RenderWireframe( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
-{
-	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
-	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
-
-	ViewportElement *viewport = GetViewport<T>();
-
-	viewport->Clear( inDeviceContext );
-
-	inDeviceContext->OMSetBlendState( mCommonStates->Opaque(), nullptr, 0xFFFFFFFF );
-	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
-	inDeviceContext->RSSetState( mCommonStates->CullNone() );
-	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
-
-	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix<T>(), GetProjMatrix<T>());
-	mWireframeGridEffect->Apply( inDeviceContext );
-
-	mWireframeGridBatch->Begin();
-	{
-		double minU, maxU, minV, maxV;
-		GetMinMaxUV<T>( minU, maxU, minV, maxV );
-
-		double subgridStep = mGridContext.mGridSize;
-		double gridStep = std::pow( 10.0, std::ceil( std::log10( subgridStep * 4 ) ) ) / 2;
-
-		while ( subgridStep / mOrthographicContext.mZoomScale2D < mMinGridSize ) {
-			//subgridStep *= 10;
-			subgridStep = std::pow( 10.0, std::ceil( std::log10( subgridStep * 4 ) ) ) / 2;
-		}
-
-		while ( gridStep / mOrthographicContext.mZoomScale2D < mMinGridSize * 5 ) {
-			//gridStep *= 10;
-			gridStep = std::pow( 10.0, std::ceil( std::log10( gridStep * 4 ) ) ) / 2;
-		}
-
-		if ( subgridStep / mOrthographicContext.mZoomScale2D > mMinGridSize ) {
-			DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, subgridStep, DirectX::ColorsLinear::DimGray );
-			DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, subgridStep, DirectX::ColorsLinear::DimGray );
-		}
-
-		DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, gridStep, DirectX::Colors::DimGray );
-		DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, gridStep, DirectX::Colors::DimGray );
-
-		DrawLineLoop<AxisU, AxisV>( minU, maxU, minV, maxV, 1000, DirectX::Colors::Gray );
-		DrawLineLoop<AxisV, AxisU>( minV, maxV, minU, maxU, 1000, DirectX::Colors::Gray );
-
-		DrawAxisLine<AxisU>( minU, maxU );
-		DrawAxisLine<AxisV>( minV, maxV );
-	}
-	mWireframeGridBatch->End();
-
-
-	// Switch to depth buffer
-	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
-
-	mWireframeGridBatch->Begin();
-	{
-		// Iterate over all entities
-		const entt::registry &cregistry = inLevelInterface->GetRegistry();
-		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
-		for ( const entt::entity entity : view ) {
-
-			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-			const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
-			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
-
-			bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
-			bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
-
-			uint32_t entityColorU32;
-			if ( entityIsSelected ) {
-				entityColorU32 = IM_COL32( 255, 255, 0, 255 );
-			}
-			else if ( entityInSelection ) {
-				entityColorU32 = IM_COL32( 255, 128, 0, 255 );
-			}
-			else {
-				entityColorU32 = entt::resolve( static_cast<entt::id_type>( entityType ) ).data( "debug_color"_hs ).get( {} ).cast<uint32_t>();
-			}
-
-			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
-
-			XLVector rebasedEntityPosition = ( position - mOrthographicContext.mCenter2D );
-			XLVector rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
-
-			DrawWireframeBoundingBox( mWireframeGridBatch.get(), rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
-		}
-	}
-	mWireframeGridBatch->End();
-
-	viewport->Resolve( inDeviceContext );
+	mViewportSide->Render( inDeviceContext, inLevelInterface, mGridContext, mOrthographicContext );
 }
