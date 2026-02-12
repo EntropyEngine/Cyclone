@@ -13,6 +13,10 @@
 // Cyclone utils
 #include "Cyclone/Util/Render.hpp"
 
+// ImGui Includes
+#include <imgui.h>
+#include <imgui_internal.h>
+
 using Cyclone::Math::XLVector;
 
 namespace
@@ -32,7 +36,52 @@ namespace
 
 void Cyclone::UI::ViewportElementPerspective::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, ViewportGridContext &inGridContext, ViewportPerspectiveContext &inPerspectiveContext )
 {
+	ImVec2 viewSize = ImGui::GetWindowSize();
+	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
 
+	ImGui::SetCursorPos( { 0, 0 } );
+	ImGui::Image( GetOrResizeSRV( static_cast<size_t>( viewSize.x ), static_cast<size_t>( viewSize.y ) ), viewSize );
+
+	ImGuiIO &io = ImGui::GetIO();
+
+	ImGui::SetCursorPos( { 0, 0 } );
+	ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
+	const bool isHovered = ImGui::IsItemHovered();
+	const bool isActive = ImGui::IsItemActive();
+
+	if ( isActive && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
+		inPerspectiveContext.mCameraPitch += io.MouseDelta.y * kMouseSensitivity;
+		inPerspectiveContext.mCameraYaw -= io.MouseDelta.x * kMouseSensitivity;
+
+		constexpr float pitchLimit = DirectX::XM_PIDIV2 - 0.01f;
+		inPerspectiveContext.mCameraPitch = std::clamp( inPerspectiveContext.mCameraPitch, -pitchLimit, pitchLimit );
+		inPerspectiveContext.mCameraYaw = inPerspectiveContext.mCameraYaw - DirectX::XM_2PI * std::floor( inPerspectiveContext.mCameraYaw / DirectX::XM_2PI );
+
+		float forward = 0.0f;
+		float left = 0.0f;
+
+		forward += ImGui::IsKeyDown( ImGuiKey_W );
+		forward -= ImGui::IsKeyDown( ImGuiKey_S );
+		left += ImGui::IsKeyDown( ImGuiKey_A );
+		left -= ImGui::IsKeyDown( ImGuiKey_D );
+
+		forward *= kKeyboardSensitivity * inDeltaTime;
+		left *= kKeyboardSensitivity * inDeltaTime;
+
+		if ( forward || left ) {
+			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw( inPerspectiveContext.mCameraPitch, inPerspectiveContext.mCameraYaw, 0.0f );
+			inPerspectiveContext.mCenter3D += XLVector::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::XMVectorSet( left, 0, forward, 0 ), rotationMatrix ) );
+		}
+	}
+
+	if ( isHovered ) {
+		float scroll = io.MouseWheel;
+		scroll *= kCameraDollySensitivity;
+		if ( scroll ) {
+			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw( inPerspectiveContext.mCameraPitch, inPerspectiveContext.mCameraYaw, 0.0f );
+			inPerspectiveContext.mCenter3D += XLVector::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::XMVectorSet( 0, 0, scroll, 0 ), rotationMatrix ) );
+		}
+	}
 }
 
 void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface, const ViewportGridContext &inGridContext, const ViewportPerspectiveContext &inPerspectiveContext )
