@@ -4,6 +4,9 @@
 #include "Cyclone/UI/ViewportType.hpp"
 #include "Cyclone/UI/ViewportContext.hpp"
 
+struct ImVec2;
+struct ImDrawList;
+
 namespace Cyclone::Core {
 	class LevelInterface;
 }
@@ -28,6 +31,10 @@ namespace Cyclone::UI
 		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface, const ViewportGridContext &inGridContext, const ViewportOrthographicContext &inOrthographicContext );
 
 	protected:
+		/// @note mutates global ImGui state
+		void DrawEntities( const Cyclone::Core::LevelInterface *inLevelInterface, const ViewportOrthographicContext &inOrthographicContext, ImDrawList* drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax ) const;
+
+	private:
 		void XM_CALLCONV GetMinMaxUV( Cyclone::Math::XLVector inCenter2D, double inWorldLimit, double inZoomScale2D, double &outMinU, double &outMaxU, double &outMinV, double &outMaxV ) const
 		{
 			double mCenterU = inCenter2D.Get<ViewportElementOrthographic::AxisU>();

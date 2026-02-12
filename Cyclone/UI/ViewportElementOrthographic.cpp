@@ -58,14 +58,17 @@ namespace
 template<Cyclone::UI::EViewportType T>
 void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, ViewportGridContext& inGridContext, ViewportOrthographicContext& inOrthographicContext )
 {
+	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
+	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
+
 	ImVec2 viewSize = ImGui::GetWindowSize();
 	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
 
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	drawList->Flags |= ImDrawListFlags_AntiAliasedLines;
+
 	ImGui::SetCursorPos( { 0, 0 } );
 	ImGui::Image( GetOrResizeSRV( static_cast<size_t>( viewSize.x ), static_cast<size_t>( viewSize.y ) ), viewSize );
-
-	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
-	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
 
 	ImGuiIO &io = ImGui::GetIO();
 
@@ -123,11 +126,6 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 		inOrthographicContext.UpdateZoomLevel( newZoomLevel );
 	}
 
-	ImDrawList* drawList = ImGui::GetWindowDrawList();
-	drawList->Flags |= ImDrawListFlags_AntiAliasedLines;
-	drawList->ChannelsSplit( 3 );
-	drawList->ChannelsSetCurrent( 0 );
-
 	if ( isCanvasHovered ) {
 		ImVec2 gridPos;
 		gridPos.x = static_cast<float>( ( inOrthographicContext.mCenter2D.Get<AxisU>() - worldSnapU ) / inOrthographicContext.mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
@@ -138,82 +136,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 		DrawCross( drawList, gridPos, offset, IM_COL32( 255, 255, 255, 255 ) );
 	}
 
-	// Get smaller font for debug text
-	ImFont* narrowFont = io.Fonts->Fonts[1];
-	float fontSize = ImGui::GetFontSize();
-
-	ImVec2 selectedBoxMin = { viewOrigin.x + viewSize.x, viewOrigin.y + viewSize.y };
-	ImVec2 selectedBoxMax = viewOrigin;
-
-	const double invZoom = 1.0 / inOrthographicContext.mZoomScale2D;
-	const float offsetX = viewSize.x / 2.0f + viewOrigin.x;
-	const float offsetY = viewSize.y / 2.0f + viewOrigin.y;
-
-	// Iterate over all entities
-	entt::registry &registry = inLevelInterface->GetRegistry();
-	const entt::registry &cregistry = inLevelInterface->GetRegistry();
-	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
-	for ( const entt::entity entity : view ) {
-
-		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-		const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
-		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
-
-		auto entityColor = entt::resolve( static_cast<entt::id_type>( entityType ) ).data( "debug_color"_hs ).get( {} ).cast<uint32_t>();
-
-		bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
-		bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
-
-		if ( entityIsSelected ) {
-			entityColor = IM_COL32( 255, 255, 0, 255 );
-			drawList->ChannelsSetCurrent( 2 );
-		}
-		else if ( entityInSelection ) {
-			entityColor = IM_COL32( 255, 128, 0, 255 );
-			drawList->ChannelsSetCurrent( 1 );
-		}
-		else {
-			drawList->ChannelsSetCurrent( 0 );
-		}
-
-		XLVector rebasedEntityPosition = ( inOrthographicContext.mCenter2D - position );
-		XLVector rebasedBoundingBoxMin = rebasedEntityPosition - boundingBox.mCenter - boundingBox.mExtent;
-		XLVector rebasedBoundingBoxMax = rebasedEntityPosition - boundingBox.mCenter + boundingBox.mExtent;
-
-		ImVec2 localBoxMin;
-		localBoxMin.x = static_cast<float>( rebasedBoundingBoxMin.Get<AxisU>() * invZoom + offsetX );
-		localBoxMin.y = static_cast<float>( rebasedBoundingBoxMin.Get<AxisV>() * invZoom + offsetY );
-
-		ImVec2 localBoxMax;
-		localBoxMax.x = static_cast<float>( rebasedBoundingBoxMax.Get<AxisU>() * invZoom + offsetX );
-		localBoxMax.y = static_cast<float>( rebasedBoundingBoxMax.Get<AxisV>() * invZoom + offsetY );
-
-		ImVec2 localPos;
-		localPos.x = static_cast<float>( rebasedEntityPosition.Get<AxisU>() * invZoom + offsetX );
-		localPos.y = static_cast<float>( rebasedEntityPosition.Get<AxisV>() * invZoom + offsetY );
-
-		// Only draw X if smaller than bounding box
-		if ( kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y ) {
-			DrawCross( drawList, localPos, kPositionHandleSize, entityColor );
-		}
-
-		if ( kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y ) {
-			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, Cyclone::Core::Entity::EntityTypeRegistry::GetEntityTypeName( entityType ) );
-			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, std::format( "id={}", static_cast<size_t>( entity ) ).c_str() );
-		}
-
-		if ( entityInSelection ) {
-			drawList->AddRect( localBoxMin, localBoxMax, entityColor, 0, 0, 2 );
-
-			selectedBoxMin.x = std::min( selectedBoxMin.x, localBoxMin.x );
-			selectedBoxMin.y = std::min( selectedBoxMin.y, localBoxMin.y );
-
-			selectedBoxMax.x = std::max( selectedBoxMax.x, localBoxMax.x );
-			selectedBoxMax.y = std::max( selectedBoxMax.y, localBoxMax.y );
-		}
-	}
-
-	drawList->ChannelsMerge();
+	ImVec2 selectedBoxMin, selectedBoxMax;
+	DrawEntities( inLevelInterface, inOrthographicContext, drawList, viewOrigin, viewSize, selectedBoxMin, selectedBoxMax );
 
 	if ( !inLevelInterface->GetSelectedEntities().empty() ) {
 
@@ -234,7 +158,9 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 		const bool isSelectionHovered = ImGui::IsItemHovered();
 		const bool isSelectionActive = ImGui::IsItemActive();
 
+		entt::registry &registry = inLevelInterface->GetRegistry();
 		if ( isSelectionActive ) {
+
 			ImVec2 selectionMouseDrag = ImGui::GetMouseDragDelta( ImGuiMouseButton_Left, 0.0f );
 
 			auto &&positionDeltaStorage = registry.storage<Cyclone::Core::Component::Position>( "delta"_hs );
@@ -376,6 +302,94 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 	mWireframeGridBatch->End();
 
 	Resolve( inDeviceContext );
+}
+
+template<Cyclone::UI::EViewportType T>
+void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::Core::LevelInterface *inLevelInterface, const ViewportOrthographicContext &inOrthographicContext, ImDrawList *drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax ) const
+{
+	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
+	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
+
+	// Split channels into 3 planes
+	drawList->ChannelsSplit( 3 );
+	drawList->ChannelsSetCurrent( 0 );
+
+	// Get smaller font for debug text
+	ImGuiIO &io = ImGui::GetIO();
+	ImFont* narrowFont = io.Fonts->Fonts[1];
+	float fontSize = ImGui::GetFontSize();
+
+	outSelectedBoxMin = { inViewOrigin.x + inViewSize.x, inViewOrigin.y + inViewSize.y };
+	outSelectedBoxMax = inViewOrigin;
+
+	const double invZoom = 1.0 / inOrthographicContext.mZoomScale2D;
+	const float offsetX = inViewSize.x / 2.0f + inViewOrigin.x;
+	const float offsetY = inViewSize.y / 2.0f + inViewOrigin.y;
+
+	// Iterate over all entities
+	const entt::registry &cregistry = inLevelInterface->GetRegistry();
+	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
+	for ( const entt::entity entity : view ) {
+
+		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+		const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
+		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
+
+		auto entityColor = entt::resolve( static_cast<entt::id_type>( entityType ) ).data( "debug_color"_hs ).get( {} ).cast<uint32_t>();
+
+		bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
+		bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
+
+		if ( entityIsSelected ) {
+			entityColor = IM_COL32( 255, 255, 0, 255 );
+			drawList->ChannelsSetCurrent( 2 );
+		}
+		else if ( entityInSelection ) {
+			entityColor = IM_COL32( 255, 128, 0, 255 );
+			drawList->ChannelsSetCurrent( 1 );
+		}
+		else {
+			drawList->ChannelsSetCurrent( 0 );
+		}
+
+		XLVector rebasedEntityPosition = ( inOrthographicContext.mCenter2D - position );
+		XLVector rebasedBoundingBoxMin = rebasedEntityPosition - boundingBox.mCenter - boundingBox.mExtent;
+		XLVector rebasedBoundingBoxMax = rebasedEntityPosition - boundingBox.mCenter + boundingBox.mExtent;
+
+		ImVec2 localBoxMin;
+		localBoxMin.x = static_cast<float>( rebasedBoundingBoxMin.Get<AxisU>() * invZoom + offsetX );
+		localBoxMin.y = static_cast<float>( rebasedBoundingBoxMin.Get<AxisV>() * invZoom + offsetY );
+
+		ImVec2 localBoxMax;
+		localBoxMax.x = static_cast<float>( rebasedBoundingBoxMax.Get<AxisU>() * invZoom + offsetX );
+		localBoxMax.y = static_cast<float>( rebasedBoundingBoxMax.Get<AxisV>() * invZoom + offsetY );
+
+		ImVec2 localPos;
+		localPos.x = static_cast<float>( rebasedEntityPosition.Get<AxisU>() * invZoom + offsetX );
+		localPos.y = static_cast<float>( rebasedEntityPosition.Get<AxisV>() * invZoom + offsetY );
+
+		// Only draw X if smaller than bounding box
+		if ( kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y ) {
+			DrawCross( drawList, localPos, kPositionHandleSize, entityColor );
+		}
+
+		if ( kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y ) {
+			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, Cyclone::Core::Entity::EntityTypeRegistry::GetEntityTypeName( entityType ) );
+			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, std::format( "id={}", static_cast<size_t>( entity ) ).c_str() );
+		}
+
+		if ( entityInSelection ) {
+			drawList->AddRect( localBoxMin, localBoxMax, entityColor, 0, 0, 2 );
+
+			outSelectedBoxMin.x = std::min( outSelectedBoxMin.x, localBoxMin.x );
+			outSelectedBoxMin.y = std::min( outSelectedBoxMin.y, localBoxMin.y );
+
+			outSelectedBoxMax.x = std::max( outSelectedBoxMax.x, localBoxMax.x );
+			outSelectedBoxMax.y = std::max( outSelectedBoxMax.y, localBoxMax.y );
+		}
+	}
+
+	drawList->ChannelsMerge();
 }
 
 template class Cyclone::UI::ViewportElementOrthographic<Cyclone::UI::EViewportType::TopXZ>;
