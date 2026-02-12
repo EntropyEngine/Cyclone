@@ -70,6 +70,12 @@ namespace Cyclone::Math
 			return _mm256_cvtps_pd( inV );
 		}
 
+		// Self conversion helper
+		XM_CALLCONV operator __m256d() const
+		{
+			return mVector;
+		}
+
 		// FP64 addition
 		XLVector XM_CALLCONV operator + ( XLVector inRhs ) const
 		{
