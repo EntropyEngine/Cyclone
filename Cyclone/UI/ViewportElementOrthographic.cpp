@@ -108,11 +108,13 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	);
 	ImGui::PopStyleVar( 2 );
 
+	// Middle click pan view
 	if ( ( isCanvasHovered || isCanvasActive ) && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
 		inOrthographicContext.mCenter2D += XLVector::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * inOrthographicContext.mZoomScale2D );
 		inOrthographicContext.mCenter2D += XLVector::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * inOrthographicContext.mZoomScale2D );
 	}
 
+	// Zoom view
 	if ( isCanvasHovered && io.MouseWheel ) {
 		int newZoomLevel = inOrthographicContext.mZoomLevel - ( ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 ) );
 		double newZoomScale2D = inOrthographicContext.sZoomLevelToScale( newZoomLevel );
@@ -126,95 +128,30 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 		inOrthographicContext.UpdateZoomLevel( newZoomLevel );
 	}
 
+	// Draw cursor
 	if ( isCanvasHovered ) {
 		ImVec2 gridPos;
 		gridPos.x = static_cast<float>( ( inOrthographicContext.mCenter2D.Get<AxisU>() - worldSnapU ) / inOrthographicContext.mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
 		gridPos.y = static_cast<float>( ( inOrthographicContext.mCenter2D.Get<AxisV>() - worldSnapV ) / inOrthographicContext.mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
 
-		//float offset = static_cast<float>( std::max( 2.0, mSubGridSize / mZoomScale2D ) );
-		float offset = static_cast<float>( 2.0f );
-		DrawCross( drawList, gridPos, offset, IM_COL32( 255, 255, 255, 255 ) );
+		DrawCross( drawList, gridPos, 2.0f, IM_COL32( 255, 255, 255, 255 ) );
 	}
 
+	// Draw entites and get selection bounding box
 	ImVec2 selectedBoxMin, selectedBoxMax;
 	DrawEntities( inLevelInterface, inOrthographicContext, drawList, viewOrigin, viewSize, selectedBoxMin, selectedBoxMax );
 
-	if ( !inLevelInterface->GetSelectedEntities().empty() ) {
-
-		drawList->AddRect( selectedBoxMin, selectedBoxMax, IM_COL32( 255, 0, 0, 255 ), 0, 0, 2 );
-
-		for ( float x = selectedBoxMin.x; x < selectedBoxMax.x - 8; x += 16 ) {
-			drawList->AddLine( { x, selectedBoxMin.y }, { x + 8, selectedBoxMin.y }, IM_COL32( 255, 255, 0, 255 ), 2 );
-			drawList->AddLine( { x - 1, selectedBoxMax.y - 1 }, { x + 7, selectedBoxMax.y - 1 }, IM_COL32( 255, 255, 0, 255 ), 2 );
-		}
-
-		for ( float y = selectedBoxMin.y; y < selectedBoxMax.y - 8; y += 16 ) {
-			drawList->AddLine( { selectedBoxMin.x, y }, { selectedBoxMin.x, y + 8 }, IM_COL32( 255, 255, 0, 255 ), 2 );
-			drawList->AddLine( { selectedBoxMax.x - 1, y - 1 }, { selectedBoxMax.x - 1, y + 7 }, IM_COL32( 255, 255, 0, 255 ), 2 );
-		}
-
-		ImGui::SetCursorPos( { selectedBoxMin.x - viewOrigin.x, selectedBoxMin.y - viewOrigin.y } );
-		ImGui::InvisibleButton( "Selection", { selectedBoxMax.x - selectedBoxMin.x, selectedBoxMax.y - selectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft );
-		const bool isSelectionHovered = ImGui::IsItemHovered();
-		const bool isSelectionActive = ImGui::IsItemActive();
-
-		entt::registry &registry = inLevelInterface->GetRegistry();
-		if ( isSelectionActive ) {
-
-			ImVec2 selectionMouseDrag = ImGui::GetMouseDragDelta( ImGuiMouseButton_Left, 0.0f );
-
-			auto &&positionDeltaStorage = registry.storage<Cyclone::Core::Component::Position>( "delta"_hs );
-
-			if ( !positionDeltaStorage.contains( inLevelInterface->GetSelectedEntity() ) ) {
-				positionDeltaStorage.emplace( inLevelInterface->GetSelectedEntity(), registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() ) );
-			}
-
-			Cyclone::Core::Component::Position startPosition = positionDeltaStorage.get( inLevelInterface->GetSelectedEntity() );
-
-			Cyclone::Core::Component::Position positionDelta{ XLVector::sZero() };
-
-			if ( inGridContext.mSnapType == ViewportGridContext::ESnapType::ByGrid ) {
-				positionDelta = Cyclone::Core::Component::Position(
-					XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * inOrthographicContext.mZoomScale2D / inGridContext.mGridSize ) * inGridContext.mGridSize ) +
-					XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * inOrthographicContext.mZoomScale2D / inGridContext.mGridSize ) * inGridContext.mGridSize ) +
-					startPosition -
-					registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() )
-				);
-			}
-			else if ( inGridContext.mSnapType == ViewportGridContext::ESnapType::ToGrid ) {
-				positionDelta = Cyclone::Core::Component::Position(
-					XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * inOrthographicContext.mZoomScale2D / inGridContext.mGridSize ) * inGridContext.mGridSize ) +
-					XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * inOrthographicContext.mZoomScale2D / inGridContext.mGridSize ) * inGridContext.mGridSize ) +
-					startPosition -
-					registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() )
-				);
-
-				positionDelta +=
-					XLVector::sZeroSetValueByIndex<AxisU>( std::round( startPosition.Get<AxisU>() / inGridContext.mGridSize ) * inGridContext.mGridSize - startPosition.Get<AxisU>() ) +
-					XLVector::sZeroSetValueByIndex<AxisV>( std::round( startPosition.Get<AxisV>() / inGridContext.mGridSize ) * inGridContext.mGridSize - startPosition.Get<AxisV>() );
-			}
-			else {
-				positionDelta = Cyclone::Core::Component::Position(
-					XLVector::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * inOrthographicContext.mZoomScale2D ) +
-					XLVector::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * inOrthographicContext.mZoomScale2D ) +
-					startPosition -
-					registry.get<Cyclone::Core::Component::Position>( inLevelInterface->GetSelectedEntity() )
-				);
-			}
-
-			for ( const entt::entity entity : inLevelInterface->GetSelectedEntities() ) {
-				registry.get<Cyclone::Core::Component::Position>( entity ) += positionDelta;
-			}
-		}
-		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) ) {
-			registry.storage<Cyclone::Core::Component::Position>( "delta"_hs ).clear();
-		}
-	}
+	// Perform drag and selection
+	TransformSelection( inLevelInterface, inGridContext, inOrthographicContext, drawList, viewOrigin, selectedBoxMin, selectedBoxMax );
 }
 
 template<Cyclone::UI::EViewportType T>
 void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface, const ViewportGridContext &inGridContext, const ViewportOrthographicContext &inOrthographicContext )
 {
+
+	constexpr size_t AxisU = ViewportElementOrthographic::AxisU;
+	constexpr size_t AxisV = ViewportElementOrthographic::AxisV;
+
 	Clear( inDeviceContext );
 
 	inDeviceContext->OMSetBlendState( mCommonStates->Opaque(), nullptr, 0xFFFFFFFF );
@@ -227,9 +164,6 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 	mWireframeGridBatch->Begin();
 	{
-		constexpr size_t AxisU = ViewportElementOrthographic::AxisU;
-		constexpr size_t AxisV = ViewportElementOrthographic::AxisV;
-
 		double minU, maxU, minV, maxV;
 		GetMinMaxUV( inOrthographicContext.mCenter2D, inGridContext.mWorldLimit, inOrthographicContext.mZoomScale2D, minU, maxU, minV, maxV );
 
@@ -268,6 +202,9 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 	mWireframeGridBatch->Begin();
 	{
+		const std::set<entt::entity> &selectedEntities = inLevelInterface->GetSelectedEntities();
+		const entt::entity selectedEntity = inLevelInterface->GetSelectedEntity();
+
 		// Iterate over all entities
 		const entt::registry &cregistry = inLevelInterface->GetRegistry();
 		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
@@ -277,8 +214,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 			const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
 			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
 
-			bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
-			bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
+			bool entityInSelection = selectedEntities.contains( entity );
+			bool entityIsSelected = selectedEntity == entity;
 
 			uint32_t entityColorU32;
 			if ( entityIsSelected ) {
@@ -326,6 +263,9 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 	const float offsetX = inViewSize.x / 2.0f + inViewOrigin.x;
 	const float offsetY = inViewSize.y / 2.0f + inViewOrigin.y;
 
+	const std::set<entt::entity> &selectedEntities = inLevelInterface->GetSelectedEntities();
+	const entt::entity selectedEntity = inLevelInterface->GetSelectedEntity();
+
 	// Iterate over all entities
 	const entt::registry &cregistry = inLevelInterface->GetRegistry();
 	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>();
@@ -337,8 +277,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 
 		auto entityColor = entt::resolve( static_cast<entt::id_type>( entityType ) ).data( "debug_color"_hs ).get( {} ).cast<uint32_t>();
 
-		bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
-		bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
+		bool entityInSelection = selectedEntities.contains( entity );
+		bool entityIsSelected = selectedEntity == entity;
 
 		if ( entityIsSelected ) {
 			entityColor = IM_COL32( 255, 255, 0, 255 );
@@ -390,6 +330,74 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 	}
 
 	drawList->ChannelsMerge();
+}
+
+template<Cyclone::UI::EViewportType T>
+void Cyclone::UI::ViewportElementOrthographic<T>::TransformSelection( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportGridContext &inGridContext, const ViewportOrthographicContext &inOrthographicContext, ImDrawList *drawList, const ImVec2 &inViewOrigin, const ImVec2 &inSelectedBoxMin, const ImVec2 &inSelectedBoxMax )
+{
+	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
+	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
+
+	const std::set<entt::entity> &selectedEntities = inLevelInterface->GetSelectedEntities();
+	const entt::entity selectedEntity = inLevelInterface->GetSelectedEntity();
+
+	if ( !selectedEntities.empty() ) {
+
+		drawList->AddRect( inSelectedBoxMin, inSelectedBoxMax, IM_COL32( 255, 0, 0, 255 ), 0, 0, 2 );
+
+		for ( float x = inSelectedBoxMin.x; x < inSelectedBoxMax.x - 8; x += 16 ) {
+			drawList->AddLine( { x, inSelectedBoxMin.y }, { x + 8, inSelectedBoxMin.y }, IM_COL32( 255, 255, 0, 255 ), 2 );
+			drawList->AddLine( { x - 1, inSelectedBoxMax.y - 1 }, { x + 7, inSelectedBoxMax.y - 1 }, IM_COL32( 255, 255, 0, 255 ), 2 );
+		}
+
+		for ( float y = inSelectedBoxMin.y; y < inSelectedBoxMax.y - 8; y += 16 ) {
+			drawList->AddLine( { inSelectedBoxMin.x, y }, { inSelectedBoxMin.x, y + 8 }, IM_COL32( 255, 255, 0, 255 ), 2 );
+			drawList->AddLine( { inSelectedBoxMax.x - 1, y - 1 }, { inSelectedBoxMax.x - 1, y + 7 }, IM_COL32( 255, 255, 0, 255 ), 2 );
+		}
+
+		ImGui::SetCursorPos( { inSelectedBoxMin.x - inViewOrigin.x, inSelectedBoxMin.y - inViewOrigin.y } );
+		ImGui::InvisibleButton( "Selection", { inSelectedBoxMax.x - inSelectedBoxMin.x, inSelectedBoxMax.y - inSelectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft );
+		const bool isSelectionHovered = ImGui::IsItemHovered();
+		const bool isSelectionActive = ImGui::IsItemActive();
+
+		entt::registry &registry = inLevelInterface->GetRegistry();
+		if ( isSelectionActive ) {
+
+			ImVec2 selectionMouseDrag = ImGui::GetMouseDragDelta( ImGuiMouseButton_Left, 0.0f );
+
+			auto &&positionDeltaStorage = registry.storage<Cyclone::Core::Component::Position>( "delta"_hs );
+
+			Cyclone::Core::Component::Position currentPosition = registry.get<Cyclone::Core::Component::Position>( selectedEntity );
+
+			if ( !positionDeltaStorage.contains( selectedEntity ) ) {
+				positionDeltaStorage.emplace( selectedEntity, registry.get<Cyclone::Core::Component::Position>( selectedEntity ) );
+			}
+
+			Cyclone::Core::Component::Position startPosition = positionDeltaStorage.get( selectedEntity );
+			Cyclone::Core::Component::Position positionDelta{ startPosition - currentPosition };
+
+			if ( inGridContext.mSnapType != ViewportGridContext::ESnapType::None ) {
+				positionDelta += XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * inOrthographicContext.mZoomScale2D / inGridContext.mGridSize ) * inGridContext.mGridSize );
+				positionDelta += XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * inOrthographicContext.mZoomScale2D / inGridContext.mGridSize ) * inGridContext.mGridSize );
+
+				if ( inGridContext.mSnapType == ViewportGridContext::ESnapType::ToGrid ) {
+					positionDelta += XLVector::sZeroSetValueByIndex<AxisU>( std::round( startPosition.Get<AxisU>() / inGridContext.mGridSize ) * inGridContext.mGridSize - startPosition.Get<AxisU>() );
+					positionDelta += XLVector::sZeroSetValueByIndex<AxisV>( std::round( startPosition.Get<AxisV>() / inGridContext.mGridSize ) * inGridContext.mGridSize - startPosition.Get<AxisV>() );
+				}
+			}
+			else {
+				positionDelta += XLVector::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * inOrthographicContext.mZoomScale2D );
+				positionDelta += XLVector::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * inOrthographicContext.mZoomScale2D );
+			}
+
+			for ( const entt::entity entity : selectedEntities ) {
+				registry.get<Cyclone::Core::Component::Position>( entity ) += positionDelta;
+			}
+		}
+		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) ) {
+			registry.storage<Cyclone::Core::Component::Position>( "delta"_hs ).clear();
+		}
+	}
 }
 
 template class Cyclone::UI::ViewportElementOrthographic<Cyclone::UI::EViewportType::TopXZ>;
