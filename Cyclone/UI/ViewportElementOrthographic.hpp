@@ -37,7 +37,7 @@ namespace Cyclone::UI
 		void TransformSelection( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportGridContext &inGridContext, const ViewportOrthographicContext &inOrthographicContext, ImDrawList* drawList, const ImVec2 &inViewOrigin, const ImVec2 &inSelectedBoxMin, const ImVec2 &inSelectedBoxMax );
 
 	private:
-		void XM_CALLCONV GetMinMaxUV( Cyclone::Math::XLVector inCenter2D, double inWorldLimit, double inZoomScale2D, double &outMinU, double &outMaxU, double &outMinV, double &outMaxV ) const
+		void XM_CALLCONV GetMinMaxUV( Cyclone::Math::Vector4D inCenter2D, double inWorldLimit, double inZoomScale2D, double &outMinU, double &outMaxU, double &outMinV, double &outMaxV ) const
 		{
 			double mCenterU = inCenter2D.Get<ViewportElementOrthographic::AxisU>();
 			double mCenterV = inCenter2D.Get<ViewportElementOrthographic::AxisV>();
@@ -50,16 +50,16 @@ namespace Cyclone::UI
 		}
 
 		template<size_t SwizzleFixed, size_t SwizzleLine>
-		void XM_CALLCONV DrawLineLoop( Cyclone::Math::XLVector inCenter2D, double inFixedMin, double inFixedMax, double inLineMin, double inLineMax, double inStep, DirectX::FXMVECTOR inColor ) const
+		void XM_CALLCONV DrawLineLoop( Cyclone::Math::Vector4D inCenter2D, double inFixedMin, double inFixedMax, double inLineMin, double inLineMax, double inStep, DirectX::FXMVECTOR inColor ) const
 		{
-			Cyclone::Math::XLVector negativeCenter = -inCenter2D;
-			Cyclone::Math::XLVector fixedMin = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<SwizzleFixed>( inFixedMin );
-			Cyclone::Math::XLVector fixedMax = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<SwizzleFixed>( inFixedMax );
+			Cyclone::Math::Vector4D negativeCenter = -inCenter2D;
+			Cyclone::Math::Vector4D fixedMin = negativeCenter + Cyclone::Math::Vector4D::sZeroSetValueByIndex<SwizzleFixed>( inFixedMin );
+			Cyclone::Math::Vector4D fixedMax = negativeCenter + Cyclone::Math::Vector4D::sZeroSetValueByIndex<SwizzleFixed>( inFixedMax );
 
 			for ( double line = std::round( inLineMin / inStep ) * inStep; line <= inLineMax; line += inStep ) {
-				Cyclone::Math::XLVector varLine = Cyclone::Math::XLVector::sZeroSetValueByIndex<SwizzleLine>( line );
-				Cyclone::Math::XLVector varMin = fixedMin + varLine;
-				Cyclone::Math::XLVector varMax = fixedMax + varLine;
+				Cyclone::Math::Vector4D varLine = Cyclone::Math::Vector4D::sZeroSetValueByIndex<SwizzleLine>( line );
+				Cyclone::Math::Vector4D varMin = fixedMin + varLine;
+				Cyclone::Math::Vector4D varMax = fixedMax + varLine;
 
 				mWireframeGridBatch->DrawLine(
 					{ varMin.ToXMVECTOR(), inColor },
@@ -69,13 +69,13 @@ namespace Cyclone::UI
 		}
 
 		template<size_t Axis>
-		void XM_CALLCONV DrawAxisLine( Cyclone::Math::XLVector inCenter2D, double inMin, double inMax ) const
+		void XM_CALLCONV DrawAxisLine( Cyclone::Math::Vector4D inCenter2D, double inMin, double inMax ) const
 		{
 			const DirectX::XMVECTOR colors[3] = { DirectX::Colors::DarkRed, DirectX::Colors::Green, DirectX::Colors::DarkBlue };
 
-			Cyclone::Math::XLVector negativeCenter = -inCenter2D;
-			Cyclone::Math::XLVector rebasedMin = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<Axis>( inMin );
-			Cyclone::Math::XLVector rebasedMax = negativeCenter + Cyclone::Math::XLVector::sZeroSetValueByIndex<Axis>( inMax );
+			Cyclone::Math::Vector4D negativeCenter = -inCenter2D;
+			Cyclone::Math::Vector4D rebasedMin = negativeCenter + Cyclone::Math::Vector4D::sZeroSetValueByIndex<Axis>( inMin );
+			Cyclone::Math::Vector4D rebasedMax = negativeCenter + Cyclone::Math::Vector4D::sZeroSetValueByIndex<Axis>( inMax );
 
 			mWireframeGridBatch->DrawLine(
 				{ rebasedMin.ToXMVECTOR(), colors[Axis] },

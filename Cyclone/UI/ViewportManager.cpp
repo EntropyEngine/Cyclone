@@ -20,7 +20,7 @@
 // DX Includes
 #include <DirectXHelpers.h>
 
-using Cyclone::Math::XLVector;
+using Cyclone::Math::Vector4D;
 
 namespace
 {
@@ -170,7 +170,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	}
 	ImGui::EndChild();
 
-	mOrthographicContext.mCenter2D = XLVector::sClamp( mOrthographicContext.mCenter2D, XLVector::sReplicate( -mGridContext.mWorldLimit ), XLVector::sReplicate( mGridContext.mWorldLimit ) );
+	mOrthographicContext.mCenter2D = Vector4D::sClamp( mOrthographicContext.mCenter2D, Vector4D::sReplicate( -mGridContext.mWorldLimit ), Vector4D::sReplicate( mGridContext.mWorldLimit ) );
 }
 
 void Cyclone::UI::ViewportManager::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )

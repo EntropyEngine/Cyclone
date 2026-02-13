@@ -20,7 +20,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-using Cyclone::Math::XLVector;
+using Cyclone::Math::Vector4D;
 
 namespace
 {
@@ -110,8 +110,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 
 	// Middle click pan view
 	if ( ( isCanvasHovered || isCanvasActive ) && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
-		inOrthographicContext.mCenter2D += XLVector::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * inOrthographicContext.mZoomScale2D );
-		inOrthographicContext.mCenter2D += XLVector::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * inOrthographicContext.mZoomScale2D );
+		inOrthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * inOrthographicContext.mZoomScale2D );
+		inOrthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * inOrthographicContext.mZoomScale2D );
 	}
 
 	// Zoom view
@@ -122,8 +122,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 		double uPosNew = inOrthographicContext.mCenter2D.Get<AxisU>() - viewportRelMousePos.x * newZoomScale2D;
 		double vPosNew = inOrthographicContext.mCenter2D.Get<AxisV>() - viewportRelMousePos.y * newZoomScale2D;
 
-		inOrthographicContext.mCenter2D += XLVector::sZeroSetValueByIndex<AxisU>( std::lerp( worldMouseU, worldSnapU, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - uPosNew );
-		inOrthographicContext.mCenter2D += XLVector::sZeroSetValueByIndex<AxisV>( std::lerp( worldMouseV, worldSnapV, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - vPosNew );
+		inOrthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisU>( std::lerp( worldMouseU, worldSnapU, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - uPosNew );
+		inOrthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisV>( std::lerp( worldMouseV, worldSnapV, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - vPosNew );
 
 		inOrthographicContext.UpdateZoomLevel( newZoomLevel );
 	}
@@ -230,8 +230,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
 
-			XLVector rebasedEntityPosition = ( position - inOrthographicContext.mCenter2D );
-			XLVector rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
+			Vector4D rebasedEntityPosition = ( position - inOrthographicContext.mCenter2D );
+			Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
 			Cyclone::Util::RenderWireframeBoundingBox( mWireframeGridBatch.get(), rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
 		}
@@ -292,9 +292,9 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 			drawList->ChannelsSetCurrent( 0 );
 		}
 
-		XLVector rebasedEntityPosition = ( inOrthographicContext.mCenter2D - position );
-		XLVector rebasedBoundingBoxMin = rebasedEntityPosition - boundingBox.mCenter - boundingBox.mExtent;
-		XLVector rebasedBoundingBoxMax = rebasedEntityPosition - boundingBox.mCenter + boundingBox.mExtent;
+		Vector4D rebasedEntityPosition = ( inOrthographicContext.mCenter2D - position );
+		Vector4D rebasedBoundingBoxMin = rebasedEntityPosition - boundingBox.mCenter - boundingBox.mExtent;
+		Vector4D rebasedBoundingBoxMax = rebasedEntityPosition - boundingBox.mCenter + boundingBox.mExtent;
 
 		ImVec2 localBoxMin;
 		localBoxMin.x = static_cast<float>( rebasedBoundingBoxMin.Get<AxisU>() * invZoom + offsetX );
@@ -377,17 +377,17 @@ void Cyclone::UI::ViewportElementOrthographic<T>::TransformSelection( Cyclone::C
 			Cyclone::Core::Component::Position positionDelta{ startPosition - currentPosition };
 
 			if ( inGridContext.mSnapType != ViewportGridContext::ESnapType::None ) {
-				positionDelta += XLVector::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * inOrthographicContext.mZoomScale2D / inGridContext.mGridSize ) * inGridContext.mGridSize );
-				positionDelta += XLVector::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * inOrthographicContext.mZoomScale2D / inGridContext.mGridSize ) * inGridContext.mGridSize );
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * inOrthographicContext.mZoomScale2D / inGridContext.mGridSize ) * inGridContext.mGridSize );
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * inOrthographicContext.mZoomScale2D / inGridContext.mGridSize ) * inGridContext.mGridSize );
 
 				if ( inGridContext.mSnapType == ViewportGridContext::ESnapType::ToGrid ) {
-					positionDelta += XLVector::sZeroSetValueByIndex<AxisU>( std::round( startPosition.Get<AxisU>() / inGridContext.mGridSize ) * inGridContext.mGridSize - startPosition.Get<AxisU>() );
-					positionDelta += XLVector::sZeroSetValueByIndex<AxisV>( std::round( startPosition.Get<AxisV>() / inGridContext.mGridSize ) * inGridContext.mGridSize - startPosition.Get<AxisV>() );
+					positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( std::round( startPosition.Get<AxisU>() / inGridContext.mGridSize ) * inGridContext.mGridSize - startPosition.Get<AxisU>() );
+					positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( std::round( startPosition.Get<AxisV>() / inGridContext.mGridSize ) * inGridContext.mGridSize - startPosition.Get<AxisV>() );
 				}
 			}
 			else {
-				positionDelta += XLVector::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * inOrthographicContext.mZoomScale2D );
-				positionDelta += XLVector::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * inOrthographicContext.mZoomScale2D );
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * inOrthographicContext.mZoomScale2D );
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * inOrthographicContext.mZoomScale2D );
 			}
 
 			for ( const entt::entity entity : selectedEntities ) {

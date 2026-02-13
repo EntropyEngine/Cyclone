@@ -38,6 +38,9 @@
     <Filter Include="Core\Tool">
       <UniqueIdentifier>{f8428dff-85bb-4f05-ba33-8c1d64e05c59}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI\Tool">
+      <UniqueIdentifier>{e3b0c654-d7a5-4a0f-8dbf-988e13797122}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -125,6 +128,9 @@
     <ClInclude Include="Util\Render.hpp">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="UI\Tool\SelectionTool.hpp">
+      <Filter>UI\Tool</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -190,6 +196,9 @@
     </ClCompile>
     <ClCompile Include="UI\ViewportElementOrthographic.cpp">
       <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Tool\SelectionTool.cpp">
+      <Filter>UI\Tool</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

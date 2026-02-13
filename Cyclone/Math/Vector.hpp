@@ -6,33 +6,33 @@
 
 namespace Cyclone::Math
 {
-	struct alignas( 32 ) XLVector
+	struct alignas( 32 ) Vector4D
 	{
 		__m256d mVector;
 
-		XLVector( __m256d inVector ) : mVector( inVector ) {}
-		XLVector( double inX, double inY, double inZ, double inW ) : mVector( _mm256_set_pd( inW, inZ, inY, inX ) ) {}
-		XLVector( double inX, double inY, double inZ ) : XLVector( inX, inY, inZ, 0.0 ) {};
+		Vector4D( __m256d inVector ) : mVector( inVector ) {}
+		Vector4D( double inX, double inY, double inZ, double inW ) : mVector( _mm256_set_pd( inW, inZ, inY, inX ) ) {}
+		Vector4D( double inX, double inY, double inZ ) : Vector4D( inX, inY, inZ, 0.0 ) {};
 
-		static XLVector XM_CALLCONV sZero() { return _mm256_setzero_pd(); }
+		static Vector4D XM_CALLCONV sZero() { return _mm256_setzero_pd(); }
 
-		template<size_t Axis> static XLVector XM_CALLCONV sZeroSetValueByIndex( double inV );
-		template<> XLVector XM_CALLCONV sZeroSetValueByIndex<0>( double inV ) { return XLVector( inV, 0.0, 0.0, 0.0 ); }
-		template<> XLVector XM_CALLCONV sZeroSetValueByIndex<1>( double inV ) { return XLVector( 0.0, inV, 0.0, 0.0 ); }
-		template<> XLVector XM_CALLCONV sZeroSetValueByIndex<2>( double inV ) { return XLVector( 0.0, 0.0, inV, 0.0 ); }
-		template<> XLVector XM_CALLCONV sZeroSetValueByIndex<3>( double inV ) { return XLVector( 0.0, 0.0, 0.0, inV ); }
+		template<size_t Axis> static Vector4D XM_CALLCONV sZeroSetValueByIndex( double inV );
+		template<> Vector4D XM_CALLCONV sZeroSetValueByIndex<0>( double inV ) { return Vector4D( inV, 0.0, 0.0, 0.0 ); }
+		template<> Vector4D XM_CALLCONV sZeroSetValueByIndex<1>( double inV ) { return Vector4D( 0.0, inV, 0.0, 0.0 ); }
+		template<> Vector4D XM_CALLCONV sZeroSetValueByIndex<2>( double inV ) { return Vector4D( 0.0, 0.0, inV, 0.0 ); }
+		template<> Vector4D XM_CALLCONV sZeroSetValueByIndex<3>( double inV ) { return Vector4D( 0.0, 0.0, 0.0, inV ); }
 
 
-		static XLVector XM_CALLCONV sReplicate( double inV ) { return _mm256_set1_pd( inV ); }
+		static Vector4D XM_CALLCONV sReplicate( double inV ) { return _mm256_set1_pd( inV ); }
 
-		static XLVector XM_CALLCONV sMin( XLVector inLhs, XLVector inRhs ) { return _mm256_min_pd( inLhs.mVector, inRhs.mVector ); }
-		static XLVector XM_CALLCONV sMax( XLVector inLhs, XLVector inRhs ) { return _mm256_max_pd( inLhs.mVector, inRhs.mVector ); }
-		static XLVector XM_CALLCONV sClamp( XLVector inV, XLVector inMin, XLVector inMax ) { return sMax( sMin( inV, inMax ), inMin ); }
+		static Vector4D XM_CALLCONV sMin( Vector4D inLhs, Vector4D inRhs ) { return _mm256_min_pd( inLhs.mVector, inRhs.mVector ); }
+		static Vector4D XM_CALLCONV sMax( Vector4D inLhs, Vector4D inRhs ) { return _mm256_max_pd( inLhs.mVector, inRhs.mVector ); }
+		static Vector4D XM_CALLCONV sClamp( Vector4D inV, Vector4D inMin, Vector4D inMax ) { return sMax( sMin( inV, inMax ), inMin ); }
 
-		static XLVector XM_CALLCONV sRound( XLVector inV ) { return _mm256_round_pd( inV.mVector, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC ); }
-		static XLVector XM_CALLCONV sFloor( XLVector inV ) { return _mm256_round_pd( inV.mVector, _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC ); }
-		static XLVector XM_CALLCONV sCeil( XLVector inV ) { return _mm256_round_pd( inV.mVector, _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC ); }
-		static XLVector XM_CALLCONV sTrunc( XLVector inV ) { return _mm256_round_pd( inV.mVector, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC ); }
+		static Vector4D XM_CALLCONV sRound( Vector4D inV ) { return _mm256_round_pd( inV.mVector, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC ); }
+		static Vector4D XM_CALLCONV sFloor( Vector4D inV ) { return _mm256_round_pd( inV.mVector, _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC ); }
+		static Vector4D XM_CALLCONV sCeil( Vector4D inV ) { return _mm256_round_pd( inV.mVector, _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC ); }
+		static Vector4D XM_CALLCONV sTrunc( Vector4D inV ) { return _mm256_round_pd( inV.mVector, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC ); }
 
 		double XM_CALLCONV GetX() const { return _mm_cvtsd_f64( _mm256_castpd256_pd128( mVector ) ); }
 		double XM_CALLCONV GetY() const { return _mm_cvtsd_f64( _mm_permute_pd( _mm256_castpd256_pd128( mVector ), 0x01 ) ); }
@@ -65,7 +65,7 @@ namespace Cyclone::Math
 		}
 
 		// Cast from 32 bit
-		static XLVector XM_CALLCONV sFromXMVECTOR( DirectX::FXMVECTOR inV )
+		static Vector4D XM_CALLCONV sFromXMVECTOR( DirectX::FXMVECTOR inV )
 		{
 			return _mm256_cvtps_pd( inV );
 		}
@@ -77,45 +77,45 @@ namespace Cyclone::Math
 		}
 
 		// FP64 addition
-		XLVector XM_CALLCONV operator + ( XLVector inRhs ) const
+		Vector4D XM_CALLCONV operator + ( Vector4D inRhs ) const
 		{
 			return _mm256_add_pd( mVector, inRhs.mVector );
 		}
 
 		// FP64 inplace addition
-		XLVector & XM_CALLCONV operator += ( XLVector inRhs )
+		Vector4D & XM_CALLCONV operator += ( Vector4D inRhs )
 		{
 			mVector = _mm256_add_pd( mVector, inRhs.mVector );
 			return *this;
 		}
 
 		// Unary negation
-		XLVector XM_CALLCONV operator - () const
+		Vector4D XM_CALLCONV operator - () const
 		{
 			return _mm256_sub_pd( _mm256_setzero_pd(), mVector );
 		}
 
 		// FP64 subtration
-		XLVector XM_CALLCONV operator - ( XLVector inRhs ) const
+		Vector4D XM_CALLCONV operator - ( Vector4D inRhs ) const
 		{
 			return _mm256_sub_pd( mVector, inRhs.mVector );
 		}
 
 		// FP64 inplace subtration
-		XLVector & XM_CALLCONV operator -= ( XLVector inRhs )
+		Vector4D & XM_CALLCONV operator -= ( Vector4D inRhs )
 		{
 			mVector = _mm256_sub_pd( mVector, inRhs.mVector );
 			return *this;
 		}
 
 		// FP64 multiplication
-		XLVector XM_CALLCONV operator * ( XLVector inRhs ) const
+		Vector4D XM_CALLCONV operator * ( Vector4D inRhs ) const
 		{
 			return _mm256_mul_pd( mVector, inRhs.mVector );
 		}
 
 		// FP64 inplace multiplication
-		XLVector & XM_CALLCONV operator *= ( XLVector inRhs )
+		Vector4D & XM_CALLCONV operator *= ( Vector4D inRhs )
 		{
 			mVector = _mm256_mul_pd( mVector, inRhs.mVector );
 			return *this;

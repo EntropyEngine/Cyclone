@@ -29,7 +29,7 @@ namespace Cyclone::UI
 	{
 		float					mCameraPitch = 0.0f;
 		float					mCameraYaw = 0.0f;
-		Cyclone::Math::XLVector mCenter3D = Cyclone::Math::XLVector( 3, 3, -6 );
+		Cyclone::Math::Vector4D mCenter3D = Cyclone::Math::Vector4D( 3, 3, -6 );
 	};
 
 	struct ViewportOrthographicContext : Cyclone::Util::NonCopyable
@@ -38,7 +38,7 @@ namespace Cyclone::UI
 
 		int						mZoomLevel = 0;
 		double					mZoomScale2D = sZoomLevelToScale( mZoomLevel ); // Pixels to meters
-		Cyclone::Math::XLVector mCenter2D = Cyclone::Math::XLVector::sZero();
+		Cyclone::Math::Vector4D mCenter2D = Cyclone::Math::Vector4D::sZero();
 
 		void					UpdateZoomLevel( int inZoomLevel )
 		{

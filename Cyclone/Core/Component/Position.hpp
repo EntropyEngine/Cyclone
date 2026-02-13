@@ -4,5 +4,5 @@
 
 namespace Cyclone::Core::Component
 {
-	struct Position : public Cyclone::Math::XLVector {};
+	struct Position : public Cyclone::Math::Vector4D {};
 }

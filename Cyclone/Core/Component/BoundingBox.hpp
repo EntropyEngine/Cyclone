@@ -6,7 +6,7 @@ namespace Cyclone::Core::Component
 {
 	struct BoundingBox
 	{
-		Cyclone::Math::XLVector mCenter;
-		Cyclone::Math::XLVector mExtent;
+		Cyclone::Math::Vector4D mCenter;
+		Cyclone::Math::Vector4D mExtent;
 	};
 }
