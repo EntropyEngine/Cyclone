@@ -131,6 +131,9 @@
     <ClInclude Include="UI\Tool\SelectionTool.hpp">
       <Filter>UI\Tool</Filter>
     </ClInclude>
+    <ClInclude Include="Math\BoundingBox.hpp">
+      <Filter>Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">

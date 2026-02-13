@@ -100,6 +100,7 @@
     <ClInclude Include="entt.hpp" />
     <ClInclude Include="main.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Math\BoundingBox.hpp" />
     <ClInclude Include="Math\Vector.hpp" />
     <ClInclude Include="MSAAHelper.h" />
     <ClInclude Include="pch.h" />

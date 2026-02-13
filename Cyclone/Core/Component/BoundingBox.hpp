@@ -1,12 +1,8 @@
 #pragma once
 
-#include "Cyclone/Math/Vector.hpp"
+#include "Cyclone/Math/BoundingBox.hpp"
 
 namespace Cyclone::Core::Component
 {
-	struct BoundingBox
-	{
-		Cyclone::Math::Vector4D mCenter;
-		Cyclone::Math::Vector4D mExtent;
-	};
+	struct BoundingBox : public Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> {};
 }
