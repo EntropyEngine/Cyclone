@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Cyclone/UI/ViewportElementOrthographic.hpp"
 
+// Cyclone UI Tools
+#include "Cyclone/UI/Tool/SelectionTool.hpp"
+
 // Cyclone core includes
 #include "Cyclone/Core/LevelInterface.hpp"
 #include "Cyclone/Core/Entity/EntityTypeRegistry.hpp"
@@ -77,6 +80,9 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
 	const bool isCanvasHovered = ImGui::IsItemHovered( ImGuiHoveredFlags_AllowWhenOverlappedByItem );
 	const bool isCanvasActive = ImGui::IsItemActive();
+	const bool isCanvasClicked = io.MouseClicked[0];
+
+	if ( isCanvasHovered || isCanvasActive ) ImGui::SetItemKeyOwner( ImGuiMod_Alt );
 
 	ImVec2 viewportAbsMousePos( io.MousePos.x - viewOrigin.x, io.MousePos.y - viewOrigin.y );
 	ImVec2 viewportRelMousePos( viewportAbsMousePos.x - viewSize.x / 2.0f, viewportAbsMousePos.y - viewSize.y / 2.0f );
@@ -107,6 +113,10 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 		inOrthographicContext.mZoomScale2D
 	);
 	ImGui::PopStyleVar( 2 );
+
+	if ( ( isCanvasActive || ( isCanvasHovered && ImGui::IsKeyDown( ImGuiMod_Ctrl ) ) ) && isCanvasClicked ) {
+		Tool::SelectionTool().OnClick<T>( inLevelInterface, worldMouseU, worldMouseV, 2.0f * kPositionHandleSize * inOrthographicContext.mZoomScale2D, inGridContext.mWorldLimit );
+	}
 
 	// Middle click pan view
 	if ( ( isCanvasHovered || isCanvasActive ) && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
@@ -361,9 +371,9 @@ void Cyclone::UI::ViewportElementOrthographic<T>::TransformSelection( Cyclone::C
 		const bool isSelectionActive = ImGui::IsItemActive();
 
 		entt::registry &registry = inLevelInterface->GetRegistry();
-		if ( isSelectionActive ) {
+		if ( isSelectionActive && ImGui::IsMouseDragging( ImGuiMouseButton_Left ) ) {
 
-			ImVec2 selectionMouseDrag = ImGui::GetMouseDragDelta( ImGuiMouseButton_Left, 0.0f );
+			ImVec2 selectionMouseDrag = ImGui::GetMouseDragDelta( ImGuiMouseButton_Left );
 
 			auto &&positionDeltaStorage = registry.storage<Cyclone::Core::Component::Position>( "delta"_hs );
 

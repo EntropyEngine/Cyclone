@@ -30,6 +30,7 @@ namespace Cyclone::Core
 		void					SetSelectedEntity( entt::entity inEntity );
 		void					AddSelectedEntity( entt::entity inEntity );
 		void					DeselectEntity( entt::entity inEntity );
+		void					ClearSelection();
 
 	protected:
 		Microsoft::WRL::ComPtr<ID3D11Device3> mDevice;

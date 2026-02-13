@@ -300,6 +300,10 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 			}
 			break;
 
+		case WM_SYSKEYUP:
+		case WM_SYSCHAR:
+			return (LRESULT) 1;
+
 		case WM_MENUCHAR:
 			// A menu is active and the user presses a key that does not correspond
 			// to any mnemonic or accelerator key. Ignore so we don't produce an error beep.

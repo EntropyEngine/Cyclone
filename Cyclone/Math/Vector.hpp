@@ -18,6 +18,8 @@ namespace Cyclone::Math
 
 		static Vector4D XM_CALLCONV sZero() { return _mm256_setzero_pd(); }
 
+		static Vector4D XM_CALLCONV sLoad( const double *inD4 ) { return _mm256_loadu_pd( inD4 ); }
+
 		template<size_t Axis> static Vector4D XM_CALLCONV sZeroSetValueByIndex( double inV );
 		template<> Vector4D XM_CALLCONV sZeroSetValueByIndex<0>( double inV ) { return Vector4D( inV, 0.0, 0.0, 0.0 ); }
 		template<> Vector4D XM_CALLCONV sZeroSetValueByIndex<1>( double inV ) { return Vector4D( 0.0, inV, 0.0, 0.0 ); }

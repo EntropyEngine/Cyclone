@@ -60,4 +60,12 @@ void Cyclone::Core::LevelInterface::DeselectEntity( entt::entity inEntity )
 {
 	if ( inEntity == mSelectedEntity ) mSelectedEntity = entt::null;
 	mSelectedEntities.erase( inEntity );
+
+	if ( mSelectedEntities.size() > 0 ) mSelectedEntity = *mSelectedEntities.begin();
+}
+
+void Cyclone::Core::LevelInterface::ClearSelection()
+{
+	mSelectedEntities.clear();
+	mSelectedEntity = entt::null;
 }

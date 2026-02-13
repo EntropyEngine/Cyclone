@@ -35,6 +35,8 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	static bool showDemoMenu = false;
 	if ( showDemoMenu ) ImGui::ShowDemoWindow();
 
+	//ImGui::SetKeyOwner( ImGuiMod_Alt, 0, ImGuiInputFlags_None );
+
 	if ( ImGui::BeginMainMenuBar() ) {
 		if ( ImGui::BeginMenu( "File" ) ) {
 			ImGui::EndMenu();
