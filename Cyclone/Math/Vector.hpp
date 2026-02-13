@@ -8,6 +8,8 @@ namespace Cyclone::Math
 {
 	struct alignas( 32 ) Vector4D
 	{
+		using scalar_type = double;
+
 		__m256d mVector;
 
 		Vector4D( __m256d inVector ) : mVector( inVector ) {}
@@ -57,6 +59,15 @@ namespace Cyclone::Math
 		template<> void XM_CALLCONV Set<2>( double inV ) { SetZ( inV ); }
 		template<> void XM_CALLCONV Set<3>( double inV ) { SetW( inV ); }
 
+		static Vector4D XM_CALLCONV sEqual( Vector4D inLhs, Vector4D inRhs ) { return _mm256_cmp_pd( inLhs, inRhs, _CMP_EQ_OQ ); } /// @note returns bitmask
+		static Vector4D XM_CALLCONV sNotEqual( Vector4D inLhs, Vector4D inRhs ) { return _mm256_cmp_pd( inLhs, inRhs, _CMP_NEQ_OS ); } /// @note returns bitmask
+		static Vector4D XM_CALLCONV sLess( Vector4D inLhs, Vector4D inRhs ) { return _mm256_cmp_pd( inLhs, inRhs, _CMP_LT_OQ ); } /// @note returns bitmask
+		static Vector4D XM_CALLCONV sLessEqual( Vector4D inLhs, Vector4D inRhs ) { return _mm256_cmp_pd( inLhs, inRhs, _CMP_LE_OQ ); } /// @note returns bitmask
+		static Vector4D XM_CALLCONV sGreater( Vector4D inLhs, Vector4D inRhs ) { return _mm256_cmp_pd( inLhs, inRhs, _CMP_GT_OQ ); } /// @note returns bitmask
+		static Vector4D XM_CALLCONV sGreaterEqual( Vector4D inLhs, Vector4D inRhs ) { return _mm256_cmp_pd( inLhs, inRhs, _CMP_GE_OQ ); } /// @note returns bitmask
+
+		static Vector4D XM_CALLCONV sBitwiseOr( Vector4D inLhs, Vector4D inRhs ) { return _mm256_castsi256_pd( _mm256_or_si256( _mm256_castpd_si256( inLhs ), _mm256_castpd_si256( inRhs ) ) ); }
+		static bool XM_CALLCONV sAnyTrue( Vector4D inV ) { return _mm256_movemask_epi8( _mm256_castpd_si256( inV ) ) != 0x0; }
 
 		// Cast to 32 bit
 		DirectX::XMVECTOR XM_CALLCONV ToXMVECTOR() const
@@ -121,4 +132,34 @@ namespace Cyclone::Math
 			return *this;
 		}
 	};
+
+	inline bool XM_CALLCONV operator <( Vector4D inLhs, Vector4D inRhs )
+	{
+		return _mm256_movemask_epi8( _mm256_castpd_si256( Vector4D::sLess( inLhs, inRhs ) ) ) == 0xFFFFFFFF;
+	}
+
+	inline bool XM_CALLCONV operator <=( Vector4D inLhs, Vector4D inRhs )
+	{
+		return _mm256_movemask_epi8( _mm256_castpd_si256( Vector4D::sLessEqual( inLhs, inRhs ) ) ) == 0xFFFFFFFF;
+	}
+
+	inline bool XM_CALLCONV operator >( Vector4D inLhs, Vector4D inRhs )
+	{
+		return _mm256_movemask_epi8( _mm256_castpd_si256( Vector4D::sGreater( inLhs, inRhs ) ) ) == 0xFFFFFFFF;
+	}
+
+	inline bool XM_CALLCONV operator >=( Vector4D inLhs, Vector4D inRhs )
+	{
+		return _mm256_movemask_epi8( _mm256_castpd_si256( Vector4D::sGreaterEqual( inLhs, inRhs ) ) ) == 0xFFFFFFFF;
+	}
+
+	inline bool XM_CALLCONV operator ==( Vector4D inLhs, Vector4D inRhs )
+	{
+		return _mm256_movemask_epi8( _mm256_castpd_si256( Vector4D::sEqual( inLhs, inRhs ) ) ) == 0xFFFFFFFF;
+	}
+
+	inline bool XM_CALLCONV operator !=( Vector4D inLhs, Vector4D inRhs )
+	{
+		return _mm256_movemask_epi8( _mm256_castpd_si256( Vector4D::sNotEqual( inLhs, inRhs ) ) ) == 0xFFFFFFFF;
+	}
 }
