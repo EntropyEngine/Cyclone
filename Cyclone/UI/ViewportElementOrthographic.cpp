@@ -80,7 +80,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
 	const bool isCanvasHovered = ImGui::IsItemHovered( ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem );
 	const bool isCanvasActive = ImGui::IsItemActive();
-	const bool isLeftClickShort = ImGui::IsMouseReleased( 0 ) && io.MouseDownDurationPrev[0] < 0.1f;
+	const bool isLeftClickShort = ImGui::IsMouseReleased( 0 ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
 
 	if ( isCanvasHovered || isCanvasActive ) ImGui::SetItemKeyOwner( ImGuiMod_Alt );
 
@@ -379,7 +379,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::TransformSelection( Cyclone::C
 		const bool isSelectionActive = ImGui::IsItemActive();
 
 		entt::registry &registry = inLevelInterface->GetRegistry();
-		if ( isSelectionActive && io.MouseDownDuration[0] > 0.1f ) {
+		if ( isSelectionActive && io.MouseDownDuration[0] > io.MouseDoubleClickTime ) {
 
 			ImVec2 selectionMouseDrag = ImGui::GetMouseDragDelta( ImGuiMouseButton_Left );
 
