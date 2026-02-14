@@ -7,15 +7,14 @@
 Cyclone::Core::LevelInterface::LevelInterface()
 {
 	mLevel = std::make_unique<Level>();
-	mSelectedEntity = entt::null;
+	mSelectionTool.ClearSelection();
 }
 
 void Cyclone::Core::LevelInterface::Initialize()
 {
 	mLevel->Initialize();
 
-	mSelectedEntity = entt::null;
-	mSelectedEntities.clear();
+	mSelectionTool.ClearSelection();
 
 	Entity::PointDebug().Create( GetRegistry(), { 0.0, 0.0, 0.0 } );
 	Entity::PointDebug().Create( GetRegistry(), { 0.0, 0.0, 2.0 } );
@@ -41,31 +40,4 @@ void Cyclone::Core::LevelInterface::ReleaseResources()
 
 	// Release device
 	mDevice.Reset();
-}
-
-void Cyclone::Core::LevelInterface::SetSelectedEntity( entt::entity inEntity )
-{
-	mSelectedEntity = inEntity;
-	mSelectedEntities.clear();
-	mSelectedEntities.insert( inEntity );
-}
-
-void Cyclone::Core::LevelInterface::AddSelectedEntity( entt::entity inEntity )
-{
-	mSelectedEntity = inEntity;
-	mSelectedEntities.insert( inEntity );
-}
-
-void Cyclone::Core::LevelInterface::DeselectEntity( entt::entity inEntity )
-{
-	if ( inEntity == mSelectedEntity ) mSelectedEntity = entt::null;
-	mSelectedEntities.erase( inEntity );
-
-	if ( mSelectedEntities.size() > 0 ) mSelectedEntity = *mSelectedEntities.begin();
-}
-
-void Cyclone::Core::LevelInterface::ClearSelection()
-{
-	mSelectedEntities.clear();
-	mSelectedEntity = entt::null;
 }

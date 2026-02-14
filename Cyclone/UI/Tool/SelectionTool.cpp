@@ -19,10 +19,14 @@ void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *i
 	bool ctrlHeld = ImGui::IsKeyDown( ImGuiMod_Ctrl );
 	bool shiftHeld = ImGui::IsKeyDown( ImGuiMod_Shift );
 
-	if ( !( ctrlHeld || shiftHeld ) ) inLevelInterface->ClearSelection();
+	if ( !( ctrlHeld || shiftHeld ) ) {}
+
+	auto &selectionContext = inLevelInterface->GetSelectionCtx();
 
 	// Not a reference; need original
-	const std::set<entt::entity> previousSelected = inLevelInterface->GetSelectedEntities();
+	const std::set<entt::entity> previousSelectedEntities = selectionContext.GetSelectedEntities();
+	const entt::entity previousSelectedEntity = selectionContext.GetSelectedEntity();
+	std::set<entt::entity> selectionCandidates;
 
 	double clickPositionD[4] = { 0, 0, 0, 0 };
 	clickPositionD[ViewportTypeTraits<T>::AxisU] = inWorldSpaceU;
@@ -40,23 +44,39 @@ void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *i
 		Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> enitityHandle{ .mCenter = position, .mExtent = entityExtent };
 
 		if ( enitityHandle.Intersects( clickBox ) ) {
-
-			if ( ctrlHeld ) {
-				if ( shiftHeld ) inLevelInterface->AddSelectedEntity( entity );
-				else if ( previousSelected.contains( entity ) ) {
-					inLevelInterface->DeselectEntity( entity );
-					break;
-				}
-			}
-			else if ( shiftHeld ) {
-				inLevelInterface->AddSelectedEntity( entity );
-			}
-			else {
-				inLevelInterface->AddSelectedEntity( entity );
-				break;
-			}
+			selectionCandidates.insert( entity );
 		}
 	}
+
+	if ( shiftHeld ) {
+		for ( auto e : selectionCandidates ) {
+			selectionContext.AddSelectedEntity( e );
+		}
+		selectionContext.AddSelectedEntity( previousSelectedEntity );
+	}
+	else if ( ctrlHeld ) {
+	}
+	else {
+		selectionContext.ClearSelection();
+	}
+
+	if ( !selectionCandidates.empty() ) {
+		if ( selectionCandidates == selectionContext.mPreviousCandidates ) {
+			auto it = selectionCandidates.upper_bound( previousSelectedEntity );
+			if ( it == selectionCandidates.end() ) {
+				it = selectionCandidates.begin();
+			}
+
+			if ( ctrlHeld && previousSelectedEntities.contains( *it ) ) selectionContext.DeselectEntity( *it );
+			else selectionContext.AddSelectedEntity( *it );
+		}
+		else {
+			if ( ctrlHeld && previousSelectedEntities.contains( *selectionCandidates.begin() ) ) selectionContext.DeselectEntity( *selectionCandidates.begin() );
+			else selectionContext.AddSelectedEntity( *selectionCandidates.begin() );
+		}
+	}
+
+	selectionContext.mPreviousCandidates = selectionCandidates;
 }
 
 

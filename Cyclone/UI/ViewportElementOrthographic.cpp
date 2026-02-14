@@ -80,7 +80,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
 	const bool isCanvasHovered = ImGui::IsItemHovered( ImGuiHoveredFlags_AllowWhenOverlappedByItem );
 	const bool isCanvasActive = ImGui::IsItemActive();
-	const bool isCanvasClicked = io.MouseClicked[0];
+	const bool isLeftClickShort = ImGui::IsMouseReleased( 0 ) && io.MouseDownDurationPrev[0] < 0.1f;
 
 	if ( isCanvasHovered || isCanvasActive ) ImGui::SetItemKeyOwner( ImGuiMod_Alt );
 
@@ -114,7 +114,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	);
 	ImGui::PopStyleVar( 2 );
 
-	if ( ( isCanvasActive || ( isCanvasHovered && ImGui::IsKeyDown( ImGuiMod_Ctrl ) ) ) && isCanvasClicked ) {
+	if ( isCanvasHovered && isLeftClickShort ) {
 		Tool::SelectionTool().OnClick<T>( inLevelInterface, worldMouseU, worldMouseV, 2.0f * kPositionHandleSize * inOrthographicContext.mZoomScale2D, inGridContext.mWorldLimit );
 	}
 
@@ -212,8 +212,10 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 	mWireframeGridBatch->Begin();
 	{
-		const std::set<entt::entity> &selectedEntities = inLevelInterface->GetSelectedEntities();
-		const entt::entity selectedEntity = inLevelInterface->GetSelectedEntity();
+		const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+
+		const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
+		const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
 
 		// Iterate over all entities
 		const entt::registry &cregistry = inLevelInterface->GetRegistry();
@@ -273,8 +275,10 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 	const float offsetX = inViewSize.x / 2.0f + inViewOrigin.x;
 	const float offsetY = inViewSize.y / 2.0f + inViewOrigin.y;
 
-	const std::set<entt::entity> &selectedEntities = inLevelInterface->GetSelectedEntities();
-	const entt::entity selectedEntity = inLevelInterface->GetSelectedEntity();
+	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+
+	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
+	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
 
 	// Iterate over all entities
 	const entt::registry &cregistry = inLevelInterface->GetRegistry();
@@ -348,8 +352,10 @@ void Cyclone::UI::ViewportElementOrthographic<T>::TransformSelection( Cyclone::C
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
 
-	const std::set<entt::entity> &selectedEntities = inLevelInterface->GetSelectedEntities();
-	const entt::entity selectedEntity = inLevelInterface->GetSelectedEntity();
+	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+
+	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
+	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
 
 	if ( !selectedEntities.empty() ) {
 

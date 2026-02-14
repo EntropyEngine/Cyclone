@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Cyclone/Core/Level.hpp"
+#include "Cyclone/Core/Tool/SelectionTool.hpp"
 
 namespace Cyclone::Core
 {
@@ -23,22 +24,14 @@ namespace Cyclone::Core
 		const entt::registry &	GetRegistry() const					{ return mLevel->GetRegistry(); }
 		entt::registry &		GetRegistry()						{ return mLevel->GetRegistry(); }
 
-		entt::entity			GetSelectedEntity() const			{ return mSelectedEntity; }
-		const std::set<entt::entity> & GetSelectedEntities() const	{ return mSelectedEntities; }
-
-		// TODO: refactor to external selection object
-		void					SetSelectedEntity( entt::entity inEntity );
-		void					AddSelectedEntity( entt::entity inEntity );
-		void					DeselectEntity( entt::entity inEntity );
-		void					ClearSelection();
+		Tool::SelectionTool &	GetSelectionCtx()					{ return mSelectionTool; }
+		const Tool::SelectionTool &	GetSelectionCtx() const			{ return mSelectionTool; }
 
 	protected:
 		Microsoft::WRL::ComPtr<ID3D11Device3> mDevice;
 
 		std::unique_ptr<Level>	mLevel;
 
-		// TODO: refactor to external selection object
-		entt::entity			mSelectedEntity;
-		std::set<entt::entity>	mSelectedEntities;
+		Tool::SelectionTool mSelectionTool;
 	};
 }

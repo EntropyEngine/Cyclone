@@ -25,6 +25,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 		ImGui::TableSetupColumn( "Position" );
 		ImGui::TableHeadersRow();
 
+		auto &selectionContext = inLevelInterface->GetSelectionCtx();
+
 		const entt::registry &cregistry = inLevelInterface->GetRegistry();
 		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position>();
 		for ( const entt::entity entity : view ) {
@@ -36,21 +38,21 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 			ImGui::TableSetColumnIndex( 0 );
 			ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
 
-			bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
-			bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
+			bool entityInSelection = selectionContext.GetSelectedEntities().contains( entity );
+			bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
 
 			if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
 			if ( ImGui::Selectable( std::format( "{}", static_cast<size_t>( entity ) ).c_str(), entityInSelection, selectionFlags ) ) {
 				if ( ImGui::GetIO().KeyCtrl ) {
 					if ( entityIsSelected ) {
-						inLevelInterface->DeselectEntity( entity );
+						selectionContext.DeselectEntity( entity );
 					}
 					else {
-						inLevelInterface->AddSelectedEntity( entity );
+						selectionContext.AddSelectedEntity( entity );
 					}
 				}
 				else {
-					inLevelInterface->SetSelectedEntity( entity );
+					selectionContext.SetSelectedEntity( entity );
 				}
 			};
 
@@ -70,6 +72,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 		ImGui::TableSetupColumn( "Type" );
 		ImGui::TableSetupColumn( "Position" );
 		ImGui::TableHeadersRow();
+
+		auto &selectionContext = inLevelInterface->GetSelectionCtx();
 
 		const entt::registry &cregistry = inLevelInterface->GetRegistry();
 		auto view = cregistry.view<Cyclone::Core::Component::EntityType>();
@@ -92,21 +96,21 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 			ImGui::TableSetColumnIndex( 0 );
 			ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
 
-			bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
-			bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
+			bool entityInSelection = selectionContext.GetSelectedEntities().contains( entity );
+			bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
 
 			if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
 			if ( ImGui::Selectable( std::format( "{}", static_cast<size_t>( entity ) ).c_str(), entityInSelection, selectionFlags ) ) {
 				if ( ImGui::GetIO().KeyCtrl ) {
 					if ( entityIsSelected ) {
-						inLevelInterface->DeselectEntity( entity );
+						selectionContext.DeselectEntity( entity );
 					}
 					else {
-						inLevelInterface->AddSelectedEntity( entity );
+						selectionContext.AddSelectedEntity( entity );
 					}
 				}
 				else {
-					inLevelInterface->SetSelectedEntity( entity );
+					selectionContext.SetSelectedEntity( entity );
 				}
 			};
 

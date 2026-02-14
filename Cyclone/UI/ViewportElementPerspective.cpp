@@ -118,6 +118,8 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 	// Switch to depth buffer
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
 
+	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+
 	mWireframeGridBatch->Begin();
 	{
 		// Iterate over all entities
@@ -129,8 +131,8 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 			const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
 			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
 
-			bool entityInSelection = inLevelInterface->GetSelectedEntities().contains( entity );
-			bool entityIsSelected = inLevelInterface->GetSelectedEntity() == entity;
+			bool entityInSelection = selectionContext.GetSelectedEntities().contains( entity );
+			bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
 
 			uint32_t entityColorU32;
 			if ( entityIsSelected ) {
