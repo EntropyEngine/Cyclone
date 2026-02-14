@@ -52,7 +52,9 @@ void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *i
 		for ( auto e : selectionCandidates ) {
 			selectionContext.AddSelectedEntity( e );
 		}
-		selectionContext.AddSelectedEntity( previousSelectedEntity );
+		if ( previousSelectedEntity != entt::null ) {
+			selectionContext.AddSelectedEntity( previousSelectedEntity );
+		}
 	}
 	else if ( ctrlHeld ) {
 	}

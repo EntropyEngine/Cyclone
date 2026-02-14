@@ -78,7 +78,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	ImGui::SetCursorPos( { 0, 0 } );
 	ImGui::SetNextItemAllowOverlap();
 	ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
-	const bool isCanvasHovered = ImGui::IsItemHovered( ImGuiHoveredFlags_AllowWhenOverlappedByItem );
+	const bool isCanvasHovered = ImGui::IsItemHovered( ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem );
 	const bool isCanvasActive = ImGui::IsItemActive();
 	const bool isLeftClickShort = ImGui::IsMouseReleased( 0 ) && io.MouseDownDurationPrev[0] < 0.1f;
 
@@ -352,6 +352,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::TransformSelection( Cyclone::C
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
 
+	ImGuiIO &io = ImGui::GetIO();
+
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 
 	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
@@ -370,14 +372,14 @@ void Cyclone::UI::ViewportElementOrthographic<T>::TransformSelection( Cyclone::C
 			drawList->AddLine( { inSelectedBoxMin.x, y }, { inSelectedBoxMin.x, y + 8 }, IM_COL32( 255, 255, 0, 255 ), 2 );
 			drawList->AddLine( { inSelectedBoxMax.x - 1, y - 1 }, { inSelectedBoxMax.x - 1, y + 7 }, IM_COL32( 255, 255, 0, 255 ), 2 );
 		}
-		/*
+		
 		ImGui::SetCursorPos( { inSelectedBoxMin.x - inViewOrigin.x, inSelectedBoxMin.y - inViewOrigin.y } );
 		ImGui::InvisibleButton( "Selection", { inSelectedBoxMax.x - inSelectedBoxMin.x, inSelectedBoxMax.y - inSelectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft );
 		const bool isSelectionHovered = ImGui::IsItemHovered();
 		const bool isSelectionActive = ImGui::IsItemActive();
 
 		entt::registry &registry = inLevelInterface->GetRegistry();
-		if ( isSelectionActive && ImGui::IsMouseDragging( ImGuiMouseButton_Left ) ) {
+		if ( isSelectionActive && io.MouseDownDuration[0] > 0.1f ) {
 
 			ImVec2 selectionMouseDrag = ImGui::GetMouseDragDelta( ImGuiMouseButton_Left );
 
@@ -413,7 +415,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::TransformSelection( Cyclone::C
 		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) ) {
 			registry.storage<Cyclone::Core::Component::Position>( "delta"_hs ).clear();
 		}
-		*/
+		
 	}
 }
 
