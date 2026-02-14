@@ -96,7 +96,6 @@
     <ClInclude Include="Core\Entity\PointDebug.hpp" />
     <ClInclude Include="Core\LevelInterface.hpp" />
     <ClInclude Include="Core\Level.hpp" />
-    <ClInclude Include="Core\Tool\BaseTool.hpp" />
     <ClInclude Include="entt.hpp" />
     <ClInclude Include="main.h" />
     <ClInclude Include="framework.h" />
