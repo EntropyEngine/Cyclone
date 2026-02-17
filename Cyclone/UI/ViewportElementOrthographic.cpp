@@ -76,7 +76,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	ImGuiIO &io = ImGui::GetIO();
 
 	ImGui::SetCursorPos( { 0, 0 } );
-	ImGui::SetNextItemAllowOverlap();
+	if( !ImGui::IsMouseDown( ImGuiMouseButton_Middle ) ) ImGui::SetNextItemAllowOverlap(); // Ensure middle mouse "wins" over selection
 	ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
 	const bool isCanvasHovered = ImGui::IsItemHovered( ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem );
 	const bool isCanvasActive = ImGui::IsItemActive();
@@ -119,7 +119,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	}
 
 	// Middle click pan view
-	if ( ( isCanvasHovered || isCanvasActive ) && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) ) {
+	if ( ( isCanvasActive ) && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) ) {
 		inOrthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * inOrthographicContext.mZoomScale2D );
 		inOrthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * inOrthographicContext.mZoomScale2D );
 	}
