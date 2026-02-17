@@ -55,13 +55,15 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 		for ( const auto &[entityCategory, typeMap] : outlinerTree ) {
 			ImGui::TableNextRow();
 
-			bool v;
+			bool *categoryVisible = inLevelInterface->GetEntityCtx().GetEntityCategoryIsVisible( entityCategory );
+			bool *categorySelectable = inLevelInterface->GetEntityCtx().GetEntityCategoryIsSelectable( entityCategory );
+
 			ImGui::TableSetColumnIndex( 1 );
 			ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-			if ( ImGui::Checkbox( std::format( "##c{}V", static_cast<size_t>( entityCategory ) ).c_str(), reinterpret_cast<bool *>( &v ) ) );
+			if ( ImGui::Checkbox( std::format( "##c{}V", static_cast<size_t>( entityCategory ) ).c_str(), reinterpret_cast<bool *>( categoryVisible ) ) );
 
 			ImGui::TableSetColumnIndex( 2 );
-			if ( ImGui::Checkbox( std::format( "##c{}S", static_cast<size_t>( entityCategory ) ).c_str(), reinterpret_cast<bool *>( &v ) ) );
+			if ( ImGui::Checkbox( std::format( "##c{}S", static_cast<size_t>( entityCategory ) ).c_str(), reinterpret_cast<bool *>( categorySelectable ) ) );
 			ImGui::PopStyleVar( 1 );
 
 			ImGui::TableSetColumnIndex( 0 );
@@ -69,13 +71,16 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 				for ( const auto &[entityType, entityList] : typeMap ) {
 					ImGui::TableNextRow();
 
+					bool *entityTypeVisible = inLevelInterface->GetEntityCtx().GetEntityTypeIsVisible( entityType );
+					bool *entityTypeSelectable = inLevelInterface->GetEntityCtx().GetEntityTypeIsSelectable( entityType );
+
 					bool v;
 					ImGui::TableSetColumnIndex( 1 );
 					ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-					if ( ImGui::Checkbox( std::format( "##t{}V", static_cast<size_t>( entityType ) ).c_str(), reinterpret_cast<bool *>( &v ) ) );
+					if ( ImGui::Checkbox( std::format( "##t{}V", static_cast<size_t>( entityType ) ).c_str(), reinterpret_cast<bool *>( entityTypeVisible ) ) );
 
 					ImGui::TableSetColumnIndex( 2 );
-					if ( ImGui::Checkbox( std::format( "##t{}S", static_cast<size_t>( entityType ) ).c_str(), reinterpret_cast<bool *>( &v ) ) );
+					if ( ImGui::Checkbox( std::format( "##t{}S", static_cast<size_t>( entityType ) ).c_str(), reinterpret_cast<bool *>( entityTypeSelectable ) ) );
 					ImGui::PopStyleVar( 1 );
 
 					ImGui::TableSetColumnIndex( 0 );
@@ -94,8 +99,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 							auto &entitySelectable = registry.get<Cyclone::Core::Component::Selectable>( entity );
 
 							if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
-							if ( !static_cast<bool>( entityVisible ) ) selectionFlags |= ImGuiSelectableFlags_Disabled;
-							if ( !static_cast<bool>( entitySelectable ) ) selectionFlags |= ImGuiSelectableFlags_Disabled;
+							if ( !static_cast<bool>( entityVisible ) || !*categoryVisible || !*entityTypeVisible ) selectionFlags |= ImGuiSelectableFlags_Disabled;
+							if ( !static_cast<bool>( entitySelectable ) || !*categorySelectable || !*entityTypeSelectable ) selectionFlags |= ImGuiSelectableFlags_Disabled;
 
 							if ( !( selectionFlags & ImGuiSelectableFlags_Disabled ) ) treeLeafFlags |= ImGuiTreeNodeFlags_Bullet;
 

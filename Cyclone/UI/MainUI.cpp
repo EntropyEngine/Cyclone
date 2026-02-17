@@ -104,11 +104,21 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	// Iterate over all entities
 	auto &selectionContext = inLevelInterface->GetSelectionCtx();
 	const entt::registry &cregistry = inLevelInterface->GetRegistry();
-	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
+	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
 	for ( const entt::entity entity : view ) {
-		const auto entityVisible = view.get<Cyclone::Core::Component::Visible>( entity );
-		const auto entitySelectable = view.get<Cyclone::Core::Component::Selectable>( entity );
-		if ( !static_cast<bool>( entityVisible ) || !static_cast<bool>( entitySelectable ) ) selectionContext.DeselectEntity( entity );
+		const auto entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+		const auto entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
+
+		bool entityVisible = static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) );
+		bool entitySelectable = static_cast<bool>( view.get<Cyclone::Core::Component::Selectable>( entity ) );
+
+		entityVisible &= *inLevelInterface->GetEntityCtx().GetEntityTypeIsVisible( entityType );
+		entitySelectable &= *inLevelInterface->GetEntityCtx().GetEntityTypeIsSelectable( entityType );
+
+		entityVisible &= *inLevelInterface->GetEntityCtx().GetEntityCategoryIsVisible( entityCategory );
+		entitySelectable &= *inLevelInterface->GetEntityCtx().GetEntityCategoryIsSelectable( entityCategory );
+
+		if ( !entityVisible || !entitySelectable ) selectionContext.DeselectEntity( entity );
 	}
 }
 

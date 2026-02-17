@@ -213,19 +213,25 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 	mWireframeGridBatch->Begin();
 	{
 		const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+		const auto &entityContext = inLevelInterface->GetEntityCtx();
 
 		const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
 		const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
 
 		// Iterate over all entities
 		const entt::registry &cregistry = inLevelInterface->GetRegistry();
-		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
+		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
 		for ( const entt::entity entity : view ) {
 
 			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+			const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
 			const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
 			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
+
 			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
+			if ( !*entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
+			if ( !*entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
+
 
 			bool entityInSelection = selectedEntities.contains( entity );
 			bool entityIsSelected = selectedEntity == entity;
@@ -277,19 +283,24 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 	const float offsetY = inViewSize.y / 2.0f + inViewOrigin.y;
 
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	const auto &entityContext = inLevelInterface->GetEntityCtx();
 
 	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
 	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
 
 	// Iterate over all entities
 	const entt::registry &cregistry = inLevelInterface->GetRegistry();
-	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
+	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
 	for ( const entt::entity entity : view ) {
 
 		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+		const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
 		const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
 		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
+
 		if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
+		if ( !*entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
+		if ( !*entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
 
 		auto entityColor = inLevelInterface->GetEntityCtx().GetEntityTypeColor( entityType );
 

@@ -33,6 +33,7 @@ namespace Cyclone::Core
 		Tool::SelectionTool &	GetSelectionCtx()					{ return mSelectionTool; }
 		const Tool::SelectionTool &	GetSelectionCtx() const			{ return mSelectionTool; }
 
+		Entity::EntityContext & GetEntityCtx()						{ return mEntityContext; }
 		const Entity::EntityContext & GetEntityCtx() const			{ return mEntityContext; }
 
 	protected:
