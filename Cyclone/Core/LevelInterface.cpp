@@ -3,6 +3,7 @@
 #include "Cyclone/Core/LevelInterface.hpp"
 
 #include "Cyclone/Core/Entity/PointDebug.hpp"
+#include "Cyclone/Core/Entity/InfoDebug.hpp"
 
 Cyclone::Core::LevelInterface::LevelInterface()
 {
@@ -21,6 +22,11 @@ void Cyclone::Core::LevelInterface::Initialize()
 	Entity::PointDebug().Create( GetRegistry(), { 0.0, 0.0, 2.0 } );
 	Entity::PointDebug().Create( GetRegistry(), { 0.0, 2.0, 0.0 } );
 	Entity::PointDebug().Create( GetRegistry(), { 2.0, 0.0, 0.0 } );
+
+	Entity::InfoDebug().Create( GetRegistry(), { -4.0, 0.0, 0.0 } );
+	Entity::InfoDebug().Create( GetRegistry(), { -4.0, 0.0, 2.0 } );
+	Entity::InfoDebug().Create( GetRegistry(), { -4.0, 2.0, 0.0 } );
+	Entity::InfoDebug().Create( GetRegistry(), { -2.0, 0.0, 0.0 } );
 
 	//for ( int x = 0; x < 128; ++x ) {
 	//	for ( int y = 0; y < 128; ++y ) {

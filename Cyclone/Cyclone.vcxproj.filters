@@ -134,6 +134,9 @@
     <ClInclude Include="Core\Entity\EntityContext.hpp">
       <Filter>Core\Entity</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Entity\InfoDebug.hpp">
+      <Filter>Core\Entity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -204,6 +207,9 @@
       <Filter>Core\Tool</Filter>
     </ClCompile>
     <ClCompile Include="Core\Entity\EntityContext.cpp">
+      <Filter>Core\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Entity\InfoDebug.cpp">
       <Filter>Core\Entity</Filter>
     </ClCompile>
   </ItemGroup>
