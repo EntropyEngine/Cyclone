@@ -1,7 +1,9 @@
 #pragma once
 
-// Cyclone includes
-#include "Cyclone/Math/Vector.hpp"
+// Cyclone utils
+#include "Cyclone/Util/NonCopyable.hpp"
+
+// Cyclone UI includes
 #include "Cyclone/UI/ViewportElementPerspective.hpp"
 #include "Cyclone/UI/ViewportElementOrthographic.hpp"
 #include "Cyclone/UI/ViewportType.hpp"
@@ -13,16 +15,13 @@ namespace Cyclone::Core {
 
 namespace Cyclone::UI
 {
-	class ViewportManager
+	class ViewportManager : public Cyclone::Util::NonCopyable
 	{
 	public:
 		ViewportManager();
 
 		ViewportManager( ViewportManager && ) = default;
 		ViewportManager &operator= ( ViewportManager && ) = default;
-
-		ViewportManager( ViewportManager const & ) = delete;
-		ViewportManager &operator= ( ViewportManager const & ) = delete;
 
 		void SetDevice( ID3D11Device3 *inDevice );
 

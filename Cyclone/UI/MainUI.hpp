@@ -1,5 +1,8 @@
 #pragma once
 
+// Cyclone utils
+#include "Cyclone/Util/NonCopyable.hpp"
+
 namespace Cyclone::Core {
 	class LevelInterface;
 }
@@ -9,7 +12,7 @@ namespace Cyclone::UI
 	class ViewportManager;
 	class Outliner;
 
-	class MainUI
+	class MainUI : public Cyclone::Util::NonCopyable
 	{
 	private:
 		static constexpr float kToolbarHeight = 35.0f;
@@ -22,9 +25,6 @@ namespace Cyclone::UI
 
 		MainUI( MainUI && ) = default;
 		MainUI &operator= ( MainUI && ) = default;
-
-		MainUI( MainUI const & ) = delete;
-		MainUI &operator= ( MainUI const & ) = delete;
 
 		void Initialize();
 		void SetDevice( ID3D11Device3 *inDevice );
