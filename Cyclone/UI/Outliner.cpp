@@ -45,7 +45,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 			itType->second.push_back( entity );
 		}
 
-		ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_LabelSpanAllColumns | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesFull;
+		ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesFull;
 
 		ImGui::TableSetupColumn( "Name" );
 		ImGui::TableSetupColumn( "V", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() );
@@ -54,16 +54,38 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 		for ( const auto &[entityCategory, typeMap] : outlinerTree ) {
 			ImGui::TableNextRow();
+
+			bool v;
+			ImGui::TableSetColumnIndex( 1 );
+			ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
+			if ( ImGui::Checkbox( std::format( "##c{}V", static_cast<size_t>( entityCategory ) ).c_str(), reinterpret_cast<bool *>( &v ) ) );
+
+			ImGui::TableSetColumnIndex( 2 );
+			if ( ImGui::Checkbox( std::format( "##c{}S", static_cast<size_t>( entityCategory ) ).c_str(), reinterpret_cast<bool *>( &v ) ) );
+			ImGui::PopStyleVar( 1 );
+
 			ImGui::TableSetColumnIndex( 0 );
 			if ( ImGui::TreeNodeEx( inLevelInterface->GetEntityCtx().GetEntityCategoryName( entityCategory ), treeNodeFlags ) ) {
 				for ( const auto &[entityType, entityList] : typeMap ) {
 					ImGui::TableNextRow();
+
+					bool v;
+					ImGui::TableSetColumnIndex( 1 );
+					ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
+					if ( ImGui::Checkbox( std::format( "##t{}V", static_cast<size_t>( entityType ) ).c_str(), reinterpret_cast<bool *>( &v ) ) );
+
+					ImGui::TableSetColumnIndex( 2 );
+					if ( ImGui::Checkbox( std::format( "##t{}S", static_cast<size_t>( entityType ) ).c_str(), reinterpret_cast<bool *>( &v ) ) );
+					ImGui::PopStyleVar( 1 );
+
 					ImGui::TableSetColumnIndex( 0 );
 					if ( ImGui::TreeNodeEx( inLevelInterface->GetEntityCtx().GetEntityTypeName( entityType ), treeNodeFlags ) ) {
 						for ( const auto entity : entityList ) {
 							ImGui::TableNextRow();
 							ImGui::TableSetColumnIndex( 0 );
+
 							ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
+							ImGuiTreeNodeFlags treeLeafFlags = ImGuiTreeNodeFlags_DrawLinesFull | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_AllowOverlap;
 
 							bool entityInSelection = selectionContext.GetSelectedEntities().contains( entity );
 							bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
@@ -74,7 +96,13 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 							if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
 							if ( !static_cast<bool>( entityVisible ) ) selectionFlags |= ImGuiSelectableFlags_Disabled;
 							if ( !static_cast<bool>( entitySelectable ) ) selectionFlags |= ImGuiSelectableFlags_Disabled;
-							ImGui::Bullet();
+
+							if ( !( selectionFlags & ImGuiSelectableFlags_Disabled ) ) treeLeafFlags |= ImGuiTreeNodeFlags_Bullet;
+
+							ImGui::TreeNodeEx( std::format( "##b{}", static_cast<size_t>( entity ) ).c_str(), treeLeafFlags );
+
+							//ImGui::Bullet();
+							ImGui::SameLine( 0, 0 );
 							ImGui::SetNextItemAllowOverlap();
 							if ( ImGui::Selectable( std::format( "{}", static_cast<size_t>( entity ) ).c_str(), entityInSelection, selectionFlags ) ) {
 								if ( ImGui::GetIO().KeyCtrl ) {
@@ -92,10 +120,10 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 							ImGui::TableSetColumnIndex( 1 );
 							ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-							if ( ImGui::Checkbox( std::format( "##{}V", static_cast<size_t>( entity ) ).c_str(), reinterpret_cast<bool *>( &entityVisible ) ) ) selectionContext.DeselectEntity( entity );
+							if ( ImGui::Checkbox( std::format( "##e{}V", static_cast<size_t>( entity ) ).c_str(), reinterpret_cast<bool *>( &entityVisible ) ) ) selectionContext.DeselectEntity( entity );
 
 							ImGui::TableSetColumnIndex( 2 );
-							if ( ImGui::Checkbox( std::format( "##{}S", static_cast<size_t>( entity ) ).c_str(), reinterpret_cast<bool *>( &entitySelectable ) ) ) selectionContext.DeselectEntity( entity );
+							if ( ImGui::Checkbox( std::format( "##e{}S", static_cast<size_t>( entity ) ).c_str(), reinterpret_cast<bool *>( &entitySelectable ) ) ) selectionContext.DeselectEntity( entity );
 							ImGui::PopStyleVar( 1 );
 						}
 						ImGui::TreePop();
