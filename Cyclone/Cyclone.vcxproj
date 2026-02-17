@@ -92,8 +92,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Core\Component\BoundingBox.hpp" />
+    <ClInclude Include="Core\Component\EntityCategory.hpp" />
     <ClInclude Include="Core\Component\EntityType.hpp" />
     <ClInclude Include="Core\Component\Position.hpp" />
+    <ClInclude Include="Core\Component\Selectable.hpp" />
+    <ClInclude Include="Core\Component\Visible.hpp" />
+    <ClInclude Include="Core\Entity\BaseEntity.hpp" />
     <ClInclude Include="Core\Entity\EntityContext.hpp" />
     <ClInclude Include="Core\Entity\InfoDebug.hpp" />
     <ClInclude Include="Core\Entity\PointDebug.hpp" />

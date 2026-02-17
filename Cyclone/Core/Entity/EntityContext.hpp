@@ -6,6 +6,7 @@
 
 // Cyclone components
 #include "Cyclone/Core/Component/EntityType.hpp"
+#include "Cyclone/Core/Component/EntityCategory.hpp"
 
 namespace Cyclone::Core::Entity
 {

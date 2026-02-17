@@ -137,6 +137,18 @@
     <ClInclude Include="Core\Entity\InfoDebug.hpp">
       <Filter>Core\Entity</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Component\Visible.hpp">
+      <Filter>Core\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Component\Selectable.hpp">
+      <Filter>Core\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Entity\BaseEntity.hpp">
+      <Filter>Core\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Component\EntityCategory.hpp">
+      <Filter>Core\Component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
