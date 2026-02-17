@@ -98,9 +98,6 @@
     <ClInclude Include="Core\Component\EntityType.hpp">
       <Filter>Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Entity\EntityTypeRegistry.hpp">
-      <Filter>Core\Entity</Filter>
-    </ClInclude>
     <ClInclude Include="Util\NonCopyable.hpp">
       <Filter>Util</Filter>
     </ClInclude>
@@ -133,6 +130,9 @@
     </ClInclude>
     <ClInclude Include="Core\Tool\SelectionTool.hpp">
       <Filter>Core\Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Entity\EntityContext.hpp">
+      <Filter>Core\Entity</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -188,9 +188,6 @@
     <ClCompile Include="Core\Entity\PointDebug.cpp">
       <Filter>Core\Entity</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Entity\EntityTypeRegistry.cpp">
-      <Filter>Core\Entity</Filter>
-    </ClCompile>
     <ClCompile Include="UI\Outliner.cpp">
       <Filter>UI</Filter>
     </ClCompile>
@@ -205,6 +202,9 @@
     </ClCompile>
     <ClCompile Include="Core\Tool\SelectionTool.cpp">
       <Filter>Core\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Entity\EntityContext.cpp">
+      <Filter>Core\Entity</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

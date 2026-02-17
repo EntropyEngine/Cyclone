@@ -3,7 +3,6 @@
 
 // Cyclone core includes
 #include "Cyclone/Core/LevelInterface.hpp"
-#include "Cyclone/Core/Entity/EntityTypeRegistry.hpp"
 
 // Cyclone components
 #include "Cyclone/Core/Component/EntityType.hpp"

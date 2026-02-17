@@ -1,8 +1,11 @@
 #pragma once
 
+// Cyclone utils
+#include "Cyclone/Util/NonCopyable.hpp"
+
 namespace Cyclone::Core
 {
-	class Level
+	class Level : public Cyclone::Util::NonCopyable
 	{
 	public:
 		Level() = default;

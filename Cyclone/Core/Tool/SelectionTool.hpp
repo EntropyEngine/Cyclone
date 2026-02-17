@@ -1,12 +1,15 @@
 #pragma once
 
+// Cyclone utils
+#include "Cyclone/Util/NonCopyable.hpp"
+
 namespace Cyclone::UI::Tool {
 	class SelectionTool;
 }
 
 namespace Cyclone::Core::Tool
 {
-	class SelectionTool
+	class SelectionTool : public Cyclone::Util::NonCopyable
 	{
 	public:
 		friend Cyclone::UI::Tool::SelectionTool;
@@ -20,7 +23,7 @@ namespace Cyclone::Core::Tool
 		void					ClearSelection();
 
 	protected:
-		entt::entity			mSelectedEntity;
+		entt::entity			mSelectedEntity = entt::null;
 		std::set<entt::entity>	mSelectedEntities;
 		std::set<entt::entity>	mPreviousCandidates;
 	};

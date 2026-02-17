@@ -24,6 +24,7 @@ namespace Cyclone::Core::Entity
 
 			// Attach a tagging components
 			inRegistry.emplace<Cyclone::Core::Component::EntityType>( entity, static_cast<Component::EntityType>( kEntityType.value() ) );
+			inRegistry.emplace<Cyclone::Core::Component::EntityCategory>( entity, static_cast<Component::EntityCategory>( kEntityCategory.value() ) );
 
 			// Attach a Position component
 			inRegistry.emplace<Cyclone::Core::Component::Position>( entity, inPosition );

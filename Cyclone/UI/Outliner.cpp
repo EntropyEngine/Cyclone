@@ -3,7 +3,6 @@
 
 // Cyclone Core includes
 #include "Cyclone/Core/LevelInterface.hpp"
-#include "Cyclone/Core/Entity/EntityTypeRegistry.hpp"
 
 // Cyclone components
 #include "Cyclone/Core/Component/EntityType.hpp"
@@ -57,7 +56,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 			};
 
 			ImGui::TableSetColumnIndex( 1 );
-			ImGui::Text( Cyclone::Core::Entity::EntityTypeRegistry::GetEntityTypeName( entityType ) );
+			ImGui::Text( inLevelInterface->GetEntityCtx().GetEntityTypeName( entityType ) );
 
 			ImGui::TableSetColumnIndex( 2 );
 			ImGui::Text( "% 7.2f\n% 7.2f\n% 7.2f", position.GetX(), position.GetY(), position.GetZ() );
@@ -115,7 +114,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 			};
 
 			ImGui::TableSetColumnIndex( 1 );
-			ImGui::Text( Cyclone::Core::Entity::EntityTypeRegistry::GetEntityTypeName( entityType ) );
+			ImGui::Text( inLevelInterface->GetEntityCtx().GetEntityTypeName( entityType ) );
 
 			ImGui::TableSetColumnIndex( 2 );
 			ImGui::Text( "% 7.2f\n% 7.2f\n% 7.2f", position.GetX(), position.GetY(), position.GetZ() );

@@ -1,11 +1,17 @@
 #pragma once
 
+// Cyclone utils
+#include "Cyclone/Util/NonCopyable.hpp"
+
+// Cyclone core
 #include "Cyclone/Core/Level.hpp"
+#include "Cyclone/Core/Entity/EntityContext.hpp"
 #include "Cyclone/Core/Tool/SelectionTool.hpp"
+
 
 namespace Cyclone::Core
 {
-	class LevelInterface
+	class LevelInterface : public Cyclone::Util::NonCopyable
 	{
 	public:
 		LevelInterface();
@@ -27,11 +33,13 @@ namespace Cyclone::Core
 		Tool::SelectionTool &	GetSelectionCtx()					{ return mSelectionTool; }
 		const Tool::SelectionTool &	GetSelectionCtx() const			{ return mSelectionTool; }
 
+		const Entity::EntityContext & GetEntityCtx() const			{ return mEntityContext; }
+
 	protected:
 		Microsoft::WRL::ComPtr<ID3D11Device3> mDevice;
 
 		std::unique_ptr<Level>	mLevel;
-
-		Tool::SelectionTool mSelectionTool;
+		Entity::EntityContext	mEntityContext;
+		Tool::SelectionTool		mSelectionTool;
 	};
 }

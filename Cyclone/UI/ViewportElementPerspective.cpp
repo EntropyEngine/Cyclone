@@ -3,7 +3,6 @@
 
 // Cyclone core includes
 #include "Cyclone/Core/LevelInterface.hpp"
-#include "Cyclone/Core/Entity/EntityTypeRegistry.hpp"
 
 // Cyclone components
 #include "Cyclone/Core/Component/EntityType.hpp"
@@ -142,7 +141,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 				entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
 			}
 			else {
-				entityColorU32 = entt::resolve( static_cast<entt::id_type>( entityType ) ).data( "debug_color"_hs ).get( {} ).cast<uint32_t>();
+				entityColorU32 = inLevelInterface->GetEntityCtx().GetEntityTypeColor( entityType );
 			}
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );

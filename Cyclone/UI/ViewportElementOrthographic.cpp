@@ -6,7 +6,6 @@
 
 // Cyclone core includes
 #include "Cyclone/Core/LevelInterface.hpp"
-#include "Cyclone/Core/Entity/EntityTypeRegistry.hpp"
 
 // Cyclone components
 #include "Cyclone/Core/Component/EntityType.hpp"
@@ -237,7 +236,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 				entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
 			}
 			else {
-				entityColorU32 = entt::resolve( static_cast<entt::id_type>( entityType ) ).data( "debug_color"_hs ).get( {} ).cast<uint32_t>();
+				entityColorU32 = inLevelInterface->GetEntityCtx().GetEntityTypeColor( entityType );
 			}
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
@@ -289,7 +288,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 		const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
 		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
 
-		auto entityColor = entt::resolve( static_cast<entt::id_type>( entityType ) ).data( "debug_color"_hs ).get( {} ).cast<uint32_t>();
+		auto entityColor = inLevelInterface->GetEntityCtx().GetEntityTypeColor( entityType );
 
 		bool entityInSelection = selectedEntities.contains( entity );
 		bool entityIsSelected = selectedEntity == entity;
@@ -328,7 +327,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 		}
 
 		if ( kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y ) {
-			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, Cyclone::Core::Entity::EntityTypeRegistry::GetEntityTypeName( entityType ) );
+			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, inLevelInterface->GetEntityCtx().GetEntityTypeName( entityType ) );
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, std::format( "id={}", static_cast<size_t>( entity ) ).c_str() );
 		}
 

@@ -13,6 +13,7 @@ Cyclone::Core::LevelInterface::LevelInterface()
 void Cyclone::Core::LevelInterface::Initialize()
 {
 	mLevel->Initialize();
+	mEntityContext.Register();
 
 	mSelectionTool.ClearSelection();
 
@@ -20,6 +21,12 @@ void Cyclone::Core::LevelInterface::Initialize()
 	Entity::PointDebug().Create( GetRegistry(), { 0.0, 0.0, 2.0 } );
 	Entity::PointDebug().Create( GetRegistry(), { 0.0, 2.0, 0.0 } );
 	Entity::PointDebug().Create( GetRegistry(), { 2.0, 0.0, 0.0 } );
+
+	//for ( int x = 0; x < 128; ++x ) {
+	//	for ( int y = 0; y < 128; ++y ) {
+	//		Entity::PointDebug().Create( GetRegistry(), { double( x * 2 + 16 ), 0.0, double( y * 2 + 16 ) } );
+	//	}
+	//}
 
 	GetRegistry().storage<Cyclone::Core::Component::Position>( "delta"_hs );
 }
