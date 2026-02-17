@@ -1,6 +1,11 @@
 #include "pch.h"
 #include "Cyclone/UI/MainUI.hpp"
 
+// Cyclone Core
+#include "Cyclone/Core/LevelInterface.hpp"
+#include "Cyclone/Core/Component/Visible.hpp"
+#include "Cyclone/Core/Component/Selectable.hpp"
+
 // Cyclone UI includes
 #include "Cyclone/UI/ViewportManager.hpp"
 #include "Cyclone/UI/Outliner.hpp"
@@ -95,6 +100,16 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 
 	//ImGui::PopStyleVar();
 
+
+	// Iterate over all entities
+	auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	const entt::registry &cregistry = inLevelInterface->GetRegistry();
+	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
+	for ( const entt::entity entity : view ) {
+		const auto entityVisible = view.get<Cyclone::Core::Component::Visible>( entity );
+		const auto entitySelectable = view.get<Cyclone::Core::Component::Selectable>( entity );
+		if ( !static_cast<bool>( entityVisible ) || !static_cast<bool>( entitySelectable ) ) selectionContext.DeselectEntity( entity );
+	}
 }
 
 void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )

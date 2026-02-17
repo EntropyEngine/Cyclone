@@ -68,7 +68,12 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 							bool entityInSelection = selectionContext.GetSelectedEntities().contains( entity );
 							bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
 
+							auto &entityVisible = registry.get<Cyclone::Core::Component::Visible>( entity );
+							auto &entitySelectable = registry.get<Cyclone::Core::Component::Selectable>( entity );
+
 							if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
+							if ( !static_cast<bool>( entityVisible ) ) selectionFlags |= ImGuiSelectableFlags_Disabled;
+							if ( !static_cast<bool>( entitySelectable ) ) selectionFlags |= ImGuiSelectableFlags_Disabled;
 							ImGui::Bullet();
 							ImGui::SetNextItemAllowOverlap();
 							if ( ImGui::Selectable( std::format( "{}", static_cast<size_t>( entity ) ).c_str(), entityInSelection, selectionFlags ) ) {
@@ -87,10 +92,10 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 							ImGui::TableSetColumnIndex( 1 );
 							ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-							ImGui::Checkbox( std::format( "##{}V", static_cast<size_t>( entity ) ).c_str(), reinterpret_cast<bool *>( &registry.get<Cyclone::Core::Component::Visible>( entity ) ) );
+							if ( ImGui::Checkbox( std::format( "##{}V", static_cast<size_t>( entity ) ).c_str(), reinterpret_cast<bool *>( &entityVisible ) ) ) selectionContext.DeselectEntity( entity );
 
 							ImGui::TableSetColumnIndex( 2 );
-							ImGui::Checkbox( std::format( "##{}S", static_cast<size_t>( entity ) ).c_str(), reinterpret_cast<bool *>( &registry.get<Cyclone::Core::Component::Selectable>( entity ) ) );
+							if ( ImGui::Checkbox( std::format( "##{}S", static_cast<size_t>( entity ) ).c_str(), reinterpret_cast<bool *>( &entitySelectable ) ) ) selectionContext.DeselectEntity( entity );
 							ImGui::PopStyleVar( 1 );
 						}
 						ImGui::TreePop();
@@ -162,16 +167,9 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 		const entt::registry &cregistry = inLevelInterface->GetRegistry();
 		auto view = cregistry.view<Cyclone::Core::Component::EntityType>();
-		/*entt::view<entt::get_t<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position>> view{};
-		const auto &&entityStorage = cregistry.storage<Cyclone::Core::Component::EntityType>();
-		const auto &&positionDeltaStorage = cregistry.storage<Cyclone::Core::Component::Position>( "delta"_hs );
-		view.storage<0>( entityStorage );
-		view.storage<1>( positionDeltaStorage );*/
-
 		auto &&other = cregistry.storage<Cyclone::Core::Component::Position>( "delta"_hs );
 		auto view2 = view | entt::basic_view{ *other };
 
-		//auto view2 = view | reg;
 		for ( const entt::entity entity : view2 ) {
 			const auto &entityType = view2.get<Cyclone::Core::Component::EntityType>( entity );
 			const auto &position = view2.get<Cyclone::Core::Component::Position>( entity );

@@ -16,6 +16,8 @@ void Cyclone::Core::Tool::SelectionTool::AddSelectedEntity( entt::entity inEntit
 
 void Cyclone::Core::Tool::SelectionTool::DeselectEntity( entt::entity inEntity )
 {
+	if ( !mSelectedEntities.contains( inEntity ) ) return;
+
 	if ( inEntity == mSelectedEntity ) mSelectedEntity = entt::null;
 	mSelectedEntities.erase( inEntity );
 

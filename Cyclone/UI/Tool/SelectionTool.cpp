@@ -5,6 +5,8 @@
 #include "Cyclone/Core/LevelInterface.hpp"
 #include "Cyclone/Core/Component/Position.hpp"
 #include "Cyclone/Core/Component/BoundingBox.hpp"
+#include "Cyclone/Core/Component/Selectable.hpp"
+#include "Cyclone/Core/Component/Visible.hpp"
 
 // Cyclone math
 #include "Cyclone/Math/Vector.hpp"
@@ -47,6 +49,12 @@ void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *i
 			selectionCandidates.insert( entity );
 		}
 	}
+
+	std::erase_if( selectionCandidates, [&cregistry]( entt::entity inEntity ) {
+		if ( !static_cast<bool>( cregistry.get<Cyclone::Core::Component::Selectable>( inEntity ) ) ) return true;
+		if ( !static_cast<bool>( cregistry.get<Cyclone::Core::Component::Visible>( inEntity ) ) ) return true;
+		return false;
+	} );
 
 	if ( shiftHeld ) {
 		for ( auto e : selectionCandidates ) {
