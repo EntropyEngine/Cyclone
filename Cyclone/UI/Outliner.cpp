@@ -87,7 +87,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 							ImGui::TableSetColumnIndex( 1 );
 							ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-							ImGui::Checkbox( std::format( "##{}H", static_cast<size_t>( entity ) ).c_str(), reinterpret_cast<bool *>( &registry.get<Cyclone::Core::Component::Visible>( entity ) ) );
+							ImGui::Checkbox( std::format( "##{}V", static_cast<size_t>( entity ) ).c_str(), reinterpret_cast<bool *>( &registry.get<Cyclone::Core::Component::Visible>( entity ) ) );
 
 							ImGui::TableSetColumnIndex( 2 );
 							ImGui::Checkbox( std::format( "##{}S", static_cast<size_t>( entity ) ).c_str(), reinterpret_cast<bool *>( &registry.get<Cyclone::Core::Component::Selectable>( entity ) ) );
