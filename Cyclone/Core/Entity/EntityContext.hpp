@@ -28,7 +28,7 @@ namespace Cyclone::Core::Entity
 		const char *GetEntityCategoryName( Cyclone::Core::Component::EntityCategory inType ) const
 		{
 			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityCategoryNameMap.begin(), mEntityCategoryNameMap.end(), static_cast<entt::hashed_string::hash_type>( hash ) );
+			const auto it = std::lower_bound( mEntityCategoryNameMap.begin(), mEntityCategoryNameMap.end(), hash );
 			if ( it != mEntityCategoryNameMap.end() && it->mKey == hash ) return it->mValue;
 			return nullptr;
 		}
@@ -36,7 +36,7 @@ namespace Cyclone::Core::Entity
 		uint32_t GetEntityTypeColor( Cyclone::Core::Component::EntityType inType ) const
 		{
 			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityTypeColorMap.begin(), mEntityTypeColorMap.end(), static_cast<entt::hashed_string::hash_type>( hash ) );
+			const auto it = std::lower_bound( mEntityTypeColorMap.begin(), mEntityTypeColorMap.end(), hash );
 			if ( it != mEntityTypeColorMap.end() && it->mKey == hash ) return it->mValue;
 			return Cyclone::Util::ColorU32( 0xFF, 0xFF, 0xFF );
 		}
@@ -45,7 +45,7 @@ namespace Cyclone::Core::Entity
 		bool *GetEntityTypeIsSelectable( Cyclone::Core::Component::EntityType inType )
 		{
 			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityTypeSelectable.begin(), mEntityTypeSelectable.end(), static_cast<entt::hashed_string::hash_type>( hash ) );
+			const auto it = std::lower_bound( mEntityTypeSelectable.begin(), mEntityTypeSelectable.end(), hash );
 			if ( it != mEntityTypeSelectable.end() && it->mKey == hash ) return &it->mValue;
 			return nullptr;
 		}
@@ -53,7 +53,7 @@ namespace Cyclone::Core::Entity
 		const bool *GetEntityTypeIsSelectable( Cyclone::Core::Component::EntityType inType ) const
 		{
 			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityTypeSelectable.begin(), mEntityTypeSelectable.end(), static_cast<entt::hashed_string::hash_type>( hash ) );
+			const auto it = std::lower_bound( mEntityTypeSelectable.begin(), mEntityTypeSelectable.end(), hash );
 			if ( it != mEntityTypeSelectable.end() && it->mKey == hash ) return &it->mValue;
 			return nullptr;
 		}
@@ -62,7 +62,7 @@ namespace Cyclone::Core::Entity
 		bool *GetEntityTypeIsVisible( Cyclone::Core::Component::EntityType inType )
 		{
 			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityTypeVisible.begin(), mEntityTypeVisible.end(), static_cast<entt::hashed_string::hash_type>( hash ) );
+			const auto it = std::lower_bound( mEntityTypeVisible.begin(), mEntityTypeVisible.end(), hash );
 			if ( it != mEntityTypeVisible.end() && it->mKey == hash ) return &it->mValue;
 			return nullptr;
 		}
@@ -70,7 +70,7 @@ namespace Cyclone::Core::Entity
 		const bool *GetEntityTypeIsVisible( Cyclone::Core::Component::EntityType inType ) const
 		{
 			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityTypeVisible.begin(), mEntityTypeVisible.end(), static_cast<entt::hashed_string::hash_type>( hash ) );
+			const auto it = std::lower_bound( mEntityTypeVisible.begin(), mEntityTypeVisible.end(), hash );
 			if ( it != mEntityTypeVisible.end() && it->mKey == hash ) return &it->mValue;
 			return nullptr;
 		}
@@ -79,7 +79,7 @@ namespace Cyclone::Core::Entity
 		bool *GetEntityCategoryIsSelectable( Cyclone::Core::Component::EntityCategory inType )
 		{
 			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityCategorySelectable.begin(), mEntityCategorySelectable.end(), static_cast<entt::hashed_string::hash_type>( hash ) );
+			const auto it = std::lower_bound( mEntityCategorySelectable.begin(), mEntityCategorySelectable.end(), hash );
 			if ( it != mEntityCategorySelectable.end() && it->mKey == hash ) return &it->mValue;
 			return nullptr;
 		}
@@ -87,7 +87,7 @@ namespace Cyclone::Core::Entity
 		const bool *GetEntityCategoryIsSelectable( Cyclone::Core::Component::EntityCategory inType ) const
 		{
 			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityCategorySelectable.begin(), mEntityCategorySelectable.end(), static_cast<entt::hashed_string::hash_type>( hash ) );
+			const auto it = std::lower_bound( mEntityCategorySelectable.begin(), mEntityCategorySelectable.end(), hash );
 			if ( it != mEntityCategorySelectable.end() && it->mKey == hash ) return &it->mValue;
 			return nullptr;
 		}
@@ -96,7 +96,7 @@ namespace Cyclone::Core::Entity
 		bool *GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType )
 		{
 			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityCategoryVisible.begin(), mEntityCategoryVisible.end(), static_cast<entt::hashed_string::hash_type>( hash ) );
+			const auto it = std::lower_bound( mEntityCategoryVisible.begin(), mEntityCategoryVisible.end(), hash );
 			if ( it != mEntityCategoryVisible.end() && it->mKey == hash ) return &it->mValue;
 			return nullptr;
 		}
@@ -104,7 +104,7 @@ namespace Cyclone::Core::Entity
 		const bool *GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType ) const
 		{
 			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityCategoryVisible.begin(), mEntityCategoryVisible.end(), static_cast<entt::hashed_string::hash_type>( hash ) );
+			const auto it = std::lower_bound( mEntityCategoryVisible.begin(), mEntityCategoryVisible.end(), hash );
 			if ( it != mEntityCategoryVisible.end() && it->mKey == hash ) return &it->mValue;
 			return nullptr;
 		}
