@@ -127,6 +127,7 @@
     <ClInclude Include="Util\Color.hpp" />
     <ClInclude Include="Util\NonCopyable.hpp" />
     <ClInclude Include="Util\Render.hpp" />
+    <ClInclude Include="Util\String.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\Entity\EntityContext.cpp" />

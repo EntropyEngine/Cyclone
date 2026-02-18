@@ -1,10 +1,13 @@
 #include "pch.h"
 #include "Cyclone/UI/Outliner.hpp"
 
-// Cyclone Core includes
+// Cyclone Utils
+#include "Cyclone/Util/String.hpp"
+
+// Cyclone Core
 #include "Cyclone/Core/LevelInterface.hpp"
 
-// Cyclone components
+// Cyclone Components
 #include "Cyclone/Core/Component/EntityType.hpp"
 #include "Cyclone/Core/Component/Position.hpp"
 #include "Cyclone/Core/Component/Visible.hpp"
@@ -104,13 +107,13 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 							if ( !( selectionFlags & ImGuiSelectableFlags_Disabled ) ) treeLeafFlags |= ImGuiTreeNodeFlags_Bullet;
 
-							const std::string entityIdString = std::format( "##b{}", static_cast<size_t>( entity ) );
-							ImGui::TreeNodeEx( entityIdString.c_str(), treeLeafFlags );
+							const auto entityIdString = Cyclone::Util::PrefixString( "##b", static_cast<entt::id_type>( entity ) );
+							ImGui::TreeNodeEx( entityIdString, treeLeafFlags );
 
 							//ImGui::Bullet();
 							ImGui::SameLine( 0, 0 );
 							ImGui::SetNextItemAllowOverlap();
-							if ( ImGui::Selectable( entityIdString.c_str() + 3, entityInSelection, selectionFlags ) ) {
+							if ( ImGui::Selectable( entityIdString.Value(), entityInSelection, selectionFlags) ) {
 								if ( ImGui::GetIO().KeyCtrl ) {
 									if ( entityIsSelected ) {
 										selectionContext.DeselectEntity( entity );
@@ -143,6 +146,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 		ImGui::EndTable();
 	}
+
+	return;
 
 	if ( ImGui::BeginTable( "Entity List", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp ) ) {
 

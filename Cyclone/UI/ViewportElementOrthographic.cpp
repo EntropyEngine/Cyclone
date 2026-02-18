@@ -15,6 +15,7 @@
 
 // Cyclone utils
 #include "Cyclone/Util/Render.hpp"
+#include "Cyclone/Util/String.hpp"
 
 // STL Includes
 #include <format>
@@ -223,15 +224,16 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
 		for ( const entt::entity entity : view ) {
 
-			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
 			const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
-			const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
-			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
-
-			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
 			if ( !*entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
+
+			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
 			if ( !*entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
 
+			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
+
+			const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
+			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
 
 			bool entityInSelection = selectedEntities.contains( entity );
 			bool entityIsSelected = selectedEntity == entity;
@@ -293,14 +295,17 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
 	for ( const entt::entity entity : view ) {
 
-		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
 		const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
+		if ( !*entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
+
+		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+		if ( !*entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
+
+		if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
+
 		const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
 		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
 
-		if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
-		if ( !*entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
-		if ( !*entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
 
 		auto entityColor = inLevelInterface->GetEntityCtx().GetEntityTypeColor( entityType );
 
@@ -342,7 +347,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 
 		if ( kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y ) {
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, inLevelInterface->GetEntityCtx().GetEntityTypeName( entityType ) );
-			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, std::format( "id={}", static_cast<size_t>( entity ) ).c_str() );
+			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, Cyclone::Util::PrefixString( "id=", static_cast<entt::id_type>( entity ) ) );
 		}
 
 		if ( entityInSelection ) {

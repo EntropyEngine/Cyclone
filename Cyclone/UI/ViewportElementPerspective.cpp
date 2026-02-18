@@ -119,18 +119,25 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
 
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	const auto &entityContext = inLevelInterface->GetEntityCtx();
 
 	mWireframeGridBatch->Begin();
 	{
 		// Iterate over all entities
 		const entt::registry &cregistry = inLevelInterface->GetRegistry();
-		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
+		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
 		for ( const entt::entity entity : view ) {
 
+			const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
+			if ( !*entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
+
 			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+			if ( !*entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
+
+			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
+
 			const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
 			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
-			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
 
 			bool entityInSelection = selectionContext.GetSelectedEntities().contains( entity );
 			bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;

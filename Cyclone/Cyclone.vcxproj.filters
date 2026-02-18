@@ -149,6 +149,9 @@
     <ClInclude Include="Core\Component\EntityCategory.hpp">
       <Filter>Core\Component</Filter>
     </ClInclude>
+    <ClInclude Include="Util\String.hpp">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
