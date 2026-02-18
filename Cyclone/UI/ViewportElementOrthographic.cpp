@@ -284,6 +284,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 	const float offsetX = inViewSize.x / 2.0f + inViewOrigin.x;
 	const float offsetY = inViewSize.y / 2.0f + inViewOrigin.y;
 
+	ImVec2 maxViewCoord{ inViewOrigin.x + inViewSize.x, inViewOrigin.y + inViewSize.y };
+
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 	const auto &entityContext = inLevelInterface->GetEntityCtx();
 
@@ -329,29 +331,43 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 		Vector4D rebasedBoundingBoxMax = rebasedEntityPosition - boundingBox.mCenter + boundingBox.mExtent;
 
 		ImVec2 localBoxMin;
-		localBoxMin.x = static_cast<float>( rebasedBoundingBoxMin.Get<AxisU>() * invZoom + offsetX );
-		localBoxMin.y = static_cast<float>( rebasedBoundingBoxMin.Get<AxisV>() * invZoom + offsetY );
+		localBoxMin.x = static_cast<float>( rebasedBoundingBoxMin.Get<AxisU>() * invZoom ) + offsetX;
+		localBoxMin.y = static_cast<float>( rebasedBoundingBoxMin.Get<AxisV>() * invZoom ) + offsetY;
 
 		ImVec2 localBoxMax;
-		localBoxMax.x = static_cast<float>( rebasedBoundingBoxMax.Get<AxisU>() * invZoom + offsetX );
-		localBoxMax.y = static_cast<float>( rebasedBoundingBoxMax.Get<AxisV>() * invZoom + offsetY );
+		localBoxMax.x = static_cast<float>( rebasedBoundingBoxMax.Get<AxisU>() * invZoom ) + offsetX;
+		localBoxMax.y = static_cast<float>( rebasedBoundingBoxMax.Get<AxisV>() * invZoom ) + offsetY;
 
 		ImVec2 localPos;
-		localPos.x = static_cast<float>( rebasedEntityPosition.Get<AxisU>() * invZoom + offsetX );
-		localPos.y = static_cast<float>( rebasedEntityPosition.Get<AxisV>() * invZoom + offsetY );
+		localPos.x = static_cast<float>( rebasedEntityPosition.Get<AxisU>() * invZoom ) + offsetX;
+		localPos.y = static_cast<float>( rebasedEntityPosition.Get<AxisV>() * invZoom ) + offsetY;
+
+
+		bool posInBounds = true;
+		bool boxInBounds = true;
+
+		if ( posInBounds && ( localPos.x < inViewOrigin.x || localPos.y < inViewOrigin.y ) ) posInBounds &= false;
+		if ( posInBounds && ( localPos.x > maxViewCoord.x || localPos.y > maxViewCoord.y ) ) posInBounds &= false;
+
+		if ( boxInBounds && ( localBoxMax.x < inViewOrigin.x || localBoxMax.y < inViewOrigin.y ) ) boxInBounds &= false;
+		if ( boxInBounds && ( localBoxMin.x > maxViewCoord.x || localBoxMin.y > maxViewCoord.y ) ) boxInBounds &= false;
+
+		bool inBounds = posInBounds || boxInBounds;
 
 		// Only draw X if smaller than bounding box
-		if ( kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y ) {
+		if ( kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y && inBounds ) {
 			DrawCross( drawList, localPos, kPositionHandleSize, entityColor );
 		}
 
-		if ( kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y ) {
+		if ( kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y && inBounds ) {
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, inLevelInterface->GetEntityCtx().GetEntityTypeName( entityType ) );
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, Cyclone::Util::PrefixString( "id=", entity ) );
 		}
 
 		if ( entityInSelection ) {
-			drawList->AddRect( localBoxMin, localBoxMax, entityColor, 0, 0, 2 );
+			if ( inBounds ) {
+				drawList->AddRect( localBoxMin, localBoxMax, entityColor, 0, 0, 2 );
+			}
 
 			outSelectedBoxMin.x = std::min( outSelectedBoxMin.x, localBoxMin.x );
 			outSelectedBoxMin.y = std::min( outSelectedBoxMin.y, localBoxMin.y );
