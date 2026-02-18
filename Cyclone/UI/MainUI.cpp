@@ -59,6 +59,10 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 			ImGui::EndMenu();
 		}
 
+		ImGui::Separator();
+
+		ImGui::TextDisabled( "%.0f FPS", ImGui::GetIO().Framerate );
+
 		ImGui::EndMainMenuBar();
 	}
 
