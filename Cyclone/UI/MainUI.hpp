@@ -39,5 +39,7 @@ namespace Cyclone::UI
 
 		std::unique_ptr<Cyclone::UI::ViewportManager> mViewportManager;
 		std::unique_ptr<Cyclone::UI::Outliner> mOutliner;
+
+		void DeselectDisabledEntities( Cyclone::Core::LevelInterface *inLevelInterface );
 	};
 }

@@ -16,12 +16,21 @@ void Cyclone::Core::Tool::SelectionTool::AddSelectedEntity( entt::entity inEntit
 
 void Cyclone::Core::Tool::SelectionTool::DeselectEntity( entt::entity inEntity )
 {
-	if ( !mSelectedEntities.contains( inEntity ) ) return;
-
-	if ( inEntity == mSelectedEntity ) mSelectedEntity = entt::null;
-	mSelectedEntities.erase( inEntity );
-
-	if ( mSelectedEntities.size() > 0 ) mSelectedEntity = *mSelectedEntities.begin();
+	if ( mSelectedEntities.erase( inEntity ) ) {
+		if ( inEntity == mSelectedEntity || true ) {
+			if ( mSelectedEntities.empty() ) mSelectedEntity = entt::null;
+			else {
+				auto it = mSelectedEntities.upper_bound( inEntity );
+				if ( it == mSelectedEntities.end() ) {
+					it = mSelectedEntities.lower_bound( inEntity );
+				}
+				if ( it == mSelectedEntities.end() ) {
+					it = mSelectedEntities.begin();
+				}
+				mSelectedEntity = *it;
+			}
+		}
+	}
 }
 
 void Cyclone::Core::Tool::SelectionTool::ClearSelection()
