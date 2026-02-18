@@ -63,10 +63,10 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 			ImGui::TableSetColumnIndex( 1 );
 			ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-			if ( ImGui::Checkbox( std::format( "##c{}V", static_cast<size_t>( entityCategory ) ).c_str(), reinterpret_cast<bool *>( categoryVisible ) ) );
+			if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##c{}V", entityCategory ), reinterpret_cast<bool *>( categoryVisible ) ) );
 
 			ImGui::TableSetColumnIndex( 2 );
-			if ( ImGui::Checkbox( std::format( "##c{}S", static_cast<size_t>( entityCategory ) ).c_str(), reinterpret_cast<bool *>( categorySelectable ) ) );
+			if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##c{}S", entityCategory ), reinterpret_cast<bool *>( categorySelectable ) ) );
 			ImGui::PopStyleVar( 1 );
 
 			ImGui::TableSetColumnIndex( 0 );
@@ -77,13 +77,12 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					bool *entityTypeVisible = inLevelInterface->GetEntityCtx().GetEntityTypeIsVisible( entityType );
 					bool *entityTypeSelectable = inLevelInterface->GetEntityCtx().GetEntityTypeIsSelectable( entityType );
 
-					bool v;
 					ImGui::TableSetColumnIndex( 1 );
 					ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-					if ( ImGui::Checkbox( std::format( "##t{}V", static_cast<size_t>( entityType ) ).c_str(), reinterpret_cast<bool *>( entityTypeVisible ) ) );
+					if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##t{}V", entityType ), reinterpret_cast<bool *>( entityTypeVisible ) ) );
 
 					ImGui::TableSetColumnIndex( 2 );
-					if ( ImGui::Checkbox( std::format( "##t{}S", static_cast<size_t>( entityType ) ).c_str(), reinterpret_cast<bool *>( entityTypeSelectable ) ) );
+					if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##t{}S", entityType ), reinterpret_cast<bool *>( entityTypeSelectable ) ) );
 					ImGui::PopStyleVar( 1 );
 
 					ImGui::TableSetColumnIndex( 0 );
@@ -107,7 +106,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 							if ( !( selectionFlags & ImGuiSelectableFlags_Disabled ) ) treeLeafFlags |= ImGuiTreeNodeFlags_Bullet;
 
-							const auto entityIdString = Cyclone::Util::PrefixString( "##b", static_cast<entt::id_type>( entity ) );
+							const auto entityIdString = Cyclone::Util::PrefixString( "##b", entity );
 							ImGui::TreeNodeEx( entityIdString, treeLeafFlags );
 
 							//ImGui::Bullet();

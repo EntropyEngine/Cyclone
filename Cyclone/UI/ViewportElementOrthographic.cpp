@@ -347,7 +347,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 
 		if ( kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y ) {
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, inLevelInterface->GetEntityCtx().GetEntityTypeName( entityType ) );
-			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, Cyclone::Util::PrefixString( "id=", static_cast<entt::id_type>( entity ) ) );
+			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, Cyclone::Util::PrefixString( "id=", entity ) );
 		}
 
 		if ( entityInSelection ) {
