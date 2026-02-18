@@ -443,7 +443,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::TransformSelection( Cyclone::C
 			}
 
 			for ( const entt::entity entity : selectedEntities ) {
-				registry.get<Cyclone::Core::Component::Position>( entity ) += positionDelta;
+				//registry.get<Cyclone::Core::Component::Position>( entity ) += positionDelta;
+				registry.patch<Cyclone::Core::Component::Position>( entity, [positionDelta]( Cyclone::Core::Component::Position &inPosition ) { inPosition += positionDelta; } );
 			}
 		}
 		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) ) {
