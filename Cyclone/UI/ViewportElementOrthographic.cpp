@@ -126,7 +126,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	}
 
 	// Zoom view
-	if ( isCanvasHovered && io.MouseWheel ) {
+	if ( isCanvasHovered && io.MouseWheel && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) ) {
 		int newZoomLevel = inOrthographicContext.mZoomLevel - ( ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 ) );
 		double newZoomScale2D = inOrthographicContext.sZoomLevelToScale( newZoomLevel );
 
