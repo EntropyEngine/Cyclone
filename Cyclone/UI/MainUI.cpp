@@ -89,11 +89,12 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f } );
 	ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f } );
+	ImGui::PushStyleVar( ImGuiStyleVar_WindowBorderSize, 0.0f );
 	if ( ImGui::Begin( "MainWindow", nullptr, windowFlags | ImGuiWindowFlags_NoDecoration ) ) {
 		mViewportManager->Update( inDeltaTime, inLevelInterface );
 	}
 	ImGui::End();
-	ImGui::PopStyleVar( 2 );
+	ImGui::PopStyleVar( 3 );
 
 	ImGui::SetNextWindowPos( { viewport->WorkPos.x + viewport->WorkSize.x - kOutlinerWidth, viewport->WorkPos.y + kToolbarHeight } );
 	ImGui::SetNextWindowSize( { 256, viewport->WorkSize.y - kToolbarHeight } );

@@ -136,13 +136,17 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 
 	ImVec2 perspectiveViewSize;
 
+	ImVec2 viewSize = ImGui::GetWindowSize();
+
 	if ( mShouldAutosize || ImGui::IsKeyChordPressed( ImGuiKey_A | ImGuiMod_Ctrl ) ) {
 		mShouldAutosize = false;
 		ImGui::SetNextWindowSize( { ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y / 2 } );
 	}
 
-	ImGui::SetNextWindowSizeConstraints( { 64.0f, 64.0f }, { ImGui::GetContentRegionAvail().x - 64.0f, ImGui::GetContentRegionAvail().y - 64.0f } );
-	if ( ImGui::BeginChild( "PerspectiveView", ImVec2( ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.5f ), ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY, viewportFlags ) ) {
+	ImGui::PushStyleVar( ImGuiStyleVar_WindowMinSize, { kMinViewportSize, kMinViewportSize } );
+
+	ImGui::SetNextWindowSizeConstraints( { kMinViewportSize, kMinViewportSize }, { viewSize.x - kMinViewportSize, viewSize.y - kMinViewportSize } );
+	if ( ImGui::BeginChild( "PerspectiveView", { ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y / 2 }, ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY, viewportFlags ) ) {
 		perspectiveViewSize = ImGui::GetWindowSize();
 		mViewportPerspective->Update( inDeltaTime, inLevelInterface, mGridContext, mPerspectiveContext );
 		DrawViewportOverlay( "Perspective" );
@@ -168,6 +172,8 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 		DrawViewportOverlay( "Side (Y/Z)" );
 	}
 	ImGui::EndChild();
+
+	ImGui::PopStyleVar( 1 );
 
 	mOrthographicContext.mCenter2D = Vector4D::sClamp( mOrthographicContext.mCenter2D, Vector4D::sReplicate( -mGridContext.mWorldLimit ), Vector4D::sReplicate( mGridContext.mWorldLimit ) );
 }

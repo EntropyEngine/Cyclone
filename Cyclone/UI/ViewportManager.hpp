@@ -18,6 +18,8 @@ namespace Cyclone::UI
 	class ViewportManager : public Cyclone::Util::NonCopyable
 	{
 	public:
+		static constexpr float kMinViewportSize = 2.0f;
+
 		ViewportManager();
 
 		ViewportManager( ViewportManager && ) = default;
@@ -36,7 +38,7 @@ namespace Cyclone::UI
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::FrontXY>> mViewportFront;
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::SideYZ>> mViewportSide;
 
-		bool   mShouldAutosize = false;
+		bool   mShouldAutosize = true;
 
 		ViewportGridContext			mGridContext;
 		ViewportPerspectiveContext	mPerspectiveContext;
