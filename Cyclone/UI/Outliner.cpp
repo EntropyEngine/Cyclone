@@ -63,10 +63,10 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 			ImGui::TableSetColumnIndex( 1 );
 			ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-			if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##c{}V", entityCategory ), reinterpret_cast<bool *>( categoryVisible ) ) );
+			if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##cV", entityCategory ), reinterpret_cast<bool *>( categoryVisible ) ) );
 
 			ImGui::TableSetColumnIndex( 2 );
-			if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##c{}S", entityCategory ), reinterpret_cast<bool *>( categorySelectable ) ) );
+			if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##cS", entityCategory ), reinterpret_cast<bool *>( categorySelectable ) ) );
 			ImGui::PopStyleVar( 1 );
 
 			ImGui::TableSetColumnIndex( 0 );
@@ -79,62 +79,73 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 					ImGui::TableSetColumnIndex( 1 );
 					ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-					if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##t{}V", entityType ), reinterpret_cast<bool *>( entityTypeVisible ) ) );
+					if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##tV", entityType ), reinterpret_cast<bool *>( entityTypeVisible ) ) );
 
 					ImGui::TableSetColumnIndex( 2 );
-					if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##t{}S", entityType ), reinterpret_cast<bool *>( entityTypeSelectable ) ) );
+					if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##tS", entityType ), reinterpret_cast<bool *>( entityTypeSelectable ) ) );
 					ImGui::PopStyleVar( 1 );
 
 					ImGui::TableSetColumnIndex( 0 );
 					if ( ImGui::TreeNodeEx( inLevelInterface->GetEntityCtx().GetEntityTypeName( entityType ), treeNodeFlags ) ) {
-						for ( const auto entity : entityList ) {
-							ImGui::TableNextRow();
-							ImGui::TableSetColumnIndex( 0 );
+						ImGuiListClipper clipper;
+						clipper.Begin( entityList.size() );
 
-							ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
-							ImGuiTreeNodeFlags treeLeafFlags = ImGuiTreeNodeFlags_DrawLinesFull | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_AllowOverlap;
+						while ( clipper.Step() ) {
 
-							bool entityInSelection = selectionContext.GetSelectedEntities().contains( entity );
-							bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
+							for ( int rowN = clipper.DisplayStart; rowN < clipper.DisplayEnd; ++rowN ) {
+								ImGui::PushID( rowN );
 
-							auto &entityVisible = registry.get<Cyclone::Core::Component::Visible>( entity );
-							auto &entitySelectable = registry.get<Cyclone::Core::Component::Selectable>( entity );
+								const auto entity = entityList[rowN];
 
-							if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
-							if ( !static_cast<bool>( entityVisible ) || !*categoryVisible || !*entityTypeVisible ) selectionFlags |= ImGuiSelectableFlags_Disabled;
-							if ( !static_cast<bool>( entitySelectable ) || !*categorySelectable || !*entityTypeSelectable ) selectionFlags |= ImGuiSelectableFlags_Disabled;
+								ImGui::TableNextRow();
+								ImGui::TableSetColumnIndex( 0 );
 
-							if ( !( selectionFlags & ImGuiSelectableFlags_Disabled ) ) treeLeafFlags |= ImGuiTreeNodeFlags_Bullet;
+								ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
+								ImGuiTreeNodeFlags treeLeafFlags = ImGuiTreeNodeFlags_DrawLinesFull | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_AllowOverlap;
 
-							const auto entityIdString = Cyclone::Util::PrefixString( "##b", entity );
-							ImGui::TreeNodeEx( entityIdString, treeLeafFlags );
+								bool entityInSelection = selectionContext.GetSelectedEntities().contains( entity );
+								bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
 
-							//ImGui::Bullet();
-							ImGui::SameLine( 0, 0 );
-							ImGui::SetNextItemAllowOverlap();
-							if ( ImGui::Selectable( entityIdString.Value(), entityInSelection, selectionFlags) ) {
-								if ( ImGui::GetIO().KeyCtrl ) {
-									if ( entityIsSelected ) {
-										selectionContext.DeselectEntity( entity );
+								auto &entityVisible = registry.get<Cyclone::Core::Component::Visible>( entity );
+								auto &entitySelectable = registry.get<Cyclone::Core::Component::Selectable>( entity );
+
+								if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
+								if ( !static_cast<bool>( entityVisible ) || !*categoryVisible || !*entityTypeVisible ) selectionFlags |= ImGuiSelectableFlags_Disabled;
+								if ( !static_cast<bool>( entitySelectable ) || !*categorySelectable || !*entityTypeSelectable ) selectionFlags |= ImGuiSelectableFlags_Disabled;
+
+								if ( !( selectionFlags & ImGuiSelectableFlags_Disabled ) ) treeLeafFlags |= ImGuiTreeNodeFlags_Bullet;
+
+								const auto entityIdString = Cyclone::Util::PrefixString( "##b", entity );
+								ImGui::TreeNodeEx( entityIdString, treeLeafFlags );
+
+								//ImGui::Bullet();
+								ImGui::SameLine( 0, 0 );
+								ImGui::SetNextItemAllowOverlap();
+								if ( ImGui::Selectable( entityIdString.Value(), entityInSelection, selectionFlags ) ) {
+									if ( ImGui::GetIO().KeyCtrl ) {
+										if ( entityIsSelected ) {
+											selectionContext.DeselectEntity( entity );
+										}
+										else {
+											selectionContext.AddSelectedEntity( entity );
+										}
 									}
 									else {
-										selectionContext.AddSelectedEntity( entity );
+										selectionContext.SetSelectedEntity( entity );
 									}
-								}
-								else {
-									selectionContext.SetSelectedEntity( entity );
-								}
-							};
+								};
 
-							ImGui::TableSetColumnIndex( 1 );
-							ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-							if ( ImGui::Checkbox( "##V", reinterpret_cast<bool *>( &entityVisible ) ) ) selectionContext.DeselectEntity( entity );
+								ImGui::TableSetColumnIndex( 1 );
+								ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
+								if ( ImGui::Checkbox( "##V", reinterpret_cast<bool *>( &entityVisible ) ) ) selectionContext.DeselectEntity( entity );
 
-							ImGui::TableSetColumnIndex( 2 );
-							if ( ImGui::Checkbox( "##S", reinterpret_cast<bool *>( &entitySelectable ) ) ) selectionContext.DeselectEntity( entity );
-							ImGui::PopStyleVar( 1 );
+								ImGui::TableSetColumnIndex( 2 );
+								if ( ImGui::Checkbox( "##S", reinterpret_cast<bool *>( &entitySelectable ) ) ) selectionContext.DeselectEntity( entity );
+								ImGui::PopStyleVar( 1 );
 
-							ImGui::TreePop();
+								ImGui::TreePop();
+								ImGui::PopID();
+							}
 						}
 						ImGui::TreePop();
 					}
