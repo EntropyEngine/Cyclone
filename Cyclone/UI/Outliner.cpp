@@ -81,7 +81,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 							ImGui::TableSetColumnIndex( 0 );
 							if ( ImGui::TreeNodeEx( entityContext.GetEntityTypeName( entityType ), treeNodeFlags ) ) {
 								ImGuiListClipper clipper;
-								clipper.Begin( entityList.size() );
+								clipper.Begin( static_cast<int>( entityList.size() ) );
 
 								while ( clipper.Step() ) {
 
@@ -230,7 +230,6 @@ void Cyclone::UI::Outliner::RebuildTree( const Cyclone::Core::LevelInterface *in
 		}
 	}
 
-	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 	const entt::registry &cregistry = inLevelInterface->GetRegistry();
 	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory>();
 	for ( const entt::entity entity : view ) {
