@@ -22,10 +22,6 @@
 
 void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	if ( mOutlinerTreeOpen || mCurrentSelectionOpen ) {
-		RebuildTree( inLevelInterface );
-	}
-
 	auto &selectionContext = inLevelInterface->GetSelectionCtx();
 	auto &entityContext = inLevelInterface->GetEntityCtx();
 	entt::registry &registry = inLevelInterface->GetRegistry();
@@ -35,7 +31,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 	ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY;
 	ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesFull;
 
-	if ( ImGui::CollapsingHeader( "Outliner", &mOutlinerTreeOpen, ImGuiTreeNodeFlags_DefaultOpen ) ) {
+	if ( ImGui::CollapsingHeader( "Outliner", ImGuiTreeNodeFlags_DefaultOpen ) ) {
+		RebuildTree( inLevelInterface );
 		ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 0.0f }, { ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y } );
 		if ( ImGui::BeginChild( "OutlinerChild", { 0.0f, 256.0f }, sectionChildFlags, sectionWindowFlags ) ) {
 			if ( ImGui::BeginTable( "OutlinerTable", 3, tableFlags, { 0.0f, -0.0f } ) ) {
@@ -155,7 +152,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 	auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
 
-	if ( ImGui::CollapsingHeader( "Selection", &mCurrentSelectionOpen, ImGuiTreeNodeFlags_DefaultOpen ) ) {
+	if ( ImGui::CollapsingHeader( "Selection", ImGuiTreeNodeFlags_DefaultOpen ) ) {
 		ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 0.0f }, { ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y } );
 		if ( ImGui::BeginChild( "SelectionChild", { 0.0f, 256.0f }, sectionChildFlags, sectionWindowFlags ) ) {
 			if ( ImGui::BeginTable( "SelectionTable", 4, tableFlags, { 0.0f, -0.0f } ) ) {

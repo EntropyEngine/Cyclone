@@ -24,11 +24,6 @@ namespace Cyclone::UI
 		using EntityCategoryTree = std::map<Cyclone::Core::Component::EntityCategory, EntityTypeTree>;
 		EntityCategoryTree mOutlinerTree;
 
-
-
 		void RebuildTree( const Cyclone::Core::LevelInterface *inLevelInterface );
-
-		bool mOutlinerTreeOpen = true;
-		bool mCurrentSelectionOpen = true;
 	};
 }
