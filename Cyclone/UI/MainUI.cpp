@@ -66,9 +66,12 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 		ImGui::EndMainMenuBar();
 	}
 
+	if ( ImGui::GetFrameCount() <= 1 ) return;
+
 	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+
 
 	ImGui::SetNextWindowPos( viewport->WorkPos );
 	ImGui::SetNextWindowSize( { viewport->WorkSize.x, kToolbarHeight } );
@@ -96,18 +99,25 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	ImGui::End();
 	ImGui::PopStyleVar( 3 );
 
+
+	ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f } );
+	ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f } );
+	ImGui::PushStyleVar( ImGuiStyleVar_WindowBorderSize, 0.0f );
 	ImGui::SetNextWindowPos( { viewport->WorkPos.x + viewport->WorkSize.x - kOutlinerWidth, viewport->WorkPos.y + kToolbarHeight } );
 	ImGui::SetNextWindowSize( { 256, viewport->WorkSize.y - kToolbarHeight } );
 	if ( ImGui::Begin( "Outliner", nullptr, windowFlags ) ) {
 		mOutliner->Update( inLevelInterface );
 	}
 	ImGui::End();
+	ImGui::PopStyleVar( 3 );
 
 	DeselectDisabledEntities( inLevelInterface );
 }
 
 void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
+	if ( ImGui::GetFrameCount() <= 1 ) return;
+
 	mViewportManager->Render( inDeviceContext, inLevelInterface );
 }
 
