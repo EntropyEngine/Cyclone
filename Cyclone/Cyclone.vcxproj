@@ -97,6 +97,9 @@
     <ClInclude Include="Core\Component\Position.hpp" />
     <ClInclude Include="Core\Component\Selectable.hpp" />
     <ClInclude Include="Core\Component\Visible.hpp" />
+    <ClInclude Include="Core\Editor\GridContext.hpp" />
+    <ClInclude Include="Core\Editor\OrthographicContext.hpp" />
+    <ClInclude Include="Core\Editor\PerspectiveContext.hpp" />
     <ClInclude Include="Core\Entity\BaseEntity.hpp" />
     <ClInclude Include="Core\Entity\EntityContext.hpp" />
     <ClInclude Include="Core\Entity\InfoDebug.hpp" />

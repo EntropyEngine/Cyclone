@@ -41,6 +41,9 @@
     <Filter Include="UI\Tool">
       <UniqueIdentifier>{e3b0c654-d7a5-4a0f-8dbf-988e13797122}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Editor">
+      <UniqueIdentifier>{3f8d375e-e8b7-4f57-a06e-402e9a9abcc7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -157,6 +160,15 @@
     </ClInclude>
     <ClInclude Include="Core\Tool\SelectionTransformToolContext.hpp">
       <Filter>Core\Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Editor\GridContext.hpp">
+      <Filter>Core\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Editor\PerspectiveContext.hpp">
+      <Filter>Core\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Editor\OrthographicContext.hpp">
+      <Filter>Core\Editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
