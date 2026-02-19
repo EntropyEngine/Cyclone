@@ -152,6 +152,9 @@
     <ClInclude Include="Util\String.hpp">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="UI\Tool\SelectionTransformTool.hpp">
+      <Filter>UI\Tool</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -226,6 +229,9 @@
     </ClCompile>
     <ClCompile Include="Core\Entity\InfoDebug.cpp">
       <Filter>Core\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Tool\SelectionTransformTool.cpp">
+      <Filter>UI\Tool</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -33,8 +33,6 @@ void Cyclone::Core::LevelInterface::Initialize()
 			Entity::PointDebug().Create( GetRegistry(), { double( x * 2 + 16 ), 0.0, double( y * 2 + 16 ) } );
 		}
 	}
-
-	GetRegistry().storage<Cyclone::Core::Component::Position>( "delta"_hs );
 }
 
 void Cyclone::Core::LevelInterface::SetDevice( ID3D11Device3 *inDevice )
