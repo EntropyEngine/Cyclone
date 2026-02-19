@@ -22,36 +22,23 @@
 
 void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	if ( ImGui::CollapsingHeader( "Outliner", ImGuiTreeNodeFlags_DefaultOpen ) ) {
+	if ( mOutlinerTreeOpen || mCurrentSelectionOpen ) {
+		RebuildTree( inLevelInterface );
+	}
+
+	auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	auto &entityContext = inLevelInterface->GetEntityCtx();
+	entt::registry &registry = inLevelInterface->GetRegistry();
+
+	ImGuiChildFlags sectionChildFlags = ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeY;
+	ImGuiWindowFlags sectionWindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking;
+	ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY;
+	ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesFull;
+
+	if ( ImGui::CollapsingHeader( "Outliner", &mOutlinerTreeOpen, ImGuiTreeNodeFlags_DefaultOpen ) ) {
 		ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 0.0f }, { ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y } );
-		if ( ImGui::BeginChild( "OutlinerChild", { 0.0f, 256.0f }, ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeY, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking ) ) {
-			if ( ImGui::BeginTable( "OutlinerTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY, { 0.0f, -0.0f } ) )
-			{
-				std::map<Cyclone::Core::Component::EntityCategory, std::map<Cyclone::Core::Component::EntityType, std::vector<entt::entity>>> outlinerTree;
-
-				auto &selectionContext = inLevelInterface->GetSelectionCtx();
-
-				entt::registry &registry = inLevelInterface->GetRegistry();
-				const entt::registry &cregistry = inLevelInterface->GetRegistry();
-				auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory>();
-				for ( const entt::entity entity : view ) {
-					const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-					const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
-
-					auto itCategory = outlinerTree.find( entityCategory );
-					if ( itCategory == outlinerTree.end() ) {
-						itCategory = outlinerTree.emplace( entityCategory, std::map<Cyclone::Core::Component::EntityType, std::vector<entt::entity>>{} ).first;
-					}
-
-					auto itType = itCategory->second.find( entityType );
-					if ( itType == itCategory->second.end() ) {
-						itType = itCategory->second.emplace( entityType, std::vector<entt::entity>{} ).first;
-					}
-
-					itType->second.push_back( entity );
-				}
-
-				ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesFull;
+		if ( ImGui::BeginChild( "OutlinerChild", { 0.0f, 256.0f }, sectionChildFlags, sectionWindowFlags ) ) {
+			if ( ImGui::BeginTable( "OutlinerTable", 3, tableFlags, { 0.0f, -0.0f } ) ) {
 
 				ImGui::TableSetupColumn( "Name" );
 				ImGui::TableSetupColumn( "V", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() );
@@ -59,38 +46,40 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 				ImGui::TableSetupScrollFreeze( 0, 1 );
 				ImGui::TableHeadersRow();
 
-				for ( const auto &[entityCategory, typeMap] : outlinerTree ) {
+				for ( const auto &[entityCategory, typeMap] : mOutlinerTree ) {
 					ImGui::TableNextRow();
 
-					bool *categoryVisible = inLevelInterface->GetEntityCtx().GetEntityCategoryIsVisible( entityCategory );
-					bool *categorySelectable = inLevelInterface->GetEntityCtx().GetEntityCategoryIsSelectable( entityCategory );
+					bool *categoryVisible = entityContext.GetEntityCategoryIsVisible( entityCategory );
+					bool *categorySelectable = entityContext.GetEntityCategoryIsSelectable( entityCategory );
 
 					ImGui::TableSetColumnIndex( 1 );
 					ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-					if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##cV", entityCategory ), reinterpret_cast<bool *>( categoryVisible ) ) );
+					if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##cV", entityCategory ), categoryVisible ) );
 
 					ImGui::TableSetColumnIndex( 2 );
-					if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##cS", entityCategory ), reinterpret_cast<bool *>( categorySelectable ) ) );
+					if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##cS", entityCategory ), categorySelectable ) );
 					ImGui::PopStyleVar( 1 );
 
 					ImGui::TableSetColumnIndex( 0 );
-					if ( ImGui::TreeNodeEx( inLevelInterface->GetEntityCtx().GetEntityCategoryName( entityCategory ), treeNodeFlags ) ) {
+					if ( ImGui::TreeNodeEx( entityContext.GetEntityCategoryName( entityCategory ), treeNodeFlags ) ) {
 						for ( const auto &[entityType, entityList] : typeMap ) {
+							if ( entityList.empty() ) continue;
+
 							ImGui::TableNextRow();
 
-							bool *entityTypeVisible = inLevelInterface->GetEntityCtx().GetEntityTypeIsVisible( entityType );
-							bool *entityTypeSelectable = inLevelInterface->GetEntityCtx().GetEntityTypeIsSelectable( entityType );
+							bool *entityTypeVisible = entityContext.GetEntityTypeIsVisible( entityType );
+							bool *entityTypeSelectable = entityContext.GetEntityTypeIsSelectable( entityType );
 
 							ImGui::TableSetColumnIndex( 1 );
 							ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-							if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##tV", entityType ), reinterpret_cast<bool *>( entityTypeVisible ) ) );
+							if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##tV", entityType ), entityTypeVisible ) );
 
 							ImGui::TableSetColumnIndex( 2 );
-							if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##tS", entityType ), reinterpret_cast<bool *>( entityTypeSelectable ) ) );
+							if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##tS", entityType ), entityTypeSelectable ) );
 							ImGui::PopStyleVar( 1 );
 
 							ImGui::TableSetColumnIndex( 0 );
-							if ( ImGui::TreeNodeEx( inLevelInterface->GetEntityCtx().GetEntityTypeName( entityType ), treeNodeFlags ) ) {
+							if ( ImGui::TreeNodeEx( entityContext.GetEntityTypeName( entityType ), treeNodeFlags ) ) {
 								ImGuiListClipper clipper;
 								clipper.Begin( entityList.size() );
 
@@ -137,7 +126,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 											else {
 												selectionContext.SetSelectedEntity( entity );
 											}
-										};
+										}
 
 										ImGui::TableSetColumnIndex( 1 );
 										ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
@@ -163,6 +152,74 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 		}
 		ImGui::EndChild();
 	}
+
+	auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
+
+	if ( ImGui::CollapsingHeader( "Selection", &mCurrentSelectionOpen, ImGuiTreeNodeFlags_DefaultOpen ) ) {
+		ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 0.0f }, { ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y } );
+		if ( ImGui::BeginChild( "SelectionChild", { 0.0f, 256.0f }, sectionChildFlags, sectionWindowFlags ) ) {
+			if ( ImGui::BeginTable( "SelectionTable", 4, tableFlags, { 0.0f, -0.0f } ) ) {
+				ImGui::TableSetupColumn( "Type" );
+				ImGui::TableSetupColumn( "Name" );
+				ImGui::TableSetupColumn( "V", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() );
+				ImGui::TableSetupColumn( "S", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() );
+				ImGui::TableSetupScrollFreeze( 0, 1 );
+				ImGui::TableHeadersRow();
+
+				// Explicitly create copy rather than ref
+				const auto previousSelection = selectionContext.GetSelectedEntities();
+
+				for ( entt::entity entity : previousSelection ) {
+					ImGui::PushID( static_cast<int>( entity ) );
+
+					ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
+					bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
+
+					if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
+					const auto entityIdString = Cyclone::Util::PrefixString( "", entity );
+
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex( 0 );
+
+					const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+					ImGui::SetNextItemAllowOverlap();
+					if ( ImGui::Selectable( entityContext.GetEntityTypeName( entityType ), true, selectionFlags ) ) {
+						if ( ImGui::GetIO().KeyCtrl ) {
+							if ( entityIsSelected ) {
+								selectionContext.DeselectEntity( entity );
+							}
+							else {
+								selectionContext.AddSelectedEntity( entity );
+							}
+						}
+						else {
+							selectionContext.SetSelectedEntity( entity );
+						}
+					}
+
+					ImGui::TableSetColumnIndex( 1 );
+					ImGui::Text( entityIdString );
+
+					auto &entityVisible = view.get<Cyclone::Core::Component::Visible>( entity );
+					auto &entitySelectable = view.get<Cyclone::Core::Component::Selectable>( entity );
+
+					ImGui::TableSetColumnIndex( 2 );
+					ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
+					if ( ImGui::Checkbox( "##V", reinterpret_cast<bool *>( &entityVisible ) ) ) selectionContext.DeselectEntity( entity );
+
+					ImGui::TableSetColumnIndex( 3 );
+					if ( ImGui::Checkbox( "##S", reinterpret_cast<bool *>( &entitySelectable ) ) ) selectionContext.DeselectEntity( entity );
+					ImGui::PopStyleVar( 1 );
+
+					ImGui::PopID();
+				}
+
+				ImGui::EndTable();
+			}
+		}
+		ImGui::EndChild();
+	}
+
 
 	/*
 	if ( ImGui::BeginTable( "Entity List", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp ) ) {
@@ -264,4 +321,34 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 		ImGui::EndTable();
 	}
 	*/
+}
+
+void Cyclone::UI::Outliner::RebuildTree( const Cyclone::Core::LevelInterface *inLevelInterface )
+{
+	// Clear all entity lists
+	for ( auto &[entityCategory, typeMap] : mOutlinerTree ) {
+		for ( auto &[entityType, entityList] : typeMap ) {
+			entityList.clear();
+		}
+	}
+
+	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	const entt::registry &cregistry = inLevelInterface->GetRegistry();
+	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory>();
+	for ( const entt::entity entity : view ) {
+		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+		const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
+
+		auto itCategory = mOutlinerTree.find( entityCategory );
+		if ( itCategory == mOutlinerTree.end() ) {
+			itCategory = mOutlinerTree.emplace( entityCategory, EntityTypeTree{} ).first;
+		}
+
+		auto itType = itCategory->second.find( entityType );
+		if ( itType == itCategory->second.end() ) {
+			itType = itCategory->second.emplace( entityType, EntityList{} ).first;
+		}
+
+		itType->second.push_back( entity );
+	}
 }

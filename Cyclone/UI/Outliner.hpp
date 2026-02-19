@@ -3,6 +3,10 @@
 // Cyclone utils
 #include "Cyclone/Util/NonCopyable.hpp"
 
+// Cyclone Components
+#include "Cyclone/Core/Component/EntityType.hpp"
+#include "Cyclone/Core/Component/EntityCategory.hpp"
+
 namespace Cyclone::Core {
 	class LevelInterface;
 }
@@ -13,5 +17,18 @@ namespace Cyclone::UI
 	{
 	public:
 		void Update( Cyclone::Core::LevelInterface *inLevelInterface );
+
+	protected:
+		using EntityList = std::vector<entt::entity>;
+		using EntityTypeTree = std::map<Cyclone::Core::Component::EntityType, EntityList>;
+		using EntityCategoryTree = std::map<Cyclone::Core::Component::EntityCategory, EntityTypeTree>;
+		EntityCategoryTree mOutlinerTree;
+
+
+
+		void RebuildTree( const Cyclone::Core::LevelInterface *inLevelInterface );
+
+		bool mOutlinerTreeOpen = true;
+		bool mCurrentSelectionOpen = true;
 	};
 }
