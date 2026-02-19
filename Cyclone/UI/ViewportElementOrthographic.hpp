@@ -1,8 +1,11 @@
 #pragma once
 
+// Cyclone UI includes
 #include "Cyclone/UI/ViewportElement.hpp"
 #include "Cyclone/UI/ViewportType.hpp"
-#include "Cyclone/UI/ViewportContext.hpp"
+
+// Cyclone Math
+#include "Cyclone/Math/Vector.hpp"
 
 struct ImVec2;
 struct ImDrawList;
@@ -27,12 +30,12 @@ namespace Cyclone::UI
 	public:
 		ViewportElementOrthographic( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor ) : ViewportElement( inBackBufferFormat, inDepthBufferFormat, inClearColor ) {}
 
-		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, ViewportGridContext &inGridContext, ViewportOrthographicContext &inOrthographicContext );
-		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface, const ViewportGridContext &inGridContext, const ViewportOrthographicContext &inOrthographicContext );
+		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
+		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface );
 
 	protected:
 		/// @note mutates global ImGui state
-		void DrawEntities( const Cyclone::Core::LevelInterface *inLevelInterface, const ViewportOrthographicContext &inOrthographicContext, ImDrawList* drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax ) const;
+		void DrawEntities( const Cyclone::Core::LevelInterface *inLevelInterface, ImDrawList* drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax ) const;
 
 	private:
 		void XM_CALLCONV GetMinMaxUV( Cyclone::Math::Vector4D inCenter2D, double inWorldLimit, double inZoomScale2D, double &outMinU, double &outMaxU, double &outMinV, double &outMaxV ) const

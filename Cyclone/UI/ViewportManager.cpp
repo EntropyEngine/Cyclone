@@ -57,8 +57,10 @@ void Cyclone::UI::ViewportManager::MenuBarUpdate()
 	if ( ImGui::MenuItem( "Autosize Viewports", "Ctrl+A") ) mShouldAutosize = true;
 }
 
-void Cyclone::UI::ViewportManager::ToolbarUpdate()
+void Cyclone::UI::ViewportManager::ToolbarUpdate( Cyclone::Core::LevelInterface *inLevelInterface )
 {
+	auto &gridContext = inLevelInterface->GetGridCtx();
+
 	ImVec2 viewSize = ImGui::GetWindowSize();
 
 	ImGui::PushStyleVarX( ImGuiStyleVar_SelectableTextAlign, 1.0f );
@@ -81,12 +83,12 @@ void Cyclone::UI::ViewportManager::ToolbarUpdate()
 
 		ImGui::SetCursorPosY( itemOffset );
 		ImGui::SetNextItemWidth( 52.0f );
-		std::string subGridLevelPreview = mGridContext.kGridSizeText[mGridContext.mGridSizeIndex];
+		std::string subGridLevelPreview = gridContext.kGridSizeText[gridContext.mGridSizeIndex];
 		if ( ImGui::BeginCombo( "##SubGridLevel", subGridLevelPreview.c_str(), ImGuiComboFlags_HeightLarge ) ) {
-			for ( int i = 0; i < std::size( mGridContext.kGridSizes ); ++i ) {
-				const bool isSelected = mGridContext.mGridSizeIndex == i;
-				if ( ImGui::Selectable( mGridContext.kGridSizeText[i], isSelected ) ) {
-					mGridContext.SetGridSize( i );
+			for ( int i = 0; i < std::size( gridContext.kGridSizes ); ++i ) {
+				const bool isSelected = gridContext.mGridSizeIndex == i;
+				if ( ImGui::Selectable( gridContext.kGridSizeText[i], isSelected ) ) {
+					gridContext.SetGridSize( i );
 				}
 				if ( isSelected ) ImGui::SetItemDefaultFocus();
 			}
@@ -95,8 +97,8 @@ void Cyclone::UI::ViewportManager::ToolbarUpdate()
 		}
 
 		// Adjust grid size with [ and ]
-		if ( ImGui::IsKeyPressed( ImGuiKey_LeftBracket, false ) ) mGridContext.SetGridSize( mGridContext.mGridSizeIndex - 1 );
-		if ( ImGui::IsKeyPressed( ImGuiKey_RightBracket, false ) ) mGridContext.SetGridSize( mGridContext.mGridSizeIndex + 1 );
+		if ( ImGui::IsKeyPressed( ImGuiKey_LeftBracket, false ) ) gridContext.SetGridSize( gridContext.mGridSizeIndex - 1 );
+		if ( ImGui::IsKeyPressed( ImGuiKey_RightBracket, false ) ) gridContext.SetGridSize( gridContext.mGridSizeIndex + 1 );
 	}
 	ImGui::EndChild();
 
@@ -110,17 +112,17 @@ void Cyclone::UI::ViewportManager::ToolbarUpdate()
 		ImGui::SameLine( 0.0f, textSpacing );
 
 		ImGui::SetCursorPosY( itemOffset );
-		if ( ImGui::RadioButton( "To Grid", mGridContext.mSnapType == ViewportGridContext::ESnapType::ToGrid ) ) mGridContext.mSnapType = ViewportGridContext::ESnapType::ToGrid;
+		if ( ImGui::RadioButton( "To Grid", gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ToGrid ) ) gridContext.mSnapType = Cyclone::Core::Editor::GridContext::ESnapType::ToGrid;
 
 		ImGui::SameLine();
 
 		ImGui::SetCursorPosY( itemOffset );
-		if ( ImGui::RadioButton( "By Grid", mGridContext.mSnapType == ViewportGridContext::ESnapType::ByGrid ) ) mGridContext.mSnapType = ViewportGridContext::ESnapType::ByGrid;
+		if ( ImGui::RadioButton( "By Grid", gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ByGrid ) ) gridContext.mSnapType = Cyclone::Core::Editor::GridContext::ESnapType::ByGrid;
 
 		ImGui::SameLine();
 
 		ImGui::SetCursorPosY( itemOffset );
-		if ( ImGui::RadioButton( "None ", mGridContext.mSnapType == ViewportGridContext::ESnapType::None ) ) mGridContext.mSnapType = ViewportGridContext::ESnapType::None;
+		if ( ImGui::RadioButton( "None ", gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::None ) ) gridContext.mSnapType = Cyclone::Core::Editor::GridContext::ESnapType::None;
 		
 	}
 	ImGui::EndChild();
@@ -148,40 +150,43 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	ImGui::SetNextWindowSizeConstraints( { kMinViewportSize, kMinViewportSize }, { viewSize.x - kMinViewportSize, viewSize.y - kMinViewportSize } );
 	if ( ImGui::BeginChild( "PerspectiveView", { ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y / 2 }, ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY, viewportFlags ) ) {
 		perspectiveViewSize = ImGui::GetWindowSize();
-		mViewportPerspective->Update( inDeltaTime, inLevelInterface, mGridContext, mPerspectiveContext );
+		mViewportPerspective->Update( inDeltaTime, inLevelInterface );
 		DrawViewportOverlay( "Perspective" );
 	}
 	ImGui::EndChild();
 
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "TopView", ImVec2( ImGui::GetContentRegionAvail().x, perspectiveViewSize.y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		mViewportTop->Update( inDeltaTime, inLevelInterface, mGridContext, mOrthographicContext );
+		mViewportTop->Update( inDeltaTime, inLevelInterface );
 		DrawViewportOverlay( "Top (X/Z)" );
 	}
 	ImGui::EndChild();
 
 	if ( ImGui::BeginChild( "FrontView", ImVec2( perspectiveViewSize.x, ImGui::GetContentRegionAvail().y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		mViewportFront->Update( inDeltaTime, inLevelInterface, mGridContext, mOrthographicContext );
+		mViewportFront->Update( inDeltaTime, inLevelInterface );
 		DrawViewportOverlay( "Front (X/Y)" );
 	}
 	ImGui::EndChild();
 
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "SideView", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		mViewportSide->Update( inDeltaTime, inLevelInterface, mGridContext, mOrthographicContext );
+		mViewportSide->Update( inDeltaTime, inLevelInterface );
 		DrawViewportOverlay( "Side (Y/Z)" );
 	}
 	ImGui::EndChild();
 
 	ImGui::PopStyleVar( 1 );
 
-	mOrthographicContext.mCenter2D = Vector4D::sClamp( mOrthographicContext.mCenter2D, Vector4D::sReplicate( -mGridContext.mWorldLimit ), Vector4D::sReplicate( mGridContext.mWorldLimit ) );
+	const auto &gridContext = inLevelInterface->GetGridCtx();
+	auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
+
+	orthographicContext.mCenter2D = Vector4D::sClamp( orthographicContext.mCenter2D, Vector4D::sReplicate( -gridContext.mWorldLimit ), Vector4D::sReplicate( gridContext.mWorldLimit ) );
 }
 
 void Cyclone::UI::ViewportManager::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	mViewportPerspective->Render( inDeviceContext, inLevelInterface, mGridContext, mPerspectiveContext );
-	mViewportTop->Render( inDeviceContext, inLevelInterface, mGridContext, mOrthographicContext );
-	mViewportFront->Render( inDeviceContext, inLevelInterface, mGridContext, mOrthographicContext );
-	mViewportSide->Render( inDeviceContext, inLevelInterface, mGridContext, mOrthographicContext );
+	mViewportPerspective->Render( inDeviceContext, inLevelInterface );
+	mViewportTop->Render( inDeviceContext, inLevelInterface );
+	mViewportFront->Render( inDeviceContext, inLevelInterface );
+	mViewportSide->Render( inDeviceContext, inLevelInterface );
 }

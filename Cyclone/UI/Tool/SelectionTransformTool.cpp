@@ -13,7 +13,7 @@
 using Cyclone::Math::Vector4D;
 
 template<Cyclone::UI::EViewportType T>
-inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportGridContext &inGridContext, const ViewportOrthographicContext &inOrthographicContext, ImDrawList *inDrawList, const ImVec2 &inViewOrigin, const ImVec2 &inSelectedBoxMin, const ImVec2 &inSelectedBoxMax )
+inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::LevelInterface *inLevelInterface, ImDrawList *inDrawList, const ImVec2 &inViewOrigin, const ImVec2 &inSelectedBoxMin, const ImVec2 &inSelectedBoxMax )
 {
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
@@ -22,6 +22,9 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
+
+	const auto &gridContext = inLevelInterface->GetGridCtx();
+	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
 
 	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
 	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
@@ -62,18 +65,18 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 			Cyclone::Core::Component::Position startPosition{ transformContext.GetInitialPosition() };
 			Cyclone::Core::Component::Position positionDelta{ startPosition - currentPosition };
 
-			if ( inGridContext.mSnapType != ViewportGridContext::ESnapType::None ) {
-				positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * inOrthographicContext.mZoomScale2D / inGridContext.mGridSize ) * inGridContext.mGridSize );
-				positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * inOrthographicContext.mZoomScale2D / inGridContext.mGridSize ) * inGridContext.mGridSize );
+			if ( gridContext.mSnapType != Cyclone::Core::Editor::GridContext::ESnapType::None ) {
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * orthographicContext.mZoomScale2D / gridContext.mGridSize ) * gridContext.mGridSize );
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * orthographicContext.mZoomScale2D / gridContext.mGridSize ) * gridContext.mGridSize );
 
-				if ( inGridContext.mSnapType == ViewportGridContext::ESnapType::ToGrid ) {
-					positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( std::round( startPosition.Get<AxisU>() / inGridContext.mGridSize ) * inGridContext.mGridSize - startPosition.Get<AxisU>() );
-					positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( std::round( startPosition.Get<AxisV>() / inGridContext.mGridSize ) * inGridContext.mGridSize - startPosition.Get<AxisV>() );
+				if ( gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ToGrid ) {
+					positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( std::round( startPosition.Get<AxisU>() / gridContext.mGridSize ) * gridContext.mGridSize - startPosition.Get<AxisU>() );
+					positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( std::round( startPosition.Get<AxisV>() / gridContext.mGridSize ) * gridContext.mGridSize - startPosition.Get<AxisV>() );
 				}
 			}
 			else {
-				positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * inOrthographicContext.mZoomScale2D );
-				positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * inOrthographicContext.mZoomScale2D );
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * orthographicContext.mZoomScale2D );
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * orthographicContext.mZoomScale2D );
 			}
 
 			for ( const entt::entity entity : selectedEntities ) {
@@ -86,6 +89,6 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 	}
 }
 
-template void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate<Cyclone::UI::EViewportType::TopXZ>( Cyclone::Core::LevelInterface *, const ViewportGridContext &, const ViewportOrthographicContext &, ImDrawList *, const ImVec2 &, const ImVec2 &, const ImVec2 & );
-template void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate<Cyclone::UI::EViewportType::FrontXY>( Cyclone::Core::LevelInterface *, const ViewportGridContext &, const ViewportOrthographicContext &, ImDrawList *, const ImVec2 &, const ImVec2 &, const ImVec2 & );
-template void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate<Cyclone::UI::EViewportType::SideYZ>( Cyclone::Core::LevelInterface *, const ViewportGridContext &, const ViewportOrthographicContext &, ImDrawList *, const ImVec2 &, const ImVec2 &, const ImVec2 & );
+template void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate<Cyclone::UI::EViewportType::TopXZ>( Cyclone::Core::LevelInterface *, ImDrawList *, const ImVec2 &, const ImVec2 &, const ImVec2 & );
+template void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate<Cyclone::UI::EViewportType::FrontXY>( Cyclone::Core::LevelInterface *, ImDrawList *, const ImVec2 &, const ImVec2 &, const ImVec2 & );
+template void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate<Cyclone::UI::EViewportType::SideYZ>( Cyclone::Core::LevelInterface *, ImDrawList *, const ImVec2 &, const ImVec2 &, const ImVec2 & );

@@ -61,10 +61,13 @@ namespace
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, ViewportGridContext& inGridContext, ViewportOrthographicContext& inOrthographicContext )
+void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
+
+	const auto &gridContext = inLevelInterface->GetGridCtx();
+	auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
 
 	ImVec2 viewSize = ImGui::GetWindowSize();
 	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
@@ -89,11 +92,11 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	ImVec2 viewportAbsMousePos( io.MousePos.x - viewOrigin.x, io.MousePos.y - viewOrigin.y );
 	ImVec2 viewportRelMousePos( viewportAbsMousePos.x - viewSize.x / 2.0f, viewportAbsMousePos.y - viewSize.y / 2.0f );
 
-	double worldMouseU = inOrthographicContext.mCenter2D.Get<AxisU>() - viewportRelMousePos.x * inOrthographicContext.mZoomScale2D;
-	double worldMouseV = inOrthographicContext.mCenter2D.Get<AxisV>() - viewportRelMousePos.y * inOrthographicContext.mZoomScale2D;
+	double worldMouseU = orthographicContext.mCenter2D.Get<AxisU>() - viewportRelMousePos.x * orthographicContext.mZoomScale2D;
+	double worldMouseV = orthographicContext.mCenter2D.Get<AxisV>() - viewportRelMousePos.y * orthographicContext.mZoomScale2D;
 
-	double worldSnapU = std::round( worldMouseU / inGridContext.mGridSize ) * inGridContext.mGridSize;
-	double worldSnapV = std::round( worldMouseV / inGridContext.mGridSize ) * inGridContext.mGridSize;
+	double worldSnapU = std::round( worldMouseU / gridContext.mGridSize ) * gridContext.mGridSize;
+	double worldSnapV = std::round( worldMouseV / gridContext.mGridSize ) * gridContext.mGridSize;
 
 	const char *uStr = std::array{ "x", "y", "z" }[AxisU];
 	const char *vStr = std::array{ "x", "y", "z" }[AxisV];
@@ -112,57 +115,60 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 		viewportRelMousePos.x, viewportRelMousePos.y,
 		uStr, worldMouseU, vStr, worldMouseV,
 		uStr, worldSnapU, vStr, worldSnapV,
-		inOrthographicContext.mZoomScale2D
+		orthographicContext.mZoomScale2D
 	);
 	ImGui::PopStyleVar( 2 );
 
 	if ( isCanvasHovered && isLeftClickShort ) {
-		Tool::SelectionTool().OnClick<T>( inLevelInterface, worldMouseU, worldMouseV, 2.0f * kPositionHandleSize * inOrthographicContext.mZoomScale2D, inGridContext.mWorldLimit );
+		Tool::SelectionTool().OnClick<T>( inLevelInterface, worldMouseU, worldMouseV, 2.0f * kPositionHandleSize * orthographicContext.mZoomScale2D, gridContext.mWorldLimit );
 	}
 
 	// Middle click pan view
 	if ( ( isCanvasActive ) && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) ) {
-		inOrthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * inOrthographicContext.mZoomScale2D );
-		inOrthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * inOrthographicContext.mZoomScale2D );
+		orthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * orthographicContext.mZoomScale2D );
+		orthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * orthographicContext.mZoomScale2D );
 	}
 
 	// Zoom view
 	if ( isCanvasHovered && io.MouseWheel && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) ) {
-		int newZoomLevel = inOrthographicContext.mZoomLevel - ( ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 ) );
-		double newZoomScale2D = inOrthographicContext.sZoomLevelToScale( newZoomLevel );
+		int newZoomLevel = orthographicContext.mZoomLevel - ( ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 ) );
+		double newZoomScale2D = orthographicContext.sZoomLevelToScale( newZoomLevel );
 
-		double uPosNew = inOrthographicContext.mCenter2D.Get<AxisU>() - viewportRelMousePos.x * newZoomScale2D;
-		double vPosNew = inOrthographicContext.mCenter2D.Get<AxisV>() - viewportRelMousePos.y * newZoomScale2D;
+		double uPosNew = orthographicContext.mCenter2D.Get<AxisU>() - viewportRelMousePos.x * newZoomScale2D;
+		double vPosNew = orthographicContext.mCenter2D.Get<AxisV>() - viewportRelMousePos.y * newZoomScale2D;
 
-		inOrthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisU>( std::lerp( worldMouseU, worldSnapU, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - uPosNew );
-		inOrthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisV>( std::lerp( worldMouseV, worldSnapV, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - vPosNew );
+		orthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisU>( std::lerp( worldMouseU, worldSnapU, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - uPosNew );
+		orthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisV>( std::lerp( worldMouseV, worldSnapV, static_cast<double>( inDeltaTime * kAccelerateToSnap ) ) - vPosNew );
 
-		inOrthographicContext.UpdateZoomLevel( newZoomLevel );
+		orthographicContext.UpdateZoomLevel( newZoomLevel );
 	}
 
 	// Draw cursor
 	if ( isCanvasHovered ) {
 		ImVec2 gridPos;
-		gridPos.x = static_cast<float>( ( inOrthographicContext.mCenter2D.Get<AxisU>() - worldSnapU ) / inOrthographicContext.mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
-		gridPos.y = static_cast<float>( ( inOrthographicContext.mCenter2D.Get<AxisV>() - worldSnapV ) / inOrthographicContext.mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
+		gridPos.x = static_cast<float>( ( orthographicContext.mCenter2D.Get<AxisU>() - worldSnapU ) / orthographicContext.mZoomScale2D + viewSize.x / 2.0f + viewOrigin.x );
+		gridPos.y = static_cast<float>( ( orthographicContext.mCenter2D.Get<AxisV>() - worldSnapV ) / orthographicContext.mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
 
 		DrawCross( drawList, gridPos, 2.0f, IM_COL32( 255, 255, 255, 255 ) );
 	}
 
 	// Draw entites and get selection bounding box
 	ImVec2 selectedBoxMin, selectedBoxMax;
-	DrawEntities( inLevelInterface, inOrthographicContext, drawList, viewOrigin, viewSize, selectedBoxMin, selectedBoxMax );
+	DrawEntities( inLevelInterface, drawList, viewOrigin, viewSize, selectedBoxMin, selectedBoxMax );
 
 	// Perform selection transform
-	Tool::SelectionTransformTool().OnUpdate<T>( inLevelInterface, inGridContext, inOrthographicContext, drawList, viewOrigin, selectedBoxMin, selectedBoxMax );
+	Tool::SelectionTransformTool().OnUpdate<T>( inLevelInterface, drawList, viewOrigin, selectedBoxMin, selectedBoxMax );
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface, const ViewportGridContext &inGridContext, const ViewportOrthographicContext &inOrthographicContext )
+void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
 
 	constexpr size_t AxisU = ViewportElementOrthographic::AxisU;
 	constexpr size_t AxisV = ViewportElementOrthographic::AxisV;
+
+	const auto &gridContext = inLevelInterface->GetGridCtx();
+	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
 
 	Clear( inDeviceContext );
 
@@ -171,40 +177,40 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 	inDeviceContext->RSSetState( mCommonStates->CullNone() );
 	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
 
-	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix<T>( inGridContext.mWorldLimit ), GetProjMatrix( mWidth, mHeight, inOrthographicContext.mZoomScale2D, inGridContext.mWorldLimit ) );
+	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix<T>( gridContext.mWorldLimit ), GetProjMatrix( mWidth, mHeight, orthographicContext.mZoomScale2D, gridContext.mWorldLimit ) );
 	mWireframeGridEffect->Apply( inDeviceContext );
 
 	mWireframeGridBatch->Begin();
 	{
 		double minU, maxU, minV, maxV;
-		GetMinMaxUV( inOrthographicContext.mCenter2D, inGridContext.mWorldLimit, inOrthographicContext.mZoomScale2D, minU, maxU, minV, maxV );
+		GetMinMaxUV( orthographicContext.mCenter2D, gridContext.mWorldLimit, orthographicContext.mZoomScale2D, minU, maxU, minV, maxV );
 
-		double subgridStep = inGridContext.mGridSize;
+		double subgridStep = gridContext.mGridSize;
 		double gridStep = std::pow( 10.0, std::ceil( std::log10( subgridStep * 4 ) ) ) / 2;
 
-		while ( subgridStep / inOrthographicContext.mZoomScale2D < kMinGridSize ) {
+		while ( subgridStep / orthographicContext.mZoomScale2D < kMinGridSize ) {
 			//subgridStep *= 10;
 			subgridStep = std::pow( 10.0, std::ceil( std::log10( subgridStep * 4 ) ) ) / 2;
 		}
 
-		while ( gridStep / inOrthographicContext.mZoomScale2D < kMinGridSize * 5 ) {
+		while ( gridStep / orthographicContext.mZoomScale2D < kMinGridSize * 5 ) {
 			//gridStep *= 10;
 			gridStep = std::pow( 10.0, std::ceil( std::log10( gridStep * 4 ) ) ) / 2;
 		}
 
-		if ( subgridStep / inOrthographicContext.mZoomScale2D > kMinGridSize ) {
-			DrawLineLoop<AxisU, AxisV>( inOrthographicContext.mCenter2D, minU, maxU, minV, maxV, subgridStep, DirectX::ColorsLinear::DimGray );
-			DrawLineLoop<AxisV, AxisU>( inOrthographicContext.mCenter2D, minV, maxV, minU, maxU, subgridStep, DirectX::ColorsLinear::DimGray );
+		if ( subgridStep / orthographicContext.mZoomScale2D > kMinGridSize ) {
+			DrawLineLoop<AxisU, AxisV>( orthographicContext.mCenter2D, minU, maxU, minV, maxV, subgridStep, DirectX::ColorsLinear::DimGray );
+			DrawLineLoop<AxisV, AxisU>( orthographicContext.mCenter2D, minV, maxV, minU, maxU, subgridStep, DirectX::ColorsLinear::DimGray );
 		}
 
-		DrawLineLoop<AxisU, AxisV>( inOrthographicContext.mCenter2D, minU, maxU, minV, maxV, gridStep, DirectX::Colors::DimGray );
-		DrawLineLoop<AxisV, AxisU>( inOrthographicContext.mCenter2D, minV, maxV, minU, maxU, gridStep, DirectX::Colors::DimGray );
+		DrawLineLoop<AxisU, AxisV>( orthographicContext.mCenter2D, minU, maxU, minV, maxV, gridStep, DirectX::Colors::DimGray );
+		DrawLineLoop<AxisV, AxisU>( orthographicContext.mCenter2D, minV, maxV, minU, maxU, gridStep, DirectX::Colors::DimGray );
 
-		DrawLineLoop<AxisU, AxisV>( inOrthographicContext.mCenter2D, minU, maxU, minV, maxV, 1000, DirectX::Colors::Gray );
-		DrawLineLoop<AxisV, AxisU>( inOrthographicContext.mCenter2D, minV, maxV, minU, maxU, 1000, DirectX::Colors::Gray );
+		DrawLineLoop<AxisU, AxisV>( orthographicContext.mCenter2D, minU, maxU, minV, maxV, 1000, DirectX::Colors::Gray );
+		DrawLineLoop<AxisV, AxisU>( orthographicContext.mCenter2D, minV, maxV, minU, maxU, 1000, DirectX::Colors::Gray );
 
-		DrawAxisLine<AxisU>( inOrthographicContext.mCenter2D, minU, maxU );
-		DrawAxisLine<AxisV>( inOrthographicContext.mCenter2D, minV, maxV );
+		DrawAxisLine<AxisU>( orthographicContext.mCenter2D, minU, maxU );
+		DrawAxisLine<AxisV>( orthographicContext.mCenter2D, minV, maxV );
 	}
 	mWireframeGridBatch->End();
 
@@ -252,7 +258,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
 
-			Vector4D rebasedEntityPosition = ( position - inOrthographicContext.mCenter2D );
+			Vector4D rebasedEntityPosition = ( position - orthographicContext.mCenter2D );
 			Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
 			Cyclone::Util::RenderWireframeBoundingBox( mWireframeGridBatch.get(), rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
@@ -264,10 +270,12 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::Core::LevelInterface *inLevelInterface, const ViewportOrthographicContext &inOrthographicContext, ImDrawList *drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax ) const
+void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::Core::LevelInterface *inLevelInterface, ImDrawList *drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax ) const
 {
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
+
+	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
 
 	// Split channels into 3 planes
 	drawList->ChannelsSplit( 3 );
@@ -281,7 +289,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 	outSelectedBoxMin = { inViewOrigin.x + inViewSize.x, inViewOrigin.y + inViewSize.y };
 	outSelectedBoxMax = inViewOrigin;
 
-	const double invZoom = 1.0 / inOrthographicContext.mZoomScale2D;
+	const double invZoom = 1.0 / orthographicContext.mZoomScale2D;
 	const float offsetX = inViewSize.x / 2.0f + inViewOrigin.x;
 	const float offsetY = inViewSize.y / 2.0f + inViewOrigin.y;
 
@@ -327,7 +335,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 			drawList->ChannelsSetCurrent( 0 );
 		}
 
-		Vector4D rebasedEntityPosition = ( inOrthographicContext.mCenter2D - position );
+		Vector4D rebasedEntityPosition = ( orthographicContext.mCenter2D - position );
 		Vector4D rebasedBoundingBoxMin = rebasedEntityPosition - boundingBox.mCenter - boundingBox.mExtent;
 		Vector4D rebasedBoundingBoxMax = rebasedEntityPosition - boundingBox.mCenter + boundingBox.mExtent;
 

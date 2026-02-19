@@ -7,7 +7,6 @@
 #include "Cyclone/UI/ViewportElementPerspective.hpp"
 #include "Cyclone/UI/ViewportElementOrthographic.hpp"
 #include "Cyclone/UI/ViewportType.hpp"
-#include "Cyclone/UI/ViewportContext.hpp"
 
 namespace Cyclone::Core {
 	class LevelInterface;
@@ -28,7 +27,7 @@ namespace Cyclone::UI
 		void SetDevice( ID3D11Device3 *inDevice );
 
 		void MenuBarUpdate();
-		void ToolbarUpdate();
+		void ToolbarUpdate( Cyclone::Core::LevelInterface *inLevelInterface );
 		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface );
 
@@ -39,9 +38,5 @@ namespace Cyclone::UI
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::SideYZ>> mViewportSide;
 
 		bool   mShouldAutosize = true;
-
-		ViewportGridContext			mGridContext;
-		ViewportPerspectiveContext	mPerspectiveContext;
-		ViewportOrthographicContext	mOrthographicContext;
 	};
 }

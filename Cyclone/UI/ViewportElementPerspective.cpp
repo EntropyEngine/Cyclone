@@ -34,10 +34,12 @@ namespace
 	}
 }
 
-void Cyclone::UI::ViewportElementPerspective::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, ViewportGridContext &inGridContext, ViewportPerspectiveContext &inPerspectiveContext )
+void Cyclone::UI::ViewportElementPerspective::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	ImVec2 viewSize = ImGui::GetWindowSize();
 	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
+
+	auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
 
 	ImGui::SetCursorPos( { 0, 0 } );
 	ImGui::Image( GetOrResizeSRV( static_cast<size_t>( viewSize.x ), static_cast<size_t>( viewSize.y ) ), viewSize );
@@ -50,12 +52,12 @@ void Cyclone::UI::ViewportElementPerspective::Update( float inDeltaTime, Cyclone
 	const bool isActive = ImGui::IsItemActive();
 
 	if ( isActive && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
-		inPerspectiveContext.mCameraPitch += io.MouseDelta.y * kMouseSensitivity;
-		inPerspectiveContext.mCameraYaw -= io.MouseDelta.x * kMouseSensitivity;
+		perspectiveContext.mCameraPitch += io.MouseDelta.y * kMouseSensitivity;
+		perspectiveContext.mCameraYaw -= io.MouseDelta.x * kMouseSensitivity;
 
 		constexpr float pitchLimit = DirectX::XM_PIDIV2 - 0.01f;
-		inPerspectiveContext.mCameraPitch = std::clamp( inPerspectiveContext.mCameraPitch, -pitchLimit, pitchLimit );
-		inPerspectiveContext.mCameraYaw = inPerspectiveContext.mCameraYaw - DirectX::XM_2PI * std::floor( inPerspectiveContext.mCameraYaw / DirectX::XM_2PI );
+		perspectiveContext.mCameraPitch = std::clamp( perspectiveContext.mCameraPitch, -pitchLimit, pitchLimit );
+		perspectiveContext.mCameraYaw = perspectiveContext.mCameraYaw - DirectX::XM_2PI * std::floor( perspectiveContext.mCameraYaw / DirectX::XM_2PI );
 
 		float forward = 0.0f;
 		float left = 0.0f;
@@ -69,8 +71,8 @@ void Cyclone::UI::ViewportElementPerspective::Update( float inDeltaTime, Cyclone
 		left *= kKeyboardSensitivity * inDeltaTime;
 
 		if ( forward || left ) {
-			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw( inPerspectiveContext.mCameraPitch, inPerspectiveContext.mCameraYaw, 0.0f );
-			inPerspectiveContext.mCenter3D += Vector4D::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::XMVectorSet( left, 0, forward, 0 ), rotationMatrix ) );
+			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw( perspectiveContext.mCameraPitch, perspectiveContext.mCameraYaw, 0.0f );
+			perspectiveContext.mCenter3D += Vector4D::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::XMVectorSet( left, 0, forward, 0 ), rotationMatrix ) );
 		}
 	}
 
@@ -78,14 +80,17 @@ void Cyclone::UI::ViewportElementPerspective::Update( float inDeltaTime, Cyclone
 		float scroll = io.MouseWheel;
 		scroll *= kCameraDollySensitivity;
 		if ( scroll ) {
-			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw( inPerspectiveContext.mCameraPitch, inPerspectiveContext.mCameraYaw, 0.0f );
-			inPerspectiveContext.mCenter3D += Vector4D::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::XMVectorSet( 0, 0, scroll, 0 ), rotationMatrix ) );
+			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw( perspectiveContext.mCameraPitch, perspectiveContext.mCameraYaw, 0.0f );
+			perspectiveContext.mCenter3D += Vector4D::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::XMVectorSet( 0, 0, scroll, 0 ), rotationMatrix ) );
 		}
 	}
 }
 
-void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface, const ViewportGridContext &inGridContext, const ViewportPerspectiveContext &inPerspectiveContext )
+void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
+	const auto &gridContext = inLevelInterface->GetGridCtx();
+	const auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
+
 	Clear( inDeviceContext );
 
 	inDeviceContext->OMSetBlendState( mCommonStates->Opaque(), nullptr, 0xFFFFFFFF );
@@ -93,24 +98,24 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 	inDeviceContext->RSSetState( mCommonStates->CullNone() );
 	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
 
-	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix( inPerspectiveContext.mCameraPitch, inPerspectiveContext.mCameraYaw ), GetProjMatrix( mWidth, mHeight, kHorizontalFOV, inGridContext.mWorldLimit ) );
+	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix( perspectiveContext.mCameraPitch, perspectiveContext.mCameraYaw ), GetProjMatrix( mWidth, mHeight, kHorizontalFOV, gridContext.mWorldLimit ) );
 	mWireframeGridEffect->Apply( inDeviceContext );
 
 	mWireframeGridBatch->Begin();
 	{
 		mWireframeGridBatch->DrawLine(
-			{ ( -inPerspectiveContext.mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkRed },
-			{ ( -inPerspectiveContext.mCenter3D + Vector4D::sZeroSetValueByIndex<0>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkRed }
+			{ ( -perspectiveContext.mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkRed },
+			{ ( -perspectiveContext.mCenter3D + Vector4D::sZeroSetValueByIndex<0>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkRed }
 		);
 
 		mWireframeGridBatch->DrawLine(
-			{ ( -inPerspectiveContext.mCenter3D ).ToXMVECTOR(), DirectX::Colors::Green },
-			{ ( -inPerspectiveContext.mCenter3D + Vector4D::sZeroSetValueByIndex<1>( 1 ) ).ToXMVECTOR(), DirectX::Colors::Green }
+			{ ( -perspectiveContext.mCenter3D ).ToXMVECTOR(), DirectX::Colors::Green },
+			{ ( -perspectiveContext.mCenter3D + Vector4D::sZeroSetValueByIndex<1>( 1 ) ).ToXMVECTOR(), DirectX::Colors::Green }
 		);
 
 		mWireframeGridBatch->DrawLine(
-			{ ( -inPerspectiveContext.mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkBlue },
-			{ ( -inPerspectiveContext.mCenter3D + Vector4D::sZeroSetValueByIndex<2>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkBlue }
+			{ ( -perspectiveContext.mCenter3D ).ToXMVECTOR(), DirectX::Colors::DarkBlue },
+			{ ( -perspectiveContext.mCenter3D + Vector4D::sZeroSetValueByIndex<2>( 1 ) ).ToXMVECTOR(), DirectX::Colors::DarkBlue }
 		);
 	}
 	mWireframeGridBatch->End();
@@ -155,7 +160,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
 
-			Vector4D rebasedEntityPosition = ( position - inPerspectiveContext.mCenter3D );
+			Vector4D rebasedEntityPosition = ( position - perspectiveContext.mCenter3D );
 			Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
 			Cyclone::Util::RenderWireframeBoundingBox( mWireframeGridBatch.get(), rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );

@@ -110,9 +110,6 @@
     <ClInclude Include="Core\Component\BoundingBox.hpp">
       <Filter>Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="UI\ViewportContext.hpp">
-      <Filter>UI</Filter>
-    </ClInclude>
     <ClInclude Include="Util\Color.hpp">
       <Filter>Util</Filter>
     </ClInclude>
