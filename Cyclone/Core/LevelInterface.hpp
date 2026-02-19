@@ -8,7 +8,6 @@
 #include "Cyclone/Core/Entity/EntityContext.hpp"
 #include "Cyclone/Core/Tool/SelectionToolContext.hpp"
 
-
 namespace Cyclone::Core
 {
 	class LevelInterface : public Cyclone::Util::NonCopyable
