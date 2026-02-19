@@ -104,6 +104,7 @@
     <ClInclude Include="Core\LevelInterface.hpp" />
     <ClInclude Include="Core\Level.hpp" />
     <ClInclude Include="Core\Tool\SelectionToolContext.hpp" />
+    <ClInclude Include="Core\Tool\SelectionTransformToolContext.hpp" />
     <ClInclude Include="entt.hpp" />
     <ClInclude Include="main.h" />
     <ClInclude Include="framework.h" />
@@ -137,6 +138,7 @@
     <ClCompile Include="Core\LevelInterface.cpp" />
     <ClCompile Include="Core\Level.cpp" />
     <ClCompile Include="Core\Tool\SelectionToolContext.cpp" />
+    <ClCompile Include="Core\Tool\SelectionTransformToolContext.cpp" />
     <ClCompile Include="ImGui\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>

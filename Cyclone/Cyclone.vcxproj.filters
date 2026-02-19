@@ -155,6 +155,9 @@
     <ClInclude Include="UI\Tool\SelectionTransformTool.hpp">
       <Filter>UI\Tool</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Tool\SelectionTransformToolContext.hpp">
+      <Filter>Core\Tool</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -232,6 +235,9 @@
     </ClCompile>
     <ClCompile Include="UI\Tool\SelectionTransformTool.cpp">
       <Filter>UI\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Tool\SelectionTransformToolContext.cpp">
+      <Filter>Core\Tool</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

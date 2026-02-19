@@ -21,6 +21,7 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 	ImGuiIO &io = ImGui::GetIO();
 
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
 
 	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
 	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
@@ -51,15 +52,13 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 
 			ImVec2 selectionMouseDrag = ImGui::GetMouseDragDelta( ImGuiMouseButton_Left );
 
-			auto &&positionDeltaStorage = registry.storage<Cyclone::Core::Component::Position>( "delta"_hs );
-
 			Cyclone::Core::Component::Position currentPosition = registry.get<Cyclone::Core::Component::Position>( selectedEntity );
 
-			if ( !positionDeltaStorage.contains( selectedEntity ) ) {
-				positionDeltaStorage.emplace( selectedEntity, registry.get<Cyclone::Core::Component::Position>( selectedEntity ) );
+			if ( !transformContext.IsActiveEntity( selectedEntity ) ) {
+				transformContext.SetActiveEntity( selectedEntity, currentPosition );
 			}
 
-			Cyclone::Core::Component::Position startPosition = positionDeltaStorage.get( selectedEntity );
+			Cyclone::Core::Component::Position startPosition{ transformContext.GetInitialPosition() };
 			Cyclone::Core::Component::Position positionDelta{ startPosition - currentPosition };
 
 			if ( inGridContext.mSnapType != ViewportGridContext::ESnapType::None ) {
@@ -77,12 +76,11 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 			}
 
 			for ( const entt::entity entity : selectedEntities ) {
-				//registry.get<Cyclone::Core::Component::Position>( entity ) += positionDelta;
 				registry.patch<Cyclone::Core::Component::Position>( entity, [positionDelta]( Cyclone::Core::Component::Position &inPosition ) { inPosition += positionDelta; } );
 			}
 		}
 		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) ) {
-			registry.storage<Cyclone::Core::Component::Position>( "delta"_hs ).clear();
+			transformContext.Deactivate();
 		}
 	}
 }

@@ -7,6 +7,7 @@
 #include "Cyclone/Core/Level.hpp"
 #include "Cyclone/Core/Entity/EntityContext.hpp"
 #include "Cyclone/Core/Tool/SelectionToolContext.hpp"
+#include "Cyclone/Core/Tool/SelectionTransformToolContext.hpp"
 
 namespace Cyclone::Core
 {
@@ -29,11 +30,14 @@ namespace Cyclone::Core
 		const entt::registry &	GetRegistry() const					{ return mLevel->GetRegistry(); }
 		entt::registry &		GetRegistry()						{ return mLevel->GetRegistry(); }
 
+		Entity::EntityContext & GetEntityCtx()						{ return mEntityContext; }
+		const Entity::EntityContext & GetEntityCtx() const			{ return mEntityContext; }
+
 		Tool::SelectionToolContext & GetSelectionCtx()				{ return mSelectionTool; }
 		const Tool::SelectionToolContext & GetSelectionCtx() const	{ return mSelectionTool; }
 
-		Entity::EntityContext & GetEntityCtx()						{ return mEntityContext; }
-		const Entity::EntityContext & GetEntityCtx() const			{ return mEntityContext; }
+		Tool::SelectionTransformToolContext & GetSelectionTransformCtx() { return mSelectionTransformTool; }
+		const Tool::SelectionTransformToolContext & GetSelectionTransformCtx() const { return mSelectionTransformTool; }
 
 	protected:
 		Microsoft::WRL::ComPtr<ID3D11Device3> mDevice;
@@ -41,5 +45,6 @@ namespace Cyclone::Core
 		std::unique_ptr<Level>	mLevel;
 		Entity::EntityContext	mEntityContext;
 		Tool::SelectionToolContext mSelectionTool;
+		Tool::SelectionTransformToolContext mSelectionTransformTool;
 	};
 }
