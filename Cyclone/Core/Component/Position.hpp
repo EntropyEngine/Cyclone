@@ -4,5 +4,5 @@
 
 namespace Cyclone::Core::Component
 {
-	struct Position : public Cyclone::Math::Vector4D {};
+	struct alignas(32) Position : public Cyclone::Math::Vector4D {};
 }
