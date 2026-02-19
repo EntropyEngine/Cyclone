@@ -1,20 +1,20 @@
 #include "pch.h"
-#include "Cyclone/Core/Tool/SelectionTool.hpp"
+#include "Cyclone/Core/Tool/SelectionToolContext.hpp"
 
-void Cyclone::Core::Tool::SelectionTool::SetSelectedEntity( entt::entity inEntity )
+void Cyclone::Core::Tool::SelectionToolContext::SetSelectedEntity( entt::entity inEntity )
 {
 	mSelectedEntity = inEntity;
 	mSelectedEntities.clear();
 	mSelectedEntities.insert( inEntity );
 }
 
-void Cyclone::Core::Tool::SelectionTool::AddSelectedEntity( entt::entity inEntity )
+void Cyclone::Core::Tool::SelectionToolContext::AddSelectedEntity( entt::entity inEntity )
 {
 	mSelectedEntity = inEntity;
 	mSelectedEntities.insert( inEntity );
 }
 
-void Cyclone::Core::Tool::SelectionTool::DeselectEntity( entt::entity inEntity )
+void Cyclone::Core::Tool::SelectionToolContext::DeselectEntity( entt::entity inEntity )
 {
 	if ( mSelectedEntities.erase( inEntity ) ) {
 		if ( inEntity == mSelectedEntity || true ) {
@@ -33,7 +33,7 @@ void Cyclone::Core::Tool::SelectionTool::DeselectEntity( entt::entity inEntity )
 	}
 }
 
-void Cyclone::Core::Tool::SelectionTool::ClearSelection()
+void Cyclone::Core::Tool::SelectionToolContext::ClearSelection()
 {
 	mSelectedEntities.clear();
 	mSelectedEntity = entt::null;

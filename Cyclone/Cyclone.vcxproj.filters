@@ -128,7 +128,7 @@
     <ClInclude Include="Math\BoundingBox.hpp">
       <Filter>Math</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Tool\SelectionTool.hpp">
+    <ClInclude Include="Core\Tool\SelectionToolContext.hpp">
       <Filter>Core\Tool</Filter>
     </ClInclude>
     <ClInclude Include="Core\Entity\EntityContext.hpp">
@@ -221,7 +221,7 @@
     <ClCompile Include="UI\Tool\SelectionTool.cpp">
       <Filter>UI\Tool</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Tool\SelectionTool.cpp">
+    <ClCompile Include="Core\Tool\SelectionToolContext.cpp">
       <Filter>Core\Tool</Filter>
     </ClCompile>
     <ClCompile Include="Core\Entity\EntityContext.cpp">

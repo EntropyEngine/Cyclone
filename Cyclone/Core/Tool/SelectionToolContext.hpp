@@ -9,7 +9,7 @@ namespace Cyclone::UI::Tool {
 
 namespace Cyclone::Core::Tool
 {
-	class SelectionTool : public Cyclone::Util::NonCopyable
+	class SelectionToolContext : public Cyclone::Util::NonCopyable
 	{
 	public:
 		friend Cyclone::UI::Tool::SelectionTool;
