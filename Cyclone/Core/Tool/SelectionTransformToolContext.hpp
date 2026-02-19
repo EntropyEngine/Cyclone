@@ -19,6 +19,7 @@ namespace Cyclone::Core::Tool
 
 		friend Cyclone::UI::Tool::SelectionTransformTool;
 
+		entt::entity GetActiveEntity() const { return mActiveEntity; }
 		bool IsActiveEntity( entt::entity inEntity ) const { return inEntity == mActiveEntity; }
 		void XM_CALLCONV SetActiveEntity( entt::entity inEntity, Cyclone::Math::Vector4D inPosition ) { mActiveEntity = inEntity; mInitialPosition = inPosition; }
 		Cyclone::Math::Vector4D XM_CALLCONV	GetInitialPosition() const { return mInitialPosition; }

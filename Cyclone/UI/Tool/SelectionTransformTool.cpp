@@ -55,6 +55,7 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 			Cyclone::Core::Component::Position currentPosition = registry.get<Cyclone::Core::Component::Position>( selectedEntity );
 
 			if ( !transformContext.IsActiveEntity( selectedEntity ) ) {
+				assert( transformContext.GetActiveEntity() == entt::null );
 				transformContext.SetActiveEntity( selectedEntity, currentPosition );
 			}
 
