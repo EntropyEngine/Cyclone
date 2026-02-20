@@ -31,11 +31,13 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 	ImGuiTableFlags tableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_NoBordersInBody;
 	ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_FramePadding;
 
+	float origHeight = ImGui::GetContentRegionAvail().y;
+
 	if ( ImGui::CollapsingHeader( "Outliner", ImGuiTreeNodeFlags_DefaultOpen ) ) {
 		RebuildTree( inLevelInterface );
-		ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 0.0f }, { ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y } );
+		ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 32.0f }, { ImGui::GetContentRegionAvail().x, mOutlinerHeight + mRemainingHeight } );
 		if ( ImGui::BeginChild( "OutlinerChild", { 0.0f, 256.0f }, sectionChildFlags, sectionWindowFlags ) ) {
-			if ( ImGui::BeginTable( "OutlinerTable", 3, tableFlags, { 0.0f, -0.0f } ) ) {
+			if ( ImGui::BeginTable( "OutlinerTable", 3, tableFlags, { 0.0f, -1.0f } ) ) {
 
 				ImGui::TableSetupColumn( "Name" );
 				ImGui::TableSetupColumn( "V", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() );
@@ -155,14 +157,15 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 			}
 		}
 		ImGui::EndChild();
+		mOutlinerHeight = ImGui::GetItemRectSize().y;
 	}
 
-	auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
 
 	if ( ImGui::CollapsingHeader( "Selection", ImGuiTreeNodeFlags_DefaultOpen ) ) {
-		ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 0.0f }, { ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y } );
+		auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
+		ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 32.0f }, { ImGui::GetContentRegionAvail().x, mSelectionHeight + mRemainingHeight } );
 		if ( ImGui::BeginChild( "SelectionChild", { 0.0f, 256.0f }, sectionChildFlags, sectionWindowFlags ) ) {
-			if ( ImGui::BeginTable( "SelectionTable", 4, tableFlags, { 0.0f, -0.0f } ) ) {
+			if ( ImGui::BeginTable( "SelectionTable", 4, tableFlags, { 0.0f, -1.0f } ) ) {
 				ImGui::TableSetupColumn( "Type" );
 				ImGui::TableSetupColumn( "Name" );
 				ImGui::TableSetupColumn( "V", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() );
@@ -173,16 +176,17 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 				ImGui::PushStyleVar( ImGuiStyleVar_CellPadding, { 0.0f, 0.0f } );
 
 				// Explicitly create copy rather than ref
-				const auto previousSelection = selectionContext.GetSelectedEntities();
+				std::vector<entt::entity> previousSelection( selectionContext.GetSelectedEntities().size() );
+				std::copy( selectionContext.GetSelectedEntities().begin(), selectionContext.GetSelectedEntities().end(), previousSelection.begin() );
+				//const auto previousSelection = selectionContext.GetSelectedEntities();
 
 				for ( entt::entity entity : previousSelection ) {
 					ImGui::PushID( static_cast<int>( entity ) );
 
-					ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
 					bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
 
+					ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
 					if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
-					const auto entityIdString = Cyclone::Util::PrefixString( "", entity );
 
 					ImGui::TableNextRow();
 					ImGui::TableSetColumnIndex( 0 );
@@ -207,7 +211,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 					ImGui::TableSetColumnIndex( 1 );
 					ImGui::AlignTextToFramePadding();
-					ImGui::Text( entityIdString );
+					ImGui::Text( Cyclone::Util::PrefixString( "", entity ) );
 
 					auto &entityVisible = view.get<Cyclone::Core::Component::Visible>( entity );
 					auto &entitySelectable = view.get<Cyclone::Core::Component::Selectable>( entity );
@@ -229,7 +233,22 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 			}
 		}
 		ImGui::EndChild();
+		mSelectionHeight = ImGui::GetItemRectSize().y;
 	}
+
+	if ( ImGui::CollapsingHeader( "Selected", ImGuiTreeNodeFlags_DefaultOpen ) ) {
+		auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
+		ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 32.0f }, { ImGui::GetContentRegionAvail().x, mSelectedHeight + mRemainingHeight } );
+		if ( ImGui::BeginChild( "SelectedChild", { 0.0f, 256.0f }, sectionChildFlags, sectionWindowFlags ) ) {
+		}
+		ImGui::EndChild();
+		mSelectedHeight = ImGui::GetItemRectSize().y;
+	}
+
+	mRemainingHeight = std::max( -std::sqrt( std::abs( ImGui::GetContentRegionAvail().y ) ), ImGui::GetContentRegionAvail().y);
+
+
+	OutputDebugStringA( std::format( "{}\n", mRemainingHeight ).c_str() );
 }
 
 void Cyclone::UI::Outliner::RebuildTree( const Cyclone::Core::LevelInterface *inLevelInterface )

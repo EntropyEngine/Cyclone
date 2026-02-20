@@ -24,6 +24,12 @@ namespace Cyclone::UI
 		using EntityCategoryTree = std::map<Cyclone::Core::Component::EntityCategory, EntityTypeTree>;
 		EntityCategoryTree mOutlinerTree;
 
+		float mOutlinerHeight = 256.0f;
+		float mSelectionHeight = 256.0f;
+		float mSelectedHeight = 256.0f;
+
+		float mRemainingHeight = 0.0f;
+
 		void RebuildTree( const Cyclone::Core::LevelInterface *inLevelInterface );
 	};
 }
