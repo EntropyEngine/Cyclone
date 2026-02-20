@@ -82,18 +82,6 @@ void Cyclone::UI::Toolbar::Update( Cyclone::Core::LevelInterface *inLevelInterfa
 		}
 		ImGui::PopStyleVar( 1 );
 
-		//if ( ImGui::RadioButton( "To Grid", gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ToGrid ) ) gridContext.mSnapType = Cyclone::Core::Editor::GridContext::ESnapType::ToGrid;
-		//
-		//ImGui::SameLine();
-		//
-		//ImGui::SetCursorPosY( itemOffset );
-		//if ( ImGui::RadioButton( "By Grid", gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ByGrid ) ) gridContext.mSnapType = Cyclone::Core::Editor::GridContext::ESnapType::ByGrid;
-		//
-		//ImGui::SameLine();
-		//
-		//ImGui::SetCursorPosY( itemOffset );
-		//if ( ImGui::RadioButton( "None ", gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::None ) ) gridContext.mSnapType = Cyclone::Core::Editor::GridContext::ESnapType::None;
-
 	}
 	ImGui::EndChild();
 

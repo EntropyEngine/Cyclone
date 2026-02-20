@@ -28,8 +28,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 	ImGuiChildFlags sectionChildFlags = ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeY;
 	ImGuiWindowFlags sectionWindowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking;
-	ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY;
-	ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesFull;
+	ImGuiTableFlags tableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_NoBordersInBody;
+	ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_FramePadding;
 
 	if ( ImGui::CollapsingHeader( "Outliner", ImGuiTreeNodeFlags_DefaultOpen ) ) {
 		RebuildTree( inLevelInterface );
@@ -42,6 +42,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 				ImGui::TableSetupColumn( "S", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() );
 				ImGui::TableSetupScrollFreeze( 0, 1 );
 				ImGui::TableHeadersRow();
+
+				ImGui::PushStyleVar( ImGuiStyleVar_CellPadding, { 0.0f, 0.0f } );
 
 				for ( const auto &[entityCategory, typeMap] : mOutlinerTree ) {
 					ImGui::TableNextRow();
@@ -106,12 +108,14 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 										if ( !( selectionFlags & ImGuiSelectableFlags_Disabled ) ) treeLeafFlags |= ImGuiTreeNodeFlags_Bullet;
 
 										const auto entityIdString = Cyclone::Util::PrefixString( "##b", entity );
-										ImGui::TreeNodeEx( entityIdString, treeLeafFlags );
+										ImGui::TreeNodeEx( entityIdString, treeLeafFlags | ImGuiTreeNodeFlags_FramePadding );
 
 										//ImGui::Bullet();
 										ImGui::SameLine( 0, 0 );
+										ImGui::SetCursorPosY( ImGui::GetCursorPosY() - ImGui::GetStyle().FramePadding.y );
 										ImGui::SetNextItemAllowOverlap();
-										if ( ImGui::Selectable( entityIdString.Value(), entityInSelection, selectionFlags ) ) {
+										ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
+										if ( ImGui::Selectable( entityIdString.Value(), entityInSelection, selectionFlags, { 0, ImGui::GetStyle().FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
 											if ( ImGui::GetIO().KeyCtrl ) {
 												if ( entityIsSelected ) {
 													selectionContext.DeselectEntity( entity );
@@ -124,6 +128,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 												selectionContext.SetSelectedEntity( entity );
 											}
 										}
+										ImGui::PopStyleVar( 1 );
 
 										ImGui::TableSetColumnIndex( 1 );
 										ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
@@ -144,6 +149,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					}
 				}
 
+				ImGui::PopStyleVar( 1 );
+
 				ImGui::EndTable();
 			}
 		}
@@ -163,6 +170,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 				ImGui::TableSetupScrollFreeze( 0, 1 );
 				ImGui::TableHeadersRow();
 
+				ImGui::PushStyleVar( ImGuiStyleVar_CellPadding, { 0.0f, 0.0f } );
+
 				// Explicitly create copy rather than ref
 				const auto previousSelection = selectionContext.GetSelectedEntities();
 
@@ -179,8 +188,9 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					ImGui::TableSetColumnIndex( 0 );
 
 					const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+					ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
 					ImGui::SetNextItemAllowOverlap();
-					if ( ImGui::Selectable( entityContext.GetEntityTypeName( entityType ), true, selectionFlags ) ) {
+					if ( ImGui::Selectable( entityContext.GetEntityTypeName( entityType ), true, selectionFlags, { 0, ImGui::GetStyle().FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
 						if ( ImGui::GetIO().KeyCtrl ) {
 							if ( entityIsSelected ) {
 								selectionContext.DeselectEntity( entity );
@@ -193,8 +203,10 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 							selectionContext.SetSelectedEntity( entity );
 						}
 					}
+					ImGui::PopStyleVar( 1 );
 
 					ImGui::TableSetColumnIndex( 1 );
+					ImGui::AlignTextToFramePadding();
 					ImGui::Text( entityIdString );
 
 					auto &entityVisible = view.get<Cyclone::Core::Component::Visible>( entity );
@@ -210,6 +222,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 					ImGui::PopID();
 				}
+
+				ImGui::PopStyleVar( 1 );
 
 				ImGui::EndTable();
 			}
