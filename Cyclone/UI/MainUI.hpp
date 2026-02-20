@@ -11,6 +11,7 @@ namespace Cyclone::UI
 {
 	class ViewportManager;
 	class Outliner;
+	class Toolbar;
 
 	class MainUI : public Cyclone::Util::NonCopyable
 	{
@@ -39,6 +40,7 @@ namespace Cyclone::UI
 
 		std::unique_ptr<Cyclone::UI::ViewportManager> mViewportManager;
 		std::unique_ptr<Cyclone::UI::Outliner> mOutliner;
+		std::unique_ptr<Cyclone::UI::Toolbar> mToolbar;
 
 		void DeselectDisabledEntities( Cyclone::Core::LevelInterface *inLevelInterface );
 	};

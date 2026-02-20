@@ -123,6 +123,7 @@
     <ClInclude Include="Application.hpp" />
     <ClInclude Include="UI\MainUI.hpp" />
     <ClInclude Include="UI\Outliner.hpp" />
+    <ClInclude Include="UI\Toolbar.hpp" />
     <ClInclude Include="UI\Tool\SelectionTool.hpp" />
     <ClInclude Include="UI\Tool\SelectionTransformTool.hpp" />
     <ClInclude Include="UI\ViewportElement.hpp" />
@@ -181,6 +182,7 @@
     <ClCompile Include="RenderTexture.cpp" />
     <ClCompile Include="UI\MainUI.cpp" />
     <ClCompile Include="UI\Outliner.cpp" />
+    <ClCompile Include="UI\Toolbar.cpp" />
     <ClCompile Include="UI\Tool\SelectionTool.cpp" />
     <ClCompile Include="UI\Tool\SelectionTransformTool.cpp" />
     <ClCompile Include="UI\ViewportElement.cpp" />

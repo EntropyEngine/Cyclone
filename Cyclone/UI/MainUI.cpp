@@ -9,6 +9,7 @@
 // Cyclone UI includes
 #include "Cyclone/UI/ViewportManager.hpp"
 #include "Cyclone/UI/Outliner.hpp"
+#include "Cyclone/UI/Toolbar.hpp"
 
 // ImGui includes
 #include <imgui.h>
@@ -28,6 +29,7 @@ void Cyclone::UI::MainUI::Initialize()
 {
 	mViewportManager = std::make_unique<Cyclone::UI::ViewportManager>();
 	mOutliner = std::make_unique<Cyclone::UI::Outliner>();
+	mToolbar = std::make_unique<Cyclone::UI::Toolbar>();
 }
 
 void Cyclone::UI::MainUI::SetDevice( ID3D11Device3 *inDevice )
@@ -73,12 +75,15 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 
 
+	ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f } );
 	ImGui::SetNextWindowPos( viewport->WorkPos );
 	ImGui::SetNextWindowSize( { viewport->WorkSize.x, kToolbarHeight } );
 	if ( ImGui::Begin( "ToolBar", nullptr, windowFlags ) ) {
-		mViewportManager->ToolbarUpdate( inLevelInterface );
+		mToolbar->Update( inLevelInterface );
+
 	}
 	ImGui::End();
+	ImGui::PopStyleVar( 1 );
 
 	ImGui::SetNextWindowPos( { viewport->WorkPos.x, viewport->WorkPos.y + kToolbarHeight } );
 	ImGui::SetNextWindowSize( { kSidebarWidth, viewport->WorkSize.y - kToolbarHeight } );

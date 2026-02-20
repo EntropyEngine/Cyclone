@@ -167,6 +167,9 @@
     <ClInclude Include="Core\Editor\OrthographicContext.hpp">
       <Filter>Core\Editor</Filter>
     </ClInclude>
+    <ClInclude Include="UI\Toolbar.hpp">
+      <Filter>UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -247,6 +250,9 @@
     </ClCompile>
     <ClCompile Include="Core\Tool\SelectionTransformToolContext.cpp">
       <Filter>Core\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Toolbar.cpp">
+      <Filter>UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
