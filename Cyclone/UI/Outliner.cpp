@@ -246,9 +246,6 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 	}
 
 	mRemainingHeight = std::max( -std::sqrt( std::abs( ImGui::GetContentRegionAvail().y ) ), ImGui::GetContentRegionAvail().y);
-
-
-	OutputDebugStringA( std::format( "{}\n", mRemainingHeight ).c_str() );
 }
 
 void Cyclone::UI::Outliner::RebuildTree( const Cyclone::Core::LevelInterface *inLevelInterface )
