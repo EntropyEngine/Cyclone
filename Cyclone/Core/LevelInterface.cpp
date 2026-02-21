@@ -18,19 +18,19 @@ void Cyclone::Core::LevelInterface::Initialize()
 
 	mSelectionTool.ClearSelection();
 
-	Entity::PointDebug().Create( GetRegistry(), { 0.0, 0.0, 0.0 } );
-	Entity::PointDebug().Create( GetRegistry(), { 0.0, 0.0, 2.0 } );
-	Entity::PointDebug().Create( GetRegistry(), { 0.0, 2.0, 0.0 } );
-	Entity::PointDebug().Create( GetRegistry(), { 2.0, 0.0, 0.0 } );
+	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
+	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 0.0, 2.0 } );
+	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 2.0, 0.0 } );
+	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 2.0, 0.0, 0.0 } );
 
-	Entity::InfoDebug().Create( GetRegistry(), { -4.0, 0.0, 0.0 } );
-	Entity::InfoDebug().Create( GetRegistry(), { -4.0, 0.0, 2.0 } );
-	Entity::InfoDebug().Create( GetRegistry(), { -4.0, 2.0, 0.0 } );
-	Entity::InfoDebug().Create( GetRegistry(), { -2.0, 0.0, 0.0 } );
+	mEntityContext.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 0.0, 0.0 } );
+	mEntityContext.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 0.0, 2.0 } );
+	mEntityContext.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 2.0, 0.0 } );
+	mEntityContext.CreateEntity( "info_debug"_hs, GetRegistry(), { -2.0, 0.0, 0.0 } );
 
 	for ( int x = 0; x < 16; ++x ) {
 		for ( int y = 0; y < 16; ++y ) {
-			Entity::PointDebug().Create( GetRegistry(), { double( x * 2 + 16 ), 0.0, double( y * 2 + 16 ) } );
+			mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { double( x * 2 + 16 ), 0.0, double( y * 2 + 16 ) } );
 		}
 	}
 }

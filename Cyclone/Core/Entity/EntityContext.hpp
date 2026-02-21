@@ -8,6 +8,9 @@
 #include "Cyclone/Core/Component/EntityType.hpp"
 #include "Cyclone/Core/Component/EntityCategory.hpp"
 
+// Cyclone math
+#include "Cyclone/Math/Vector.hpp"
+
 namespace Cyclone::Core::Entity
 {
 	class EntityContext: public Cyclone::Util::NonCopyable
@@ -17,100 +20,47 @@ namespace Cyclone::Core::Entity
 
 		void Register();
 
-		const char *GetEntityTypeName( Cyclone::Core::Component::EntityType inType ) const
+
+		const char *			GetEntityTypeName( Cyclone::Core::Component::EntityType inType ) const					{ auto it = sFindIn( mEntityTypeNameMap, inType ); return it ? *it : nullptr; }
+		const char *			GetEntityCategoryName( Cyclone::Core::Component::EntityCategory inType ) const			{ auto it = sFindIn( mEntityCategoryNameMap, inType ); return it ? *it : nullptr; }
+		uint32_t				GetEntityTypeColor( Cyclone::Core::Component::EntityType inType ) const					{ auto it = sFindIn( mEntityTypeColorMap, inType ); return it ? *it : Cyclone::Util::ColorU32( 0xFF, 0xFF, 0xFF ); }
+
+		bool *					GetEntityTypeIsSelectable( Cyclone::Core::Component::EntityType inType )				{ auto it = sFindIn( mEntityTypeSelectable, inType ); return it ? it : nullptr; }
+		const bool *			GetEntityTypeIsSelectable( Cyclone::Core::Component::EntityType inType ) const			{ auto it = sFindIn( mEntityTypeSelectable, inType ); return it ? it : nullptr; }
+
+		bool *					GetEntityTypeIsVisible( Cyclone::Core::Component::EntityType inType )					{ auto it = sFindIn( mEntityTypeVisible, inType ); return it ? it : nullptr; }
+		const bool *			GetEntityTypeIsVisible( Cyclone::Core::Component::EntityType inType ) const				{ auto it = sFindIn( mEntityTypeVisible, inType ); return it ? it : nullptr; }
+
+		bool *					GetEntityCategoryIsSelectable( Cyclone::Core::Component::EntityCategory inType )		{ auto it = sFindIn( mEntityCategorySelectable, inType ); return it ? it : nullptr; }
+		const bool *			GetEntityCategoryIsSelectable( Cyclone::Core::Component::EntityCategory inType ) const	{ auto it = sFindIn( mEntityCategorySelectable, inType ); return it ? it : nullptr; }
+
+		bool *					GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType )			{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
+		const bool *			GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType ) const		{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
+
+		entt::entity CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition ) const
 		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityTypeNameMap.begin(), mEntityTypeNameMap.end(), hash );
-			if ( it != mEntityTypeNameMap.end() && it->mKey == hash ) return it->mValue;
-			return nullptr;
-		}
-
-		const char *GetEntityCategoryName( Cyclone::Core::Component::EntityCategory inType ) const
-		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityCategoryNameMap.begin(), mEntityCategoryNameMap.end(), hash );
-			if ( it != mEntityCategoryNameMap.end() && it->mKey == hash ) return it->mValue;
-			return nullptr;
-		}
-
-		uint32_t GetEntityTypeColor( Cyclone::Core::Component::EntityType inType ) const
-		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityTypeColorMap.begin(), mEntityTypeColorMap.end(), hash );
-			if ( it != mEntityTypeColorMap.end() && it->mKey == hash ) return it->mValue;
-			return Cyclone::Util::ColorU32( 0xFF, 0xFF, 0xFF );
-		}
-
-
-		bool *GetEntityTypeIsSelectable( Cyclone::Core::Component::EntityType inType )
-		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityTypeSelectable.begin(), mEntityTypeSelectable.end(), hash );
-			if ( it != mEntityTypeSelectable.end() && it->mKey == hash ) return &it->mValue;
-			return nullptr;
-		}
-
-		const bool *GetEntityTypeIsSelectable( Cyclone::Core::Component::EntityType inType ) const
-		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityTypeSelectable.begin(), mEntityTypeSelectable.end(), hash );
-			if ( it != mEntityTypeSelectable.end() && it->mKey == hash ) return &it->mValue;
-			return nullptr;
-		}
-
-
-		bool *GetEntityTypeIsVisible( Cyclone::Core::Component::EntityType inType )
-		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityTypeVisible.begin(), mEntityTypeVisible.end(), hash );
-			if ( it != mEntityTypeVisible.end() && it->mKey == hash ) return &it->mValue;
-			return nullptr;
-		}
-
-		const bool *GetEntityTypeIsVisible( Cyclone::Core::Component::EntityType inType ) const
-		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityTypeVisible.begin(), mEntityTypeVisible.end(), hash );
-			if ( it != mEntityTypeVisible.end() && it->mKey == hash ) return &it->mValue;
-			return nullptr;
-		}
-
-
-		bool *GetEntityCategoryIsSelectable( Cyclone::Core::Component::EntityCategory inType )
-		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityCategorySelectable.begin(), mEntityCategorySelectable.end(), hash );
-			if ( it != mEntityCategorySelectable.end() && it->mKey == hash ) return &it->mValue;
-			return nullptr;
-		}
-
-		const bool *GetEntityCategoryIsSelectable( Cyclone::Core::Component::EntityCategory inType ) const
-		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityCategorySelectable.begin(), mEntityCategorySelectable.end(), hash );
-			if ( it != mEntityCategorySelectable.end() && it->mKey == hash ) return &it->mValue;
-			return nullptr;
-		}
-
-
-		bool *GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType )
-		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityCategoryVisible.begin(), mEntityCategoryVisible.end(), hash );
-			if ( it != mEntityCategoryVisible.end() && it->mKey == hash ) return &it->mValue;
-			return nullptr;
-		}
-
-		const bool *GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType ) const
-		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( mEntityCategoryVisible.begin(), mEntityCategoryVisible.end(), hash );
-			if ( it != mEntityCategoryVisible.end() && it->mKey == hash ) return &it->mValue;
-			return nullptr;
+			auto type = entt::resolve( inType );
+			if ( !type ) {
+				assert( !"Failed to create entity: unknown type" );
+				return entt::null;
+			}
+			
+			auto func = type.func( "create_entity"_hs );
+			if ( !func ) {
+				assert( !"Failed to create entity: type has no create_entity function" );
+				return entt::null;
+			}
+			
+			auto result = func.invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( inPosition ) );
+			if ( !result ) {
+				assert( !"Failed to create entity: type has incorrect create_entity function, please report!" );
+				return entt::null;
+			}
+			
+			return result.cast<entt::entity>();
 		}
 
 	protected:
-
 		template<typename T>
 		void RegisterEntityClass()
 		{
@@ -141,6 +91,8 @@ namespace Cyclone::Core::Entity
 			mEntityTypeColorMap.emplace_back( T::kEntityType.value(), entityColor );
 			mEntityTypeNameMap.emplace_back( T::kEntityType.value(), T::kEntityType.data() );
 			mEntityCategoryNameMap.emplace_back( T::kEntityCategory.value(), T::kEntityCategory.data() );
+
+			T::sRegister();
 		}
 
 		template<typename T>
@@ -152,6 +104,24 @@ namespace Cyclone::Core::Entity
 			bool operator ==( const HashPair &inRhs ) const { return mKey == inRhs.mKey; }
 			operator entt::hashed_string::hash_type() const { return mKey; }
 		};
+
+		template<typename T>
+		static const T *sFindIn( const std::vector<HashPair<T>> &inVector, auto inType )
+		{
+			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
+			const auto it = std::lower_bound( inVector.begin(), inVector.end(), hash );
+			if ( it != inVector.end() && it->mKey == hash ) return &it->mValue;
+			return nullptr;
+		}
+
+		template<typename T>
+		static T *sFindIn( std::vector<HashPair<T>> &inVector, auto inType )
+		{
+			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
+			const auto it = std::lower_bound( inVector.begin(), inVector.end(), hash );
+			if ( it != inVector.end() && it->mKey == hash ) return &it->mValue;
+			return nullptr;
+		}
 
 		std::vector<HashPair<uint32_t>>		mEntityTypeColorMap;
 		std::vector<HashPair<const char *>>	mEntityTypeNameMap;

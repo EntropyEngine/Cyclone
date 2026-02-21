@@ -1,6 +1,7 @@
 #pragma once
 
 // Cyclone Compontents
+#include "Cyclone/Core/Component/Position.hpp"
 #include "Cyclone/Core/Component/EntityType.hpp"
 #include "Cyclone/Core/Component/EntityCategory.hpp"
 #include "Cyclone/Core/Component/Visible.hpp"
@@ -11,6 +12,17 @@ namespace Cyclone::Core::Entity
 	template<typename T>
 	class BaseEntity
 	{
+	public:
+		static void sRegister()
+		{
+			entt::meta_factory<T>{}.type( T::kEntityType ).func<&T::sCreateEntity>( "create_entity"_hs );
+		}
+
+		static entt::entity sCreateEntity( entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
+		{
+			return T().Create( inRegistry, inPosition );
+		}
+
 	protected:
 		static entt::entity sCreate( entt::registry &inRegistry )
 		{
