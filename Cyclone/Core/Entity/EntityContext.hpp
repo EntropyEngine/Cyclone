@@ -37,63 +37,11 @@ namespace Cyclone::Core::Entity
 		bool *					GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType )			{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
 		const bool *			GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType ) const		{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
 
-		entt::entity CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition ) const
-		{
-			auto type = entt::resolve( inType );
-			if ( !type ) {
-				assert( !"Failed to create entity: unknown type" );
-				return entt::null;
-			}
-			
-			auto func = type.func( "create_entity"_hs );
-			if ( !func ) {
-				assert( !"Failed to create entity: type has no create_entity function" );
-				return entt::null;
-			}
-			
-			auto result = func.invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( inPosition ) );
-			if ( !result ) {
-				assert( !"Failed to create entity: type has incorrect create_entity function, please report!" );
-				return entt::null;
-			}
-			
-			return result.cast<entt::entity>();
-		}
+		entt::entity CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition );
 
 	protected:
 		template<typename T>
-		void RegisterEntityClass()
-		{
-			uint32_t entityColor = Cyclone::Util::ColorU32( 0xFF, 0xFF, 0xFF );
-
-			if constexpr ( requires { T::kDebugColor; } ) {
-				entityColor = T::kDebugColor;
-			}
-			else {
-				switch ( T::kEntityCategory.value() ) {
-					case "ai"_hs.value():		entityColor = {}; break;
-					case "camera"_hs.value():	entityColor = {}; break;
-					case "env"_hs.value():		entityColor = {}; break;
-					case "func"_hs.value():		entityColor = {}; break;
-					case "game"_hs.value():		entityColor = {}; break;
-					case "info"_hs.value():		entityColor = Cyclone::Util::ColorU32( 0x18, 0x18, 0xDD ); break;
-					case "item"_hs.value():		entityColor = {}; break;
-					case "light"_hs.value():	entityColor = {}; break;
-					case "logic"_hs.value():	entityColor = {}; break;
-					case "npc"_hs.value():		entityColor = {}; break;
-					case "player"_hs.value():	entityColor = {}; break;
-					case "point"_hs.value():	entityColor = Cyclone::Util::ColorU32( 0xDD, 0x18, 0xDD ); break;
-					case "prop"_hs.value():		entityColor = {}; break;
-					case "trigger"_hs.value():	entityColor = Cyclone::Util::ColorU32( 0xF8, 0x9A, 0x00 ); break;
-				}
-			}
-
-			mEntityTypeColorMap.emplace_back( T::kEntityType.value(), entityColor );
-			mEntityTypeNameMap.emplace_back( T::kEntityType.value(), T::kEntityType.data() );
-			mEntityCategoryNameMap.emplace_back( T::kEntityCategory.value(), T::kEntityCategory.data() );
-
-			T::sRegister();
-		}
+		void RegisterEntityClass();
 
 		template<typename T>
 		struct HashPair
@@ -132,5 +80,7 @@ namespace Cyclone::Core::Entity
 
 		std::vector<HashPair<bool>>			mEntityCategorySelectable;
 		std::vector<HashPair<bool>>			mEntityCategoryVisible;
+
+		entt::meta_ctx mEntityMetaContext{};
 	};
 }

@@ -13,9 +13,9 @@ namespace Cyclone::Core::Entity
 	class BaseEntity
 	{
 	public:
-		static void sRegister()
+		static void sRegister( entt::meta_ctx &inMetaContext )
 		{
-			entt::meta_factory<T>{}.type( T::kEntityType ).func<&T::sCreateEntity>( "create_entity"_hs );
+			entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sCreateEntity>( "create_entity"_hs );
 		}
 
 		static entt::entity sCreateEntity( entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
