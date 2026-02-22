@@ -239,7 +239,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
 
-			const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
+			const Vector4D position = view.get<Cyclone::Core::Component::Position>( entity );
 			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
 
 			bool entityInSelection = selectedEntities.contains( entity );

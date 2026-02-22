@@ -55,32 +55,34 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 
 			ImVec2 selectionMouseDrag = ImGui::GetMouseDragDelta( ImGuiMouseButton_Left );
 
-			Cyclone::Core::Component::Position currentPosition = registry.get<Cyclone::Core::Component::Position>( selectedEntity );
+			const Vector4D currentPosition = registry.get<Cyclone::Core::Component::Position>( selectedEntity );
 
 			if ( !transformContext.IsActiveEntity( selectedEntity ) ) {
 				assert( transformContext.GetActiveEntity() == entt::null );
 				transformContext.SetActiveEntity( selectedEntity, currentPosition );
 			}
 
-			Cyclone::Core::Component::Position startPosition{ transformContext.GetInitialPosition() };
-			Cyclone::Core::Component::Position positionDelta{ startPosition - currentPosition };
+			const Vector4D startPosition = transformContext.GetInitialPosition();
+			Vector4D positionDelta = startPosition - currentPosition;
 
-			if ( gridContext.mSnapType != Cyclone::Core::Editor::GridContext::ESnapType::None ) {
-				positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( std::round( -selectionMouseDrag.x * orthographicContext.mZoomScale2D / gridContext.mGridSize ) * gridContext.mGridSize );
-				positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( std::round( -selectionMouseDrag.y * orthographicContext.mZoomScale2D / gridContext.mGridSize ) * gridContext.mGridSize );
+			double dragU = -selectionMouseDrag.x * orthographicContext.mZoomScale2D;
+			double dragV = -selectionMouseDrag.y * orthographicContext.mZoomScale2D;
 
-				if ( gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ToGrid ) {
-					positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( std::round( startPosition.Get<AxisU>() / gridContext.mGridSize ) * gridContext.mGridSize - startPosition.Get<AxisU>() );
-					positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( std::round( startPosition.Get<AxisV>() / gridContext.mGridSize ) * gridContext.mGridSize - startPosition.Get<AxisV>() );
-				}
+			if ( gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ToGrid ) {
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( std::round( ( dragU + startPosition.Get<AxisU>() ) / gridContext.mGridSize ) * gridContext.mGridSize - startPosition.Get<AxisU>() );
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( std::round( ( dragV + startPosition.Get<AxisV>() ) / gridContext.mGridSize ) * gridContext.mGridSize - startPosition.Get<AxisV>() );
+			}
+			else if ( gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ByGrid ) {
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( std::round( dragU / gridContext.mGridSize ) * gridContext.mGridSize );
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( std::round( dragV / gridContext.mGridSize ) * gridContext.mGridSize );
 			}
 			else {
-				positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( -selectionMouseDrag.x * orthographicContext.mZoomScale2D );
-				positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( -selectionMouseDrag.y * orthographicContext.mZoomScale2D );
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisU>( dragU );
+				positionDelta += Vector4D::sZeroSetValueByIndex<AxisV>( dragV );
 			}
 
 			for ( const entt::entity entity : selectedEntities ) {
-				registry.patch<Cyclone::Core::Component::Position>( entity, [positionDelta]( Cyclone::Core::Component::Position &inPosition ) { inPosition += positionDelta; } );
+				registry.patch<Cyclone::Core::Component::Position>( entity, [positionDelta]( Cyclone::Core::Component::Position &inPosition ) { inPosition.mValue += positionDelta; } );
 			}
 		}
 		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) ) {
