@@ -11,30 +11,6 @@
 // Cyclone math
 #include "Cyclone/Math/Vector.hpp"
 
-template<typename Type>
-// NOLINTNEXTLINE(*-exception-escape)
-struct meta_mixin: Type {
-	using allocator_type = Type::allocator_type;
-	using element_type = Type::element_type;
-
-	explicit meta_mixin(const allocator_type &allocator);
-};
-
-template<typename Type>
-struct entt::storage_type<Type, entt::entity> {
-	using type = meta_mixin<basic_storage<Type, entt::entity>>;
-};
-
-template<typename Type>
-meta_mixin<Type>::meta_mixin(const allocator_type &allocator)
-	: Type{allocator} {
-	using namespace entt::literals;
-
-	entt::meta_factory<element_type>{}
-	// cross registry, same type
-	.template func<entt::overload<entt::storage_for_t<element_type, entt::entity> &( const entt::id_type )>( &entt::basic_registry<entt::entity>::storage<element_type> ), entt::as_ref_t>( "storage"_hs );
-}
-
 namespace Cyclone::Core::Entity
 {
 	class EntityContext: public Cyclone::Util::NonCopyable
