@@ -55,7 +55,7 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 
 			ImVec2 selectionMouseDrag = ImGui::GetMouseDragDelta( ImGuiMouseButton_Left );
 
-			const Vector4D currentPosition = registry.get<Cyclone::Core::Component::Position>( selectedEntity );
+			const auto &currentPosition = registry.get<Cyclone::Core::Component::Position>( selectedEntity ).mValue;
 
 			if ( !transformContext.IsActiveEntity( selectedEntity ) ) {
 				assert( transformContext.GetActiveEntity() == entt::null );

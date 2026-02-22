@@ -42,7 +42,7 @@ void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *i
 	const entt::registry &cregistry = inLevelInterface->GetRegistry();
 	auto view = cregistry.view<Cyclone::Core::Component::Position>();
 	for ( const entt::entity entity : view ) {
-		const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
+		const auto &position = view.get<Cyclone::Core::Component::Position>( entity ).mValue;
 		Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> enitityHandle{ .mCenter = position, .mExtent = entityExtent };
 
 		if ( enitityHandle.Intersects( clickBox ) ) {

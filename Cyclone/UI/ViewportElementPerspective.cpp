@@ -141,8 +141,8 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
 
-			const Vector4D position = view.get<Cyclone::Core::Component::Position>( entity );
-			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
+			const auto &position = view.get<Cyclone::Core::Component::Position>( entity ).mValue;
+			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity ).mValue;
 
 			bool entityInSelection = selectionContext.GetSelectedEntities().contains( entity );
 			bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;

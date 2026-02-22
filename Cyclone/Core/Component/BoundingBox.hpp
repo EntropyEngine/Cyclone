@@ -4,5 +4,8 @@
 
 namespace Cyclone::Core::Component
 {
-	struct BoundingBox : public Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> {};
+	struct BoundingBox
+	{
+		Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> mValue;
+	};
 }
