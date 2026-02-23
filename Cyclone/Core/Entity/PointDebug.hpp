@@ -21,6 +21,8 @@ namespace Cyclone::Core::Entity
 		static constexpr entt::hashed_string kEntityCategory = "point"_hs;
 		//static constexpr uint32_t kDebugColor = 0xffdd1800;
 
+		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>>;
+
 		entt::entity Create( entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
 		{
 			// Allocates in the entity storage of the registry

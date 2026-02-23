@@ -33,6 +33,12 @@ void Cyclone::Core::LevelInterface::Initialize()
 			mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { double( x * 2 + 16 ), 0.0, double( y * 2 + 16 ) } );
 		}
 	}
+
+	entt::registry save;
+
+	Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::PointDebug>::sSaveHistory( GetRegistry(), save, i );
+
+	__debugbreak();
 }
 
 void Cyclone::Core::LevelInterface::SetDevice( ID3D11Device3 *inDevice )
