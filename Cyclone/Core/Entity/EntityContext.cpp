@@ -131,6 +131,38 @@ bool Cyclone::Core::Entity::EntityContext::UndoAction( entt::registry &inRegistr
 	return true;
 }
 
+bool Cyclone::Core::Entity::EntityContext::RedoAction( entt::registry & inRegistry )
+{
+	assert( !mUndoStackLockHeld && "Cannot redo action while stack lock is held!" );
+	bool lock = mUndoStackLock.try_lock();
+	if ( !lock ) return false;
+
+	mUndoStackLockHeld = true;
+
+	size_t nextTopEpoch = static_cast<size_t>( mUndoStackEpoch ) + 1; // TODO: cast overloads
+
+	const entt::registry &nextTop = mUndoStack[nextTopEpoch];
+
+	// TODO: fix when no EpochNumber present
+	const auto &nextTopView = nextTop.view<Component::EntityType>();
+
+	for ( const entt::entity entity : nextTopView ) {
+		// TODO: fix in case of transmutation (no idea how, fuck it we ball)
+		// TODO: do we get current type, or previous type?
+		const auto nextType = static_cast<entt::id_type>( nextTopView.get<Component::EntityType>( entity ) );
+		entt::resolve( mEntityMetaContext, nextType ).func( "restore_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( nextTop ), entity );
+		inRegistry.replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( nextTopEpoch ) ); // TODO: cast overloads
+	}
+
+	mUndoStackLockHeld = false;
+
+	mUndoStackLock.unlock();
+
+	mUndoStackEpoch = static_cast<Component::EpochNumber>( static_cast<size_t>( mUndoStackEpoch ) + 1 ); // TODO: incrementation overloads
+
+	return true;
+}
+
 entt::entity Cyclone::Core::Entity::EntityContext::CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
 {
 	assert( mUndoStackLockHeld && "Can only create entities within Begin()/End()" );

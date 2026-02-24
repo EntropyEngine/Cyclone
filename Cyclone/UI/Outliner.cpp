@@ -294,6 +294,10 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					while ( inLevelInterface->GetEntityCtx().GetUndoEpoch() > chosenEpoch ) {
 						inLevelInterface->GetEntityCtx().UndoAction( inLevelInterface->GetRegistry() );
 					}
+
+					while ( inLevelInterface->GetEntityCtx().GetUndoEpoch() < chosenEpoch ) {
+						inLevelInterface->GetEntityCtx().RedoAction( inLevelInterface->GetRegistry() );
+					}
 				}
 
 				ImGui::EndTable();

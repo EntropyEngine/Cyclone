@@ -44,6 +44,7 @@ namespace Cyclone::Core::Entity
 		bool					BeginAction();
 		void					EndAction();
 		bool					UndoAction( entt::registry &inRegistry );
+		bool					RedoAction( entt::registry &inRegistry );
 
 		entt::entity			CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition );
 		void					UpdateEntity( entt::entity inEntity, entt::registry &inRegistry );
