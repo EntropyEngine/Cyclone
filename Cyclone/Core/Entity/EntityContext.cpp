@@ -74,8 +74,67 @@ void Cyclone::Core::Entity::EntityContext::Register()
 	}
 }
 
+bool Cyclone::Core::Entity::EntityContext::BeginAction()
+{
+	assert( !mUndoStackLockHeld && "Cannot begin action while stack lock is held!" );
+	bool lock = mUndoStackLock.try_lock();
+	if ( !lock ) return false;
+
+	mUndoStackLockHeld = true;
+
+	mUndoStack.emplace_back();
+
+	return true;
+}
+
+void Cyclone::Core::Entity::EntityContext::EndAction()
+{
+	assert( mUndoStackLockHeld && "Cannot end action with no stack lock held!" );
+	mUndoStackLock.unlock();
+
+	mUndoStackLockHeld = false;
+
+	mUndoStackEpoch = static_cast<Component::EpochNumber>( static_cast<size_t>( mUndoStackEpoch ) + 1 ); // TODO: incrementation overloads
+}
+
+bool Cyclone::Core::Entity::EntityContext::UndoAction( entt::registry &inRegistry )
+{
+	assert( !mUndoStackLockHeld && "Cannot undo action while stack lock is held!" );
+	bool lock = mUndoStackLock.try_lock();
+	if ( !lock ) return false;
+
+	mUndoStackLockHeld = true;
+
+	const entt::registry &currentTop = mUndoStack[static_cast<size_t>( mUndoStackEpoch )]; // TODO: cast overloads
+
+	// TODO: fix when no EpochNumber present
+	const auto &currentTopView = currentTop.view<Component::EpochNumber>();
+
+	for ( const entt::entity entity : currentTopView ) {
+		const auto lastModifiedEpochIdx = static_cast<size_t>( currentTopView.get<Component::EpochNumber>( entity ) );
+
+		const entt::registry &lastModifiedEpochRegistry = mUndoStack[lastModifiedEpochIdx];
+
+		// TODO: fix in case of transmutation (no idea how, fuck it we ball)
+		// TODO: do we get current type, or previous type?
+		const auto previousType = static_cast<entt::id_type>( lastModifiedEpochRegistry.get<Component::EntityType>( entity ) );
+		entt::resolve( mEntityMetaContext, previousType ).func( "restore_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( lastModifiedEpochRegistry ), entity );
+		inRegistry.replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( lastModifiedEpochIdx ) ); // TODO: cast overloads
+	}
+
+	mUndoStackLockHeld = false;
+
+	mUndoStackLock.unlock();
+
+	mUndoStackEpoch = static_cast<Component::EpochNumber>( static_cast<size_t>( mUndoStackEpoch ) - 1 ); // TODO: incrementation overloads
+
+	return true;
+}
+
 entt::entity Cyclone::Core::Entity::EntityContext::CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
 {
+	assert( mUndoStackLockHeld && "Can only create entities within Begin()/End()" );
+
 	auto type = entt::resolve( mEntityMetaContext, inType );
 	if ( !type ) {
 		assert( !"Failed to create entity: unknown type" );
@@ -94,5 +153,21 @@ entt::entity Cyclone::Core::Entity::EntityContext::CreateEntity( entt::id_type i
 		return entt::null;
 	}
 
-	return result.cast<entt::entity>();
+	entt::entity entity = result.cast<entt::entity>();
+
+	type.func( "save_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( mUndoStack.back() ), entity );
+	inRegistry.emplace_or_replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( static_cast<size_t>( mUndoStackEpoch ) + 1 ) ); // TODO: incrementation overloads
+
+	return entity;
+}
+
+void Cyclone::Core::Entity::EntityContext::UpdateEntity( entt::entity inEntity, entt::registry &inRegistry )
+{
+	assert( mUndoStackLockHeld && "Can only update entities within Begin()/End()" );
+
+	const auto type = static_cast<entt::id_type>( inRegistry.get<Component::EntityType>( inEntity ) );
+
+	entt::resolve( mEntityMetaContext, type ).func( "save_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( mUndoStack.back() ), inEntity );
+	mUndoStack.back().emplace_or_replace<Component::EpochNumber>( inEntity, mUndoStackEpoch );
+	inRegistry.emplace_or_replace<Component::EpochNumber>( inEntity, static_cast<Component::EpochNumber>( static_cast<size_t>( mUndoStackEpoch ) + 1 ) ); // TODO: incrementation overloads
 }

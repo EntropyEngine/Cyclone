@@ -9,25 +9,7 @@
 #include "Cyclone/Core/Component/EntityCategory.hpp"
 #include "Cyclone/Core/Component/Visible.hpp"
 #include "Cyclone/Core/Component/Selectable.hpp"
-
-//template<typename T>
-//struct CopyComponentFunctor
-//{
-//	static void sApply( const entt::registry &inRegistry, entt::registry &inHistoryRegistry, entt::entity inEntity )
-//	{
-//		const T copy = inRegistry.get<T>( inEntity );
-//		inHistoryRegistry.emplace_or_replace<T>( inEntity, copy );
-//	}
-//};
-//
-//template<typename List, size_t index = 0>
-//void ApplyTest( const entt::registry &inRegistry, entt::registry &inHistoryRegistry, entt::entity inEntity )
-//{
-//	if constexpr ( index < List::size ) {
-//		CopyComponentFunctor<entt::type_list_element_t<index, List>>::sApply( inRegistry, inHistoryRegistry, inEntity );
-//		ApplyTest<List, index + 1>( inRegistry, inHistoryRegistry, inEntity );
-//	}
-//}
+#include "Cyclone/Core/Component/EpochNumber.hpp"
 
 namespace Cyclone::Core::Entity
 {
@@ -41,11 +23,12 @@ namespace Cyclone::Core::Entity
 		{
 			static_assert( T::history_components::size > 4 );
 			static_assert( entt::type_list_diff_t<T::history_components, history_components>::size + history_components::size == T::history_components::size );
+			static_assert( !entt::type_list_contains_v<T::history_components, Component::EpochNumber> );
 
 			entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sCreateEntity>( "create_entity"_hs );
 
 			entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sSaveHistory>( "save_history"_hs );
-			entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sRestoreHistory>( "restory_history"_hs );
+			entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sRestoreHistory>( "restore_history"_hs );
 		}
 
 		static entt::entity sCreateEntity( entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )

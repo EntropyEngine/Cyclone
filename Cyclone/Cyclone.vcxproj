@@ -75,6 +75,7 @@
       <SupportJustMyCode>false</SupportJustMyCode>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <AdditionalOptions>/fp:contract %(AdditionalOptions)</AdditionalOptions>
+      <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -100,6 +101,7 @@
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <AdditionalOptions>/fp:contract %(AdditionalOptions)</AdditionalOptions>
+      <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -125,6 +127,7 @@
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <AdditionalOptions>/fp:contract %(AdditionalOptions)</AdditionalOptions>
+      <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -136,6 +139,7 @@
     <ClInclude Include="Core\Component\BoundingBox.hpp" />
     <ClInclude Include="Core\Component\EntityCategory.hpp" />
     <ClInclude Include="Core\Component\EntityType.hpp" />
+    <ClInclude Include="Core\Component\EpochNumber.hpp" />
     <ClInclude Include="Core\Component\Position.hpp" />
     <ClInclude Include="Core\Component\Selectable.hpp" />
     <ClInclude Include="Core\Component\Visible.hpp" />

@@ -7,9 +7,13 @@
 // Cyclone components
 #include "Cyclone/Core/Component/EntityType.hpp"
 #include "Cyclone/Core/Component/EntityCategory.hpp"
+#include "Cyclone/Core/Component/EpochNumber.hpp"
 
 // Cyclone math
 #include "Cyclone/Math/Vector.hpp"
+
+// STL Includes
+#include <mutex>
 
 namespace Cyclone::Core::Entity
 {
@@ -37,7 +41,12 @@ namespace Cyclone::Core::Entity
 		bool *					GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType )			{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
 		const bool *			GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType ) const		{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
 
-		entt::entity CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition );
+		bool					BeginAction();
+		void					EndAction();
+		bool					UndoAction( entt::registry &inRegistry );
+
+		entt::entity			CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition );
+		void					UpdateEntity( entt::entity inEntity, entt::registry &inRegistry );
 
 	protected:
 		template<typename T>
@@ -81,6 +90,12 @@ namespace Cyclone::Core::Entity
 		std::vector<HashPair<bool>>			mEntityCategorySelectable;
 		std::vector<HashPair<bool>>			mEntityCategoryVisible;
 
-		entt::meta_ctx mEntityMetaContext{};
+		entt::meta_ctx						mEntityMetaContext{};
+
+		
+		std::deque<entt::registry>			mUndoStack;
+		Component::EpochNumber				mUndoStackEpoch{ Component::EpochNumber::Sentinel };
+		std::mutex							mUndoStackLock;
+		bool								mUndoStackLockHeld;
 	};
 }

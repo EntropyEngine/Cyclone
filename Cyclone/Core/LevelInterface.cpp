@@ -18,6 +18,8 @@ void Cyclone::Core::LevelInterface::Initialize()
 
 	mSelectionTool.ClearSelection();
 
+	mEntityContext.BeginAction();
+
 	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
 	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 0.0, 2.0 } );
 	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 2.0, 0.0 } );
@@ -34,12 +36,24 @@ void Cyclone::Core::LevelInterface::Initialize()
 		}
 	}
 
-	entt::registry save;
-	Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::InfoDebug>::sSaveHistory( GetRegistry(), save, i );
+	mEntityContext.EndAction();
 
+	mEntityContext.BeginAction();
 	GetRegistry().get<Component::Position>( i ).mValue += Cyclone::Math::Vector4D( 0, 1, 0 );
+	mEntityContext.UpdateEntity( i, GetRegistry() );
+	mEntityContext.EndAction();
 
-	Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::InfoDebug>::sRestoreHistory( GetRegistry(), save, i );
+	//entt::registry save;
+	//Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::InfoDebug>::sSaveHistory( GetRegistry(), save, i );
+	//
+	//GetRegistry().get<Component::Position>( i ).mValue += Cyclone::Math::Vector4D( 0, 1, 0 );
+	//
+	//Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::InfoDebug>::sRestoreHistory( GetRegistry(), save, i );
+
+	//__debugbreak();
+
+	mEntityContext.UndoAction( GetRegistry() );
+
 }
 
 void Cyclone::Core::LevelInterface::SetDevice( ID3D11Device3 *inDevice )

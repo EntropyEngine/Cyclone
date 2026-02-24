@@ -173,6 +173,9 @@
     <ClInclude Include="Util\TypeList.hpp">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Component\EpochNumber.hpp">
+      <Filter>Core\Component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">

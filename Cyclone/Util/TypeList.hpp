@@ -8,7 +8,7 @@ namespace Cyclone::Util
 	/// @param functor The functor struct containing `void Apply(...) const`
 	/// @param ...args The arguments to provide to `functor.Apply`
 	template<typename TypeList, size_t Index = 0>
-	void ApplyOverTypeList( const auto&functor, auto&&... args )
+	void ApplyOverTypeList( const auto &functor, auto&&... args )
 	{
 		// Invokes functor.Apply(args...) to current Index in type list
 		functor.template Apply<entt::type_list_element_t<Index, TypeList>>( std::forward<decltype( args )>( args )... );
