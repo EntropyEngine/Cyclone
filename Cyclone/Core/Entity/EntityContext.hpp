@@ -48,6 +48,9 @@ namespace Cyclone::Core::Entity
 		entt::entity			CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition );
 		void					UpdateEntity( entt::entity inEntity, entt::registry &inRegistry );
 
+		size_t					GetUndoEpoch() const { return static_cast<size_t>( mUndoStackEpoch ); }
+		const auto &			GetUndoStack() const { return mUndoStack; }
+
 	protected:
 		template<typename T>
 		void RegisterEntityClass();
@@ -96,6 +99,6 @@ namespace Cyclone::Core::Entity
 		std::deque<entt::registry>			mUndoStack;
 		Component::EpochNumber				mUndoStackEpoch{ Component::EpochNumber::Sentinel };
 		std::mutex							mUndoStackLock;
-		bool								mUndoStackLockHeld;
+		bool								mUndoStackLockHeld{ false };
 	};
 }

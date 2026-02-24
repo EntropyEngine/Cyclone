@@ -23,7 +23,7 @@ void Cyclone::Core::LevelInterface::Initialize()
 	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
 	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 0.0, 2.0 } );
 	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 2.0, 0.0 } );
-	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 2.0, 0.0, 0.0 } );
+	auto j = mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 2.0, 0.0, 0.0 } );
 
 	mEntityContext.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 0.0, 0.0 } );
 	mEntityContext.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 0.0, 2.0 } );
@@ -43,6 +43,13 @@ void Cyclone::Core::LevelInterface::Initialize()
 	mEntityContext.UpdateEntity( i, GetRegistry() );
 	mEntityContext.EndAction();
 
+	mEntityContext.BeginAction();
+	GetRegistry().get<Component::Position>( i ).mValue += Cyclone::Math::Vector4D( 0, 1, 0 );
+	GetRegistry().get<Component::Position>( j ).mValue += Cyclone::Math::Vector4D( 0, 1, 0 );
+	mEntityContext.UpdateEntity( i, GetRegistry() );
+	mEntityContext.UpdateEntity( j, GetRegistry() );
+	mEntityContext.EndAction();
+
 	//entt::registry save;
 	//Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::InfoDebug>::sSaveHistory( GetRegistry(), save, i );
 	//
@@ -52,7 +59,7 @@ void Cyclone::Core::LevelInterface::Initialize()
 
 	//__debugbreak();
 
-	mEntityContext.UndoAction( GetRegistry() );
+	//mEntityContext.UndoAction( GetRegistry() );
 
 }
 

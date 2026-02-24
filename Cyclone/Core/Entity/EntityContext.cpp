@@ -135,6 +135,8 @@ entt::entity Cyclone::Core::Entity::EntityContext::CreateEntity( entt::id_type i
 {
 	assert( mUndoStackLockHeld && "Can only create entities within Begin()/End()" );
 
+	size_t epochToUpdate = static_cast<size_t>( mUndoStackEpoch ) + 1;
+
 	auto type = entt::resolve( mEntityMetaContext, inType );
 	if ( !type ) {
 		assert( !"Failed to create entity: unknown type" );
@@ -155,8 +157,8 @@ entt::entity Cyclone::Core::Entity::EntityContext::CreateEntity( entt::id_type i
 
 	entt::entity entity = result.cast<entt::entity>();
 
-	type.func( "save_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( mUndoStack.back() ), entity );
-	inRegistry.emplace_or_replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( static_cast<size_t>( mUndoStackEpoch ) + 1 ) ); // TODO: incrementation overloads
+	type.func( "save_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( mUndoStack[epochToUpdate] ), entity);
+	inRegistry.emplace_or_replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( epochToUpdate ) ); // TODO: incrementation overloads
 
 	return entity;
 }
@@ -165,9 +167,11 @@ void Cyclone::Core::Entity::EntityContext::UpdateEntity( entt::entity inEntity, 
 {
 	assert( mUndoStackLockHeld && "Can only update entities within Begin()/End()" );
 
+	size_t epochToUpdate = static_cast<size_t>( mUndoStackEpoch ) + 1;
+
 	const auto type = static_cast<entt::id_type>( inRegistry.get<Component::EntityType>( inEntity ) );
 
-	entt::resolve( mEntityMetaContext, type ).func( "save_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( mUndoStack.back() ), inEntity );
-	mUndoStack.back().emplace_or_replace<Component::EpochNumber>( inEntity, mUndoStackEpoch );
-	inRegistry.emplace_or_replace<Component::EpochNumber>( inEntity, static_cast<Component::EpochNumber>( static_cast<size_t>( mUndoStackEpoch ) + 1 ) ); // TODO: incrementation overloads
+	entt::resolve( mEntityMetaContext, type ).func( "save_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( mUndoStack[epochToUpdate] ), inEntity );
+	mUndoStack[epochToUpdate].emplace_or_replace<Component::EpochNumber>( inEntity, inRegistry.get<Component::EpochNumber>( inEntity ) );
+	inRegistry.emplace_or_replace<Component::EpochNumber>( inEntity, static_cast<Component::EpochNumber>( epochToUpdate ) ); // TODO: incrementation overloads
 }

@@ -26,7 +26,7 @@ namespace Cyclone::UI
 
 		float mOutlinerHeight = 256.0f;
 		float mSelectionHeight = 256.0f;
-		float mSelectedHeight = 256.0f;
+		float mUndoHistoryHeight = 256.0f;
 
 		float mRemainingHeight = 0.0f;
 

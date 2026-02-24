@@ -22,6 +22,9 @@
 
 void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterface )
 {
+	ImGuiIO &io = ImGui::GetIO();
+	ImGuiStyle &style = ImGui::GetStyle();
+
 	auto &selectionContext = inLevelInterface->GetSelectionCtx();
 	auto &entityContext = inLevelInterface->GetEntityCtx();
 	entt::registry &registry = inLevelInterface->GetRegistry();
@@ -114,11 +117,11 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 										//ImGui::Bullet();
 										ImGui::SameLine( 0, 0 );
-										ImGui::SetCursorPosY( ImGui::GetCursorPosY() - ImGui::GetStyle().FramePadding.y );
+										ImGui::SetCursorPosY( ImGui::GetCursorPosY() - style.FramePadding.y );
 										ImGui::SetNextItemAllowOverlap();
 										ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
-										if ( ImGui::Selectable( entityIdString.Value(), entityInSelection, selectionFlags, { 0, ImGui::GetStyle().FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
-											if ( ImGui::GetIO().KeyCtrl ) {
+										if ( ImGui::Selectable( entityIdString.Value(), entityInSelection, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
+											if ( io.KeyCtrl ) {
 												if ( entityIsSelected ) {
 													selectionContext.DeselectEntity( entity );
 												}
@@ -194,8 +197,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
 					ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
 					ImGui::SetNextItemAllowOverlap();
-					if ( ImGui::Selectable( entityContext.GetEntityTypeName( entityType ), true, selectionFlags, { 0, ImGui::GetStyle().FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
-						if ( ImGui::GetIO().KeyCtrl ) {
+					if ( ImGui::Selectable( entityContext.GetEntityTypeName( entityType ), true, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
+						if ( io.KeyCtrl ) {
 							if ( entityIsSelected ) {
 								selectionContext.DeselectEntity( entity );
 							}
@@ -236,13 +239,68 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 		mSelectionHeight = ImGui::GetItemRectSize().y;
 	}
 
-	if ( ImGui::CollapsingHeader( "Selected", ImGuiTreeNodeFlags_DefaultOpen ) ) {
+	if ( ImGui::CollapsingHeader( "Undo History", ImGuiTreeNodeFlags_DefaultOpen ) ) {
 		auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
-		ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 32.0f }, { ImGui::GetContentRegionAvail().x, mSelectedHeight + mRemainingHeight } );
-		if ( ImGui::BeginChild( "SelectedChild", { 0.0f, 256.0f }, sectionChildFlags, sectionWindowFlags ) ) {
+		ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 32.0f }, { ImGui::GetContentRegionAvail().x, mUndoHistoryHeight + mRemainingHeight } );
+		if ( ImGui::BeginChild( "UndoHistoryChild", { 0.0f, 256.0f }, sectionChildFlags, sectionWindowFlags ) ) {
+			if ( ImGui::BeginTable( "UndoHistoryTable", 4, tableFlags, { 0.0f, -1.0f } ) ) {
+
+				ImGui::TableSetupColumn( "Epoch" );
+				ImGui::TableSetupColumn( "Total" );
+				ImGui::TableSetupColumn( "Created" );
+				ImGui::TableSetupColumn( "Updated" );
+				ImGui::TableSetupScrollFreeze( 0, 1 );
+				ImGui::TableHeadersRow();
+
+				const auto &undoStack = inLevelInterface->GetEntityCtx().GetUndoStack();
+				const size_t currentEpoch = inLevelInterface->GetEntityCtx().GetUndoEpoch();
+				size_t chosenEpoch = currentEpoch;
+
+				for ( size_t epoch = 0; epoch < undoStack.size(); ++epoch ) {
+					ImGui::PushID( static_cast<int>( epoch ) );
+
+					const entt::registry &epochRegistry = undoStack[epoch];
+
+					size_t nChanges = epochRegistry.view<entt::entity>().size();
+					size_t nUpdates = epochRegistry.view<Cyclone::Core::Component::EpochNumber>().size();
+
+					bool isCurrent = epoch == currentEpoch;
+					bool disabled = epoch > currentEpoch;
+
+					if ( disabled ) ImGui::PushStyleColor( ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
+
+					ImGui::TableNextRow();
+
+					ImGui::TableSetColumnIndex( 0 );
+					if ( ImGui::Selectable( Cyclone::Util::PrefixString( "", epoch ), isCurrent, ImGuiSelectableFlags_SpanAllColumns ) ) {
+						chosenEpoch = epoch;
+					};
+
+					ImGui::TableSetColumnIndex( 1 );
+					ImGui::Text( Cyclone::Util::PrefixString( "", nChanges ) );
+
+					ImGui::TableSetColumnIndex( 2 );
+					ImGui::Text( Cyclone::Util::PrefixString( "", nChanges - nUpdates ) );
+
+					ImGui::TableSetColumnIndex( 3 );
+					ImGui::Text( Cyclone::Util::PrefixString( "", nUpdates ) );
+
+					if ( disabled ) ImGui::PopStyleColor( 1 );
+
+					ImGui::PopID();
+				}
+
+				if ( chosenEpoch != currentEpoch ) {
+					while ( inLevelInterface->GetEntityCtx().GetUndoEpoch() > chosenEpoch ) {
+						inLevelInterface->GetEntityCtx().UndoAction( inLevelInterface->GetRegistry() );
+					}
+				}
+
+				ImGui::EndTable();
+			}
 		}
 		ImGui::EndChild();
-		mSelectedHeight = ImGui::GetItemRectSize().y;
+		mUndoHistoryHeight = ImGui::GetItemRectSize().y;
 	}
 
 	mRemainingHeight = std::max( -std::sqrt( std::abs( ImGui::GetContentRegionAvail().y ) ), ImGui::GetContentRegionAvail().y);
