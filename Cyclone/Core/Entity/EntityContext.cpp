@@ -80,6 +80,10 @@ bool Cyclone::Core::Entity::EntityContext::BeginAction()
 	bool lock = mUndoStackLock.try_lock();
 	if ( !lock ) return false;
 
+	if ( static_cast<size_t>( mUndoStackEpoch ) + 1 != mUndoStack.size() ) {
+		mUndoStack.erase( mUndoStack.begin() + static_cast<size_t>( mUndoStackEpoch ) + 1, mUndoStack.end() );
+	}
+
 	mUndoStackLockHeld = true;
 
 	mUndoStack.emplace_back();
