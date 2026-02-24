@@ -35,10 +35,11 @@ void Cyclone::Core::LevelInterface::Initialize()
 	}
 
 	entt::registry save;
+	Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::InfoDebug>::sSaveHistory( GetRegistry(), save, i );
 
-	Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::PointDebug>::sSaveHistory( GetRegistry(), save, i );
+	GetRegistry().get<Component::Position>( i ).mValue += Cyclone::Math::Vector4D( 0, 1, 0 );
 
-	__debugbreak();
+	Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::InfoDebug>::sRestoreHistory( GetRegistry(), save, i );
 }
 
 void Cyclone::Core::LevelInterface::SetDevice( ID3D11Device3 *inDevice )

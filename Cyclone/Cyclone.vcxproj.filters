@@ -170,6 +170,9 @@
     <ClInclude Include="UI\Toolbar.hpp">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="Util\TypeList.hpp">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
