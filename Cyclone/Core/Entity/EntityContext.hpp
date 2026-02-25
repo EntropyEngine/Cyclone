@@ -41,13 +41,17 @@ namespace Cyclone::Core::Entity
 		bool *					GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType )			{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
 		const bool *			GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType ) const		{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
 
+		bool					CanAquireActionLock() const	{ return !mUndoStackLockHeld; }
+		auto					AquireActionLock()			{ assert( !mUndoStackLockHeld ); return std::unique_lock<std::mutex>( mUndoStackLock ); }
 		bool					BeginAction();
 		void					EndAction();
+
 		bool					UndoAction( entt::registry &inRegistry );
 		bool					RedoAction( entt::registry &inRegistry );
 
 		entt::entity			CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition );
 		void					UpdateEntity( entt::entity inEntity, entt::registry &inRegistry );
+
 
 		size_t					GetUndoEpoch() const { return static_cast<size_t>( mUndoStackEpoch ); }
 		const auto &			GetUndoStack() const { return mUndoStack; }
