@@ -137,10 +137,20 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 										ImGui::TableSetColumnIndex( 1 );
 										ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-										if ( ImGui::Checkbox( "##V", reinterpret_cast<bool *>( &entityVisible ) ) ) selectionContext.DeselectEntity( entity );
+										if ( ImGui::Checkbox( "##V", reinterpret_cast<bool *>( &entityVisible ) ) ) {
+											entityContext.BeginAction();
+											selectionContext.DeselectEntity( entity );
+											entityContext.UpdateEntity( entity, registry );
+											entityContext.EndAction();
+										}
 
 										ImGui::TableSetColumnIndex( 2 );
-										if ( ImGui::Checkbox( "##S", reinterpret_cast<bool *>( &entitySelectable ) ) ) selectionContext.DeselectEntity( entity );
+										if ( ImGui::Checkbox( "##S", reinterpret_cast<bool *>( &entitySelectable ) ) ) {
+											entityContext.BeginAction();
+											selectionContext.DeselectEntity( entity );
+											entityContext.UpdateEntity( entity, registry );
+											entityContext.EndAction();
+										}
 										ImGui::PopStyleVar( 1 );
 
 										ImGui::TreePop();
@@ -221,10 +231,20 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 					ImGui::TableSetColumnIndex( 2 );
 					ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-					if ( ImGui::Checkbox( "##V", reinterpret_cast<bool *>( &entityVisible ) ) ) selectionContext.DeselectEntity( entity );
+					if ( ImGui::Checkbox( "##V", reinterpret_cast<bool *>( &entityVisible ) ) ) {
+						entityContext.BeginAction();
+						selectionContext.DeselectEntity( entity );
+						entityContext.UpdateEntity( entity, registry );
+						entityContext.EndAction();
+					}
 
 					ImGui::TableSetColumnIndex( 3 );
-					if ( ImGui::Checkbox( "##S", reinterpret_cast<bool *>( &entitySelectable ) ) ) selectionContext.DeselectEntity( entity );
+					if ( ImGui::Checkbox( "##S", reinterpret_cast<bool *>( &entitySelectable ) ) ) {
+						entityContext.BeginAction();
+						selectionContext.DeselectEntity( entity );
+						entityContext.UpdateEntity( entity, registry );
+						entityContext.EndAction();
+					}
 					ImGui::PopStyleVar( 1 );
 
 					ImGui::PopID();
