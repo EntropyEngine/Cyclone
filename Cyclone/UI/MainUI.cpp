@@ -127,6 +127,16 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 			}
 			entityContext.EndAction();
 		}
+
+		if ( ImGui::IsKeyChordPressed( ImGuiKey_H | ImGuiMod_Ctrl ) ) {
+			entityContext.BeginAction();
+			auto view = inLevelInterface->GetRegistry().view<Cyclone::Core::Component::Visible>();
+			for ( entt::entity entity : inLevelInterface->GetSelectionCtx().GetSelectedEntities() ) {
+				view.get<Cyclone::Core::Component::Visible>( entity ) = static_cast<Cyclone::Core::Component::Visible>( false );
+				entityContext.UpdateEntity( entity, inLevelInterface->GetRegistry() );
+			}
+			entityContext.EndAction();
+		}
 	}
 
 	inLevelInterface->OnUpdateEnd();
