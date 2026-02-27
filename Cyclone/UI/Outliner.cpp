@@ -360,4 +360,10 @@ void Cyclone::UI::Outliner::RebuildTree( const Cyclone::Core::LevelInterface *in
 
 		itType->second.push_back( entity );
 	}
+
+	for ( auto &[entityCategory, typeMap] : mOutlinerTree ) {
+		for ( auto &[entityType, entityList] : typeMap ) {
+			std::sort( entityList.begin(), entityList.end() );
+		}
+	}
 }
