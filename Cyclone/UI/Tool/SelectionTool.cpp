@@ -18,6 +18,8 @@
 template<Cyclone::UI::EViewportType T>
 void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *inLevelInterface, double inWorldSpaceU, double inWorldSpaceV, double inHandleRadius, double inWorldLimit )
 {
+	if ( !inLevelInterface->GetEntityCtx().CanAquireActionLock() ) return;
+
 	bool ctrlHeld = ImGui::IsKeyDown( ImGuiMod_Ctrl );
 	bool shiftHeld = ImGui::IsKeyDown( ImGuiMod_Shift );
 
