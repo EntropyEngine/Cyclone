@@ -80,8 +80,8 @@ bool Cyclone::Core::Entity::EntityContext::BeginAction()
 	bool lock = mUndoStackLock.try_lock();
 	if ( !lock ) return false;
 
-	if ( static_cast<size_t>( mUndoStackEpoch ) + 1 != mUndoStack.size() ) {
-		mUndoStack.erase( mUndoStack.begin() + static_cast<size_t>( mUndoStackEpoch ) + 1, mUndoStack.end() );
+	if ( mUndoStackEpoch + 1 != mUndoStack.size() ) {
+		mUndoStack.erase( mUndoStack.begin() + mUndoStackEpoch + 1, mUndoStack.end() );
 	}
 
 	mUndoStackLockHeld = true;
@@ -98,12 +98,12 @@ void Cyclone::Core::Entity::EntityContext::EndAction()
 
 	mUndoStackLockHeld = false;
 
-	mUndoStackEpoch = static_cast<Component::EpochNumber>( static_cast<size_t>( mUndoStackEpoch ) + 1 ); // TODO: incrementation overloads
+	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 ); // TODO: incrementation overloads
 }
 
 bool Cyclone::Core::Entity::EntityContext::UndoAction( entt::registry &inRegistry )
 {
-	if ( static_cast<size_t>( mUndoStackEpoch ) == 0 ) return false;
+	if ( mUndoStackEpoch == 0 ) return false;
 
 	assert( !mUndoStackLockHeld && "Cannot undo action while stack lock is held!" );
 	bool lock = mUndoStackLock.try_lock();
@@ -111,13 +111,13 @@ bool Cyclone::Core::Entity::EntityContext::UndoAction( entt::registry &inRegistr
 
 	mUndoStackLockHeld = true;
 
-	const entt::registry &currentTop = mUndoStack[static_cast<size_t>( mUndoStackEpoch )]; // TODO: cast overloads
+	const entt::registry &currentTop = mUndoStack[mUndoStackEpoch]; // TODO: cast overloads
 
 	// TODO: fix when no EpochNumber present
 	const auto &currentTopView = currentTop.view<Component::EpochNumber>();
 
 	for ( const entt::entity entity : currentTopView ) {
-		const auto lastModifiedEpochIdx = static_cast<size_t>( currentTopView.get<Component::EpochNumber>( entity ) );
+		size_t lastModifiedEpochIdx = currentTopView.get<Component::EpochNumber>( entity );
 
 		const entt::registry &lastModifiedEpochRegistry = mUndoStack[lastModifiedEpochIdx];
 
@@ -131,20 +131,23 @@ bool Cyclone::Core::Entity::EntityContext::UndoAction( entt::registry &inRegistr
 	const auto &currentTopViewDelete = currentTop.view<Component::EntityType>( entt::exclude<Component::EpochNumber> );
 	for ( const entt::entity entity : currentTopViewDelete ) {
 		inRegistry.destroy( entity );
+
+		entt::entity created = inRegistry.create( entity );
+		assert( created == entity );
 	}
 
 	mUndoStackLockHeld = false;
 
 	mUndoStackLock.unlock();
 
-	mUndoStackEpoch = static_cast<Component::EpochNumber>( static_cast<size_t>( mUndoStackEpoch ) - 1 ); // TODO: incrementation overloads
+	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch - 1 ); // TODO: incrementation overloads
 
 	return true;
 }
 
 bool Cyclone::Core::Entity::EntityContext::RedoAction( entt::registry & inRegistry )
 {
-	if ( static_cast<size_t>( mUndoStackEpoch ) + 1 >= mUndoStack.size() ) return false;
+	if ( mUndoStackEpoch + 1 >= mUndoStack.size() ) return false;
 
 	assert( !mUndoStackLockHeld && "Cannot redo action while stack lock is held!" );
 	bool lock = mUndoStackLock.try_lock();
@@ -152,7 +155,7 @@ bool Cyclone::Core::Entity::EntityContext::RedoAction( entt::registry & inRegist
 
 	mUndoStackLockHeld = true;
 
-	size_t nextTopEpoch = static_cast<size_t>( mUndoStackEpoch ) + 1; // TODO: cast overloads
+	size_t nextTopEpoch = mUndoStackEpoch + 1; // TODO: cast overloads
 
 	const entt::registry &nextTop = mUndoStack[nextTopEpoch];
 
@@ -171,7 +174,7 @@ bool Cyclone::Core::Entity::EntityContext::RedoAction( entt::registry & inRegist
 
 	mUndoStackLock.unlock();
 
-	mUndoStackEpoch = static_cast<Component::EpochNumber>( static_cast<size_t>( mUndoStackEpoch ) + 1 ); // TODO: incrementation overloads
+	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 ); // TODO: incrementation overloads
 
 	return true;
 }
@@ -180,7 +183,7 @@ entt::entity Cyclone::Core::Entity::EntityContext::CreateEntity( entt::id_type i
 {
 	assert( mUndoStackLockHeld && "Can only create entities within Begin()/End()" );
 
-	size_t epochToUpdate = static_cast<size_t>( mUndoStackEpoch ) + 1;
+	size_t epochToUpdate = mUndoStackEpoch + 1;
 
 	auto type = entt::resolve( mEntityMetaContext, inType );
 	if ( !type ) {
@@ -212,7 +215,7 @@ void Cyclone::Core::Entity::EntityContext::UpdateEntity( entt::entity inEntity, 
 {
 	assert( mUndoStackLockHeld && "Can only update entities within Begin()/End()" );
 
-	size_t epochToUpdate = static_cast<size_t>( mUndoStackEpoch ) + 1;
+	size_t epochToUpdate = mUndoStackEpoch + 1;
 
 	const auto type = static_cast<entt::id_type>( inRegistry.get<Component::EntityType>( inEntity ) );
 

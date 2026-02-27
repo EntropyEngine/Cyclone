@@ -52,10 +52,10 @@ namespace Cyclone::Core::Entity
 
 		static void sRestoreHistory( entt::registry &inRegistry, const entt::registry &inHistoryRegistry, entt::entity inEntity )
 		{
-			if ( !inRegistry.valid( inEntity ) ) {
-				auto retEntity = inRegistry.create( inEntity );
-				assert( retEntity == inEntity );
-			}
+			//if ( !inRegistry.valid( inEntity ) ) {
+			//	auto retEntity = inRegistry.create( inEntity );
+			//	assert( retEntity == inEntity );
+			//}
 
 			// Copy back from inRegistryHistory -> inRegistry
 			Cyclone::Util::ApplyOverTypeList<T::history_components>( CopyComponentFunctor{}, inHistoryRegistry, inRegistry, inEntity );
