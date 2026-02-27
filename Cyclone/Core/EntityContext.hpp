@@ -98,6 +98,9 @@ namespace Cyclone::Core
 		std::vector<HashPair<bool>>			mEntityCategorySelectable;
 		std::vector<HashPair<bool>>			mEntityCategoryVisible;
 
+		std::vector<HashPair<const char *>> mEntitiesSpawnable;
+		std::vector<HashPair<const char *>> mEntitiesBrushable;
+
 		entt::meta_ctx						mEntityMetaContext{};
 
 		

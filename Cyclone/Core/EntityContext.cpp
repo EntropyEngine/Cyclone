@@ -72,6 +72,21 @@ void Cyclone::Core::EntityContext::Register()
 		mEntityTypeSelectable.emplace_back( i.mKey, true );
 		mEntityTypeVisible.emplace_back( i.mKey, true );
 	}
+
+	// Create entity list for spawnable entities
+	for ( const auto &i : mEntityTypeNameMap ) {
+		if ( entt::resolve( mEntityMetaContext, i.mKey ).func( "create_entity"_hs ) ) {
+			mEntitiesSpawnable.push_back( i );
+		}
+
+		if ( entt::resolve( mEntityMetaContext, i.mKey ).func( "create_brush"_hs ) ) {
+			mEntitiesBrushable.push_back( i );
+		}
+	}
+
+	// Sort spawnable/brushable entities by name
+	std::stable_sort( mEntitiesSpawnable.begin(), mEntitiesSpawnable.end(), []( const auto &inLhs, const auto &inRhs ) { return std::strcmp( inLhs.mValue, inRhs.mValue ) < 0; } );
+	std::stable_sort( mEntitiesBrushable.begin(), mEntitiesBrushable.end(), []( const auto &inLhs, const auto &inRhs ) { return std::strcmp( inLhs.mValue, inRhs.mValue ) < 0; } );
 }
 
 void Cyclone::Core::EntityContext::SetEntityTypeIsSelectable( Component::EntityType inType, bool inV )
