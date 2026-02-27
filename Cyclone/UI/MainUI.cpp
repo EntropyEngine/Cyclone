@@ -116,6 +116,11 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	ImGui::End();
 	ImGui::PopStyleVar( 3 );
 
+	if ( auto &entityContext = inLevelInterface->GetEntityCtx(); entityContext.CanAquireActionLock() ) {
+		if( ImGui::IsKeyChordPressed( ImGuiKey_Z | ImGuiMod_Ctrl ) ) entityContext.UndoAction( inLevelInterface->GetRegistry() );
+		if( ImGui::IsKeyChordPressed( ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift ) ) entityContext.RedoAction( inLevelInterface->GetRegistry() );
+	}
+
 	DeselectDisabledEntities( inLevelInterface );
 }
 
@@ -134,11 +139,15 @@ void Cyclone::UI::MainUI::DeselectDisabledEntities( Cyclone::Core::LevelInterfac
 	if ( entityContext.CanAquireActionLock() ) {
 		auto lock = entityContext.AquireActionLock();
 
+		// NOT A REFERENCE
+		const auto previousSelection = selectionContext.GetSelectedEntities();
+
 		const entt::registry &cregistry = inLevelInterface->GetRegistry();
 		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
-		for ( const entt::entity entity : view ) {
+		for ( const entt::entity entity : previousSelection ) {
 
-			if ( !selectionContext.GetSelectedEntities().contains( entity ) ) {
+			if ( !view.contains( entity ) ) {
+				selectionContext.DeselectEntity( entity );
 				continue;
 			}
 

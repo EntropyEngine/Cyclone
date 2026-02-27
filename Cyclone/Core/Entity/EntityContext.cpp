@@ -103,6 +103,8 @@ void Cyclone::Core::Entity::EntityContext::EndAction()
 
 bool Cyclone::Core::Entity::EntityContext::UndoAction( entt::registry &inRegistry )
 {
+	if ( static_cast<size_t>( mUndoStackEpoch ) == 0 ) return false;
+
 	assert( !mUndoStackLockHeld && "Cannot undo action while stack lock is held!" );
 	bool lock = mUndoStackLock.try_lock();
 	if ( !lock ) return false;
@@ -126,6 +128,11 @@ bool Cyclone::Core::Entity::EntityContext::UndoAction( entt::registry &inRegistr
 		inRegistry.replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( lastModifiedEpochIdx ) ); // TODO: cast overloads
 	}
 
+	const auto &currentTopViewDelete = currentTop.view<Component::EntityType>( entt::exclude<Component::EpochNumber> );
+	for ( const entt::entity entity : currentTopViewDelete ) {
+		inRegistry.destroy( entity );
+	}
+
 	mUndoStackLockHeld = false;
 
 	mUndoStackLock.unlock();
@@ -137,6 +144,8 @@ bool Cyclone::Core::Entity::EntityContext::UndoAction( entt::registry &inRegistr
 
 bool Cyclone::Core::Entity::EntityContext::RedoAction( entt::registry & inRegistry )
 {
+	if ( static_cast<size_t>( mUndoStackEpoch ) + 1 >= mUndoStack.size() ) return false;
+
 	assert( !mUndoStackLockHeld && "Cannot redo action while stack lock is held!" );
 	bool lock = mUndoStackLock.try_lock();
 	if ( !lock ) return false;
@@ -155,7 +164,7 @@ bool Cyclone::Core::Entity::EntityContext::RedoAction( entt::registry & inRegist
 		// TODO: do we get current type, or previous type?
 		const auto nextType = static_cast<entt::id_type>( nextTopView.get<Component::EntityType>( entity ) );
 		entt::resolve( mEntityMetaContext, nextType ).func( "restore_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( nextTop ), entity );
-		inRegistry.replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( nextTopEpoch ) ); // TODO: cast overloads
+		inRegistry.emplace_or_replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( nextTopEpoch ) ); // TODO: cast overloads
 	}
 
 	mUndoStackLockHeld = false;
