@@ -79,7 +79,62 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cS", entityCategory ), categorySelectable ) ) entityContext.SetEntityCategoryIsSelectable( entityCategory, categorySelectable ^= true );
 
 						ImGui::TableSetColumnIndex( 0 );
-						if ( ImGui::TreeNodeEx( entityContext.GetEntityCategoryName( entityCategory ), treeNodeFlags ) ) {
+						bool entityCategoryNodeOpen = ImGui::TreeNodeEx( entityContext.GetEntityCategoryName( entityCategory ), treeNodeFlags );
+
+						{
+							ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
+							ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
+							if ( ImGui::BeginPopupContextItem() ) {
+								if ( ImGui::Selectable( "Add children to selection" ) ) {
+									for ( const auto [entity, category] : registry.view<const Cyclone::Core::Component::EntityCategory>().each() ) {
+										if ( entityCategory == category ) selectionContext.AddSelectedEntity( entity );
+									}
+								};
+								if ( ImGui::Selectable( "Remove children from selection" ) ) {
+									for ( const auto [entity, category] : registry.view<const Cyclone::Core::Component::EntityCategory>().each() ) {
+										if ( entityCategory == category ) selectionContext.DeselectEntity( entity );
+									}
+								};
+								ImGui::Separator();
+								if ( ImGui::Selectable( "Set all children Visible" ) ) {
+									entityContext.BeginAction();
+									for ( auto [entity, category, visible] : registry.view<const Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Visible>().each() ) {
+										if ( entityCategory == category ) visible = static_cast<Cyclone::Core::Component::Visible>( true );
+										entityContext.UpdateEntity( entity, registry );
+									}
+									entityContext.EndAction();
+								}
+								if ( ImGui::Selectable( "Set all children Hidden" ) ) {
+									entityContext.BeginAction();
+									for ( auto [entity, category, visible] : registry.view<const Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Visible>().each() ) {
+										if ( entityCategory == category ) visible = static_cast<Cyclone::Core::Component::Visible>( false );
+										entityContext.UpdateEntity( entity, registry );
+									}
+									entityContext.EndAction();
+								}
+								ImGui::Separator();
+								if ( ImGui::Selectable( "Set all children Selectable" ) ) {
+									entityContext.BeginAction();
+									for ( auto [entity, category, selectable] : registry.view<const Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Selectable>().each() ) {
+										if ( entityCategory == category ) selectable = static_cast<Cyclone::Core::Component::Selectable>( true );
+										entityContext.UpdateEntity( entity, registry );
+									}
+									entityContext.EndAction();
+								}
+								if ( ImGui::Selectable( "Set all children Unselectable" ) ) {
+									entityContext.BeginAction();
+									for ( auto [entity, category, selectable] : registry.view<const Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Selectable>().each() ) {
+										if ( entityCategory == category ) selectable = static_cast<Cyclone::Core::Component::Selectable>( false );
+										entityContext.UpdateEntity( entity, registry );
+									}
+									entityContext.EndAction();
+								}
+								ImGui::EndPopup();
+							}
+							ImGui::PopStyleVar( 2 );
+						}
+
+						if ( entityCategoryNodeOpen ) {
 							for ( const auto &[entityType, entityList] : typeMap ) {
 								if ( entityList.empty() ) continue;
 
@@ -95,7 +150,63 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tS", entityType ), entityTypeSelectable ) ) entityContext.SetEntityTypeIsSelectable( entityType, entityTypeSelectable ^= true );
 
 								ImGui::TableSetColumnIndex( 0 );
-								if ( ImGui::TreeNodeEx( entityContext.GetEntityTypeName( entityType ), treeNodeFlags ) ) {
+								bool entityTypeNodeOpen = ImGui::TreeNodeEx( entityContext.GetEntityTypeName( entityType ), treeNodeFlags );
+
+								{
+									ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
+									ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
+									if ( ImGui::BeginPopupContextItem() ) {
+										if ( ImGui::Selectable( "Add children to selection" ) ) {
+											for ( const auto [entity, type] : registry.view<const Cyclone::Core::Component::EntityType>().each() ) {
+												if ( entityType == type ) selectionContext.AddSelectedEntity( entity );
+											}
+										};
+										if ( ImGui::Selectable( "Remove children from selection" ) ) {
+											for ( const auto [entity, type] : registry.view<const Cyclone::Core::Component::EntityType>().each() ) {
+												if ( entityType == type ) selectionContext.DeselectEntity( entity );
+											}
+										};
+										ImGui::Separator();
+										if ( ImGui::Selectable( "Set all children Visible" ) ) {
+											entityContext.BeginAction();
+											for ( auto [entity, type, visible] : registry.view<const Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible>().each() ) {
+												if ( entityType == type ) visible = static_cast<Cyclone::Core::Component::Visible>( true );
+												entityContext.UpdateEntity( entity, registry );
+											}
+											entityContext.EndAction();
+										}
+										if ( ImGui::Selectable( "Set all children Hidden" ) ) {
+											entityContext.BeginAction();
+											for ( auto [entity, type, visible] : registry.view<const Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible>().each() ) {
+												if ( entityType == type ) visible = static_cast<Cyclone::Core::Component::Visible>( false );
+												entityContext.UpdateEntity( entity, registry );
+											}
+											entityContext.EndAction();
+										}
+										ImGui::Separator();
+										if ( ImGui::Selectable( "Set all children Selectable" ) ) {
+											entityContext.BeginAction();
+											for ( auto [entity, type, selectable] : registry.view<const Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Selectable>().each() ) {
+												if ( entityType == type ) selectable = static_cast<Cyclone::Core::Component::Selectable>( true );
+												entityContext.UpdateEntity( entity, registry );
+											}
+											entityContext.EndAction();
+										}
+										if ( ImGui::Selectable( "Set all children Unselectable" ) ) {
+											entityContext.BeginAction();
+											for ( auto [entity, type, selectable] : registry.view<const Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Selectable>().each() ) {
+												if ( entityType == type ) selectable = static_cast<Cyclone::Core::Component::Selectable>( false );
+												entityContext.UpdateEntity( entity, registry );
+											}
+											entityContext.EndAction();
+										}
+										ImGui::EndPopup();
+									}
+									ImGui::PopStyleVar( 2 );
+								}
+
+								if ( entityTypeNodeOpen ) {
+									
 									ImGuiListClipper clipper;
 									clipper.Begin( static_cast<int>( entityList.size() ) );
 
