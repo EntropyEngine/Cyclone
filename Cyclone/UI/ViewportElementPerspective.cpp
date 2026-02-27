@@ -134,10 +134,10 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 		for ( const entt::entity entity : view ) {
 
 			const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
-			if ( !*entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
+			if ( !entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
 
 			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-			if ( !*entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
+			if ( !entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
 
 			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
 

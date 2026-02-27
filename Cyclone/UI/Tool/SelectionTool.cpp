@@ -58,11 +58,11 @@ void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *i
 		const auto entityType = cregistry.get<Cyclone::Core::Component::EntityType>( inEntity );
 		const auto entityCategory = cregistry.get<Cyclone::Core::Component::EntityCategory>( inEntity );
 
-		if ( !*entityContext.GetEntityTypeIsVisible( entityType ) ) return true;
-		if ( !*entityContext.GetEntityTypeIsSelectable( entityType ) ) return true;
+		if ( !entityContext.GetEntityTypeIsVisible( entityType ) ) return true;
+		if ( !entityContext.GetEntityTypeIsSelectable( entityType ) ) return true;
 
-		if ( !*entityContext.GetEntityCategoryIsVisible( entityCategory ) ) return true;
-		if ( !*entityContext.GetEntityCategoryIsSelectable( entityCategory ) ) return true;
+		if ( !entityContext.GetEntityCategoryIsVisible( entityCategory ) ) return true;
+		if ( !entityContext.GetEntityCategoryIsSelectable( entityCategory ) ) return true;
 
 		return false;
 	} );

@@ -232,10 +232,10 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 		for ( const entt::entity entity : view ) {
 
 			const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
-			if ( !*entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
+			if ( !entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
 
 			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-			if ( !*entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
+			if ( !entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
 
 			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
 
@@ -307,10 +307,10 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 	for ( const entt::entity entity : view ) {
 
 		const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
-		if ( !*entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
+		if ( !entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
 
 		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-		if ( !*entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
+		if ( !entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
 
 		if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
 

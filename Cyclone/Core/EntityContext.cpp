@@ -74,6 +74,62 @@ void Cyclone::Core::EntityContext::Register()
 	}
 }
 
+void Cyclone::Core::EntityContext::SetEntityTypeIsSelectable( Component::EntityType inType, bool inV )
+{
+	auto currentValue = sFindIn( mEntityTypeSelectable, inType );
+	if ( *currentValue == inV ) return;
+
+	BeginAction();
+	entt::registry &currentTop = mUndoStack[mUndoStackEpoch + 1];
+
+	currentTop.ctx().emplace_as<HashPair<bool>>( "entity_type_selectable"_hs, static_cast<entt::id_type>( inType ), inV );
+	*currentValue = inV;
+
+	EndAction();
+}
+
+void Cyclone::Core::EntityContext::SetEntityTypeIsVisible( Component::EntityType inType, bool inV )
+{
+	auto currentValue = sFindIn( mEntityTypeVisible, inType );
+	if ( *currentValue == inV ) return;
+
+	BeginAction();
+	entt::registry &currentTop = mUndoStack[mUndoStackEpoch + 1];
+
+	currentTop.ctx().emplace_as<HashPair<bool>>( "entity_type_visible"_hs, static_cast<entt::id_type>( inType ), inV );
+	*currentValue = inV;
+
+	EndAction();
+}
+
+void Cyclone::Core::EntityContext::SetEntityCategoryIsSelectable( Component::EntityCategory inType, bool inV )
+{
+	auto currentValue = sFindIn( mEntityCategorySelectable, inType );
+	if ( *currentValue == inV ) return;
+
+	BeginAction();
+	entt::registry &currentTop = mUndoStack[mUndoStackEpoch + 1];
+
+	currentTop.ctx().emplace_as<HashPair<bool>>( "entity_category_selectable"_hs, static_cast<entt::id_type>( inType ), inV );
+	*currentValue = inV;
+
+	EndAction();
+}
+
+void Cyclone::Core::EntityContext::SetEntityCategoryIsVisible( Component::EntityCategory inType, bool inV )
+{
+	auto currentValue = sFindIn( mEntityCategoryVisible, inType );
+	if ( *currentValue == inV ) return;
+
+	BeginAction();
+	entt::registry &currentTop = mUndoStack[mUndoStackEpoch + 1];
+
+	currentTop.ctx().emplace_as<HashPair<bool>>( "entity_category_visible"_hs, static_cast<entt::id_type>( inType ), inV );
+	*currentValue = inV;
+
+	EndAction();
+}
+
 void Cyclone::Core::EntityContext::BeginAction()
 {
 	assert( !mUndoStackLock && "Cannot begin action while stack lock is held!" );
@@ -102,6 +158,19 @@ void Cyclone::Core::EntityContext::UndoAction( entt::registry &inRegistry )
 	mUndoStackLock = std::unique_lock( mUndoStackMutex );
 
 	const entt::registry &currentTop = mUndoStack[mUndoStackEpoch]; // TODO: cast overloads
+	{
+		const auto entityTypeSelectableCtx = currentTop.ctx().find<HashPair<bool>>( "entity_type_selectable"_hs );
+		if ( entityTypeSelectableCtx ) *sFindIn( mEntityTypeSelectable, entityTypeSelectableCtx->mKey ) = !entityTypeSelectableCtx->mValue;
+
+		const auto entityTypeVisibleCtx = currentTop.ctx().find<HashPair<bool>>( "entity_type_visible"_hs );
+		if ( entityTypeVisibleCtx ) *sFindIn( mEntityTypeVisible, entityTypeVisibleCtx->mKey ) = !entityTypeVisibleCtx->mValue;
+
+		const auto entityCategorySelectableCtx = currentTop.ctx().find<HashPair<bool>>( "entity_category_selectable"_hs );
+		if ( entityCategorySelectableCtx ) *sFindIn( mEntityCategorySelectable, entityCategorySelectableCtx->mKey ) = !entityCategorySelectableCtx->mValue;
+
+		const auto entityCategoryVisibleCtx = currentTop.ctx().find<HashPair<bool>>( "entity_category_visible"_hs );
+		if ( entityCategoryVisibleCtx ) *sFindIn( mEntityCategoryVisible, entityCategoryVisibleCtx->mKey ) = !entityCategoryVisibleCtx->mValue;
+	}
 
 	// TODO: fix when no EpochNumber present
 	const auto &currentTopView = currentTop.view<Component::EpochNumber>();
@@ -129,6 +198,21 @@ void Cyclone::Core::EntityContext::UndoAction( entt::registry &inRegistry )
 	mUndoStackLock.unlock();
 
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch - 1 ); // TODO: incrementation overloads
+
+	const auto &newTop = mUndoStack[mUndoStackEpoch];
+	{
+		const auto entityTypeSelectableCtx = newTop.ctx().find<HashPair<bool>>( "entity_type_selectable"_hs );
+		if ( entityTypeSelectableCtx ) *sFindIn( mEntityTypeSelectable, entityTypeSelectableCtx->mKey ) = entityTypeSelectableCtx->mValue;
+
+		const auto entityTypeVisibleCtx = newTop.ctx().find<HashPair<bool>>( "entity_type_visible"_hs );
+		if ( entityTypeVisibleCtx ) *sFindIn( mEntityTypeVisible, entityTypeVisibleCtx->mKey ) = entityTypeVisibleCtx->mValue;
+
+		const auto entityCategorySelectableCtx = newTop.ctx().find<HashPair<bool>>( "entity_category_selectable"_hs );
+		if ( entityCategorySelectableCtx ) *sFindIn( mEntityCategorySelectable, entityCategorySelectableCtx->mKey ) = entityCategorySelectableCtx->mValue;
+
+		const auto entityCategoryVisibleCtx = newTop.ctx().find<HashPair<bool>>( "entity_category_visible"_hs );
+		if ( entityCategoryVisibleCtx ) *sFindIn( mEntityCategoryVisible, entityCategoryVisibleCtx->mKey ) = entityCategoryVisibleCtx->mValue;
+	}
 }
 
 void Cyclone::Core::EntityContext::RedoAction( entt::registry & inRegistry )
@@ -141,6 +225,19 @@ void Cyclone::Core::EntityContext::RedoAction( entt::registry & inRegistry )
 	size_t nextTopEpoch = mUndoStackEpoch + 1; // TODO: cast overloads
 
 	const entt::registry &nextTop = mUndoStack[nextTopEpoch];
+	{
+		const auto entityTypeSelectableCtx = nextTop.ctx().find<HashPair<bool>>( "entity_type_selectable"_hs );
+		if ( entityTypeSelectableCtx ) *sFindIn( mEntityTypeSelectable, entityTypeSelectableCtx->mKey ) = !entityTypeSelectableCtx->mValue;
+
+		const auto entityTypeVisibleCtx = nextTop.ctx().find<HashPair<bool>>( "entity_type_visible"_hs );
+		if ( entityTypeVisibleCtx ) *sFindIn( mEntityTypeVisible, entityTypeVisibleCtx->mKey ) = !entityTypeVisibleCtx->mValue;
+
+		const auto entityCategorySelectableCtx = nextTop.ctx().find<HashPair<bool>>( "entity_category_selectable"_hs );
+		if ( entityCategorySelectableCtx ) *sFindIn( mEntityCategorySelectable, entityCategorySelectableCtx->mKey ) = !entityCategorySelectableCtx->mValue;
+
+		const auto entityCategoryVisibleCtx = nextTop.ctx().find<HashPair<bool>>( "entity_category_visible"_hs );
+		if ( entityCategoryVisibleCtx ) *sFindIn( mEntityCategoryVisible, entityCategoryVisibleCtx->mKey ) = !entityCategoryVisibleCtx->mValue;
+	}
 
 	// TODO: fix when no EpochNumber present
 	const auto &nextTopView = nextTop.view<Component::EntityType>();
@@ -165,6 +262,21 @@ void Cyclone::Core::EntityContext::RedoAction( entt::registry & inRegistry )
 	mUndoStackLock.unlock();
 
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 ); // TODO: incrementation overloads
+
+	const auto &newTop = mUndoStack[mUndoStackEpoch];
+	{
+		const auto entityTypeSelectableCtx = newTop.ctx().find<HashPair<bool>>( "entity_type_selectable"_hs );
+		if ( entityTypeSelectableCtx ) *sFindIn( mEntityTypeSelectable, entityTypeSelectableCtx->mKey ) = entityTypeSelectableCtx->mValue;
+
+		const auto entityTypeVisibleCtx = newTop.ctx().find<HashPair<bool>>( "entity_type_visible"_hs );
+		if ( entityTypeVisibleCtx ) *sFindIn( mEntityTypeVisible, entityTypeVisibleCtx->mKey ) = entityTypeVisibleCtx->mValue;
+
+		const auto entityCategorySelectableCtx = newTop.ctx().find<HashPair<bool>>( "entity_category_selectable"_hs );
+		if ( entityCategorySelectableCtx ) *sFindIn( mEntityCategorySelectable, entityCategorySelectableCtx->mKey ) = entityCategorySelectableCtx->mValue;
+
+		const auto entityCategoryVisibleCtx = newTop.ctx().find<HashPair<bool>>( "entity_category_visible"_hs );
+		if ( entityCategoryVisibleCtx ) *sFindIn( mEntityCategoryVisible, entityCategoryVisibleCtx->mKey ) = entityCategoryVisibleCtx->mValue;
+	}
 }
 
 entt::entity Cyclone::Core::EntityContext::CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )

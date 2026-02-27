@@ -69,14 +69,14 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					for ( const auto &[entityCategory, typeMap] : mOutlinerTree ) {
 						ImGui::TableNextRow();
 
-						bool *categoryVisible = entityContext.GetEntityCategoryIsVisible( entityCategory );
-						bool *categorySelectable = entityContext.GetEntityCategoryIsSelectable( entityCategory );
+						bool categoryVisible = entityContext.GetEntityCategoryIsVisible( entityCategory );
+						bool categorySelectable = entityContext.GetEntityCategoryIsSelectable( entityCategory );
 
 						ImGui::TableSetColumnIndex( 1 );
-						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cV", entityCategory ), *categoryVisible ) ) *categoryVisible ^= true;
+						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cV", entityCategory ), categoryVisible ) ) entityContext.SetEntityCategoryIsVisible( entityCategory, categoryVisible ^= true );
 
 						ImGui::TableSetColumnIndex( 2 );
-						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cS", entityCategory ), *categorySelectable ) ) *categorySelectable ^= true;
+						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cS", entityCategory ), categorySelectable ) ) entityContext.SetEntityCategoryIsSelectable( entityCategory, categorySelectable ^= true );
 
 						ImGui::TableSetColumnIndex( 0 );
 						if ( ImGui::TreeNodeEx( entityContext.GetEntityCategoryName( entityCategory ), treeNodeFlags ) ) {
@@ -85,14 +85,14 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 								ImGui::TableNextRow();
 
-								bool *entityTypeVisible = entityContext.GetEntityTypeIsVisible( entityType );
-								bool *entityTypeSelectable = entityContext.GetEntityTypeIsSelectable( entityType );
+								bool entityTypeVisible = entityContext.GetEntityTypeIsVisible( entityType );
+								bool entityTypeSelectable = entityContext.GetEntityTypeIsSelectable( entityType );
 
 								ImGui::TableSetColumnIndex( 1 );
-								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tV", entityType ), *entityTypeVisible ) ) *entityTypeVisible ^= true;
+								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tV", entityType ), entityTypeVisible ) ) entityContext.SetEntityTypeIsVisible( entityType, entityTypeVisible ^= true );
 
 								ImGui::TableSetColumnIndex( 2 );
-								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tS", entityType ), *entityTypeSelectable ) ) *entityTypeSelectable ^= true;
+								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tS", entityType ), entityTypeSelectable ) ) entityContext.SetEntityTypeIsSelectable( entityType, entityTypeSelectable ^= true );
 
 								ImGui::TableSetColumnIndex( 0 );
 								if ( ImGui::TreeNodeEx( entityContext.GetEntityTypeName( entityType ), treeNodeFlags ) ) {
@@ -119,8 +119,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 											auto &entitySelectable = registry.get<Cyclone::Core::Component::Selectable>( entity );
 
 											if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
-											if ( !static_cast<bool>( entityVisible ) || !*categoryVisible || !*entityTypeVisible ) selectionFlags |= ImGuiSelectableFlags_Disabled;
-											if ( !static_cast<bool>( entitySelectable ) || !*categorySelectable || !*entityTypeSelectable ) selectionFlags |= ImGuiSelectableFlags_Disabled;
+											if ( !static_cast<bool>( entityVisible ) || !categoryVisible || !entityTypeVisible ) selectionFlags |= ImGuiSelectableFlags_Disabled;
+											if ( !static_cast<bool>( entitySelectable ) || !categorySelectable || !entityTypeSelectable ) selectionFlags |= ImGuiSelectableFlags_Disabled;
 
 											if ( !( selectionFlags & ImGuiSelectableFlags_Disabled ) ) treeLeafFlags |= ImGuiTreeNodeFlags_Bullet;
 
@@ -149,8 +149,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 											ImGui::TableSetColumnIndex( 1 );
 											if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
-												*reinterpret_cast<bool *>( &entityVisible ) ^= true;
 												entityContext.BeginAction();
+												*reinterpret_cast<bool *>( &entityVisible ) ^= true;
 												selectionContext.DeselectEntity( entity );
 												entityContext.UpdateEntity( entity, registry );
 												entityContext.EndAction();
@@ -158,8 +158,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 											ImGui::TableSetColumnIndex( 2 );
 											if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
-												*reinterpret_cast<bool *>( &entitySelectable ) ^= true;
 												entityContext.BeginAction();
+												*reinterpret_cast<bool *>( &entitySelectable ) ^= true;
 												selectionContext.DeselectEntity( entity );
 												entityContext.UpdateEntity( entity, registry );
 												entityContext.EndAction();
@@ -242,8 +242,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 						ImGui::TableSetColumnIndex( 2 );
 						if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
-							*reinterpret_cast<bool *>( &entityVisible ) ^= true;
 							entityContext.BeginAction();
+							*reinterpret_cast<bool *>( &entityVisible ) ^= true;
 							selectionContext.DeselectEntity( entity );
 							entityContext.UpdateEntity( entity, registry );
 							entityContext.EndAction();
@@ -251,8 +251,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 						ImGui::TableSetColumnIndex( 3 );
 						if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
-							*reinterpret_cast<bool *>( &entitySelectable ) ^= true;
 							entityContext.BeginAction();
+							*reinterpret_cast<bool *>( &entitySelectable ) ^= true;
 							selectionContext.DeselectEntity( entity );
 							entityContext.UpdateEntity( entity, registry );
 							entityContext.EndAction();

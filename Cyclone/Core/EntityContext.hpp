@@ -29,17 +29,17 @@ namespace Cyclone::Core
 		const char *			GetEntityCategoryName( Component::EntityCategory inType ) const			{ auto it = sFindIn( mEntityCategoryNameMap, inType ); return it ? *it : nullptr; }
 		uint32_t				GetEntityTypeColor( Component::EntityType inType ) const				{ auto it = sFindIn( mEntityTypeColorMap, inType ); return it ? *it : Cyclone::Util::ColorU32( 0xFF, 0xFF, 0xFF ); }
 
-		bool *					GetEntityTypeIsSelectable( Component::EntityType inType )				{ auto it = sFindIn( mEntityTypeSelectable, inType ); return it ? it : nullptr; }
-		const bool *			GetEntityTypeIsSelectable( Component::EntityType inType ) const			{ auto it = sFindIn( mEntityTypeSelectable, inType ); return it ? it : nullptr; }
+		bool					GetEntityTypeIsSelectable( Component::EntityType inType ) const			{ auto it = sFindIn( mEntityTypeSelectable, inType ); return it ? *it : false; }
+		void					SetEntityTypeIsSelectable( Component::EntityType inType, bool inV );
 
-		bool *					GetEntityTypeIsVisible( Component::EntityType inType )					{ auto it = sFindIn( mEntityTypeVisible, inType ); return it ? it : nullptr; }
-		const bool *			GetEntityTypeIsVisible( Component::EntityType inType ) const			{ auto it = sFindIn( mEntityTypeVisible, inType ); return it ? it : nullptr; }
+		bool					GetEntityTypeIsVisible( Component::EntityType inType ) const			{ auto it = sFindIn( mEntityTypeVisible, inType ); return it ? *it : false; }
+		void					SetEntityTypeIsVisible( Component::EntityType inType, bool inV );
 
-		bool *					GetEntityCategoryIsSelectable( Component::EntityCategory inType )		{ auto it = sFindIn( mEntityCategorySelectable, inType ); return it ? it : nullptr; }
-		const bool *			GetEntityCategoryIsSelectable( Component::EntityCategory inType ) const	{ auto it = sFindIn( mEntityCategorySelectable, inType ); return it ? it : nullptr; }
+		bool					GetEntityCategoryIsSelectable( Component::EntityCategory inType ) const	{ auto it = sFindIn( mEntityCategorySelectable, inType ); return it ? *it : false; }
+		void					SetEntityCategoryIsSelectable( Component::EntityCategory inType, bool inV );
 
-		bool *					GetEntityCategoryIsVisible( Component::EntityCategory inType )			{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
-		const bool *			GetEntityCategoryIsVisible( Component::EntityCategory inType ) const	{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
+		bool					GetEntityCategoryIsVisible( Component::EntityCategory inType ) const	{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? *it : false; }
+		void					SetEntityCategoryIsVisible( Component::EntityCategory inType, bool inV );
 
 		bool					CanAquireActionLock() const	{ return !mUndoStackLock; }
 		void					BeginAction();

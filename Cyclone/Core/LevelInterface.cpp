@@ -98,24 +98,24 @@ void Cyclone::Core::LevelInterface::OnUpdateEnd()
 
 			const auto entityCategory = view.get<Component::EntityCategory>( entity );
 
-			if ( !*mEntityContext.GetEntityCategoryIsVisible( entityCategory ) ) {
+			if ( !mEntityContext.GetEntityCategoryIsVisible( entityCategory ) ) {
 				mSelectionTool.DeselectEntity( entity );
 				continue;
 			}
 
-			if ( !*mEntityContext.GetEntityCategoryIsSelectable( entityCategory ) ) {
+			if ( !mEntityContext.GetEntityCategoryIsSelectable( entityCategory ) ) {
 				mSelectionTool.DeselectEntity( entity );
 				continue;
 			}
 
 			const auto entityType = view.get<Component::EntityType>( entity );
 
-			if ( !*mEntityContext.GetEntityTypeIsVisible( entityType ) ) {
+			if ( !mEntityContext.GetEntityTypeIsVisible( entityType ) ) {
 				mSelectionTool.DeselectEntity( entity );
 				continue;
 			}
 
-			if ( !*mEntityContext.GetEntityTypeIsSelectable( entityType ) ) {
+			if ( !mEntityContext.GetEntityTypeIsSelectable( entityType ) ) {
 				mSelectionTool.DeselectEntity( entity );
 				continue;
 			}
