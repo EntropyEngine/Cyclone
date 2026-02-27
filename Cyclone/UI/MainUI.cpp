@@ -129,7 +129,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 		}
 	}
 
-	DeselectDisabledEntities( inLevelInterface );
+	inLevelInterface->OnUpdateEnd();
 }
 
 void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
@@ -137,61 +137,4 @@ void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, const C
 	if ( ImGui::GetFrameCount() <= 1 ) return;
 
 	mViewportManager->Render( inDeviceContext, inLevelInterface );
-}
-
-void Cyclone::UI::MainUI::DeselectDisabledEntities( Cyclone::Core::LevelInterface * inLevelInterface )
-{
-	auto &selectionContext = inLevelInterface->GetSelectionCtx();
-	auto &entityContext = inLevelInterface->GetEntityCtx();
-
-	if ( entityContext.CanAquireActionLock() ) {
-		auto lock = entityContext.AquireActionLock();
-
-		// NOT A REFERENCE
-		const auto previousSelection = selectionContext.GetSelectedEntities();
-
-		const entt::registry &cregistry = inLevelInterface->GetRegistry();
-		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
-		for ( const entt::entity entity : previousSelection ) {
-
-			if ( !view.contains( entity ) ) {
-				selectionContext.DeselectEntity( entity );
-				continue;
-			}
-
-			const auto entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
-
-			if ( !*entityContext.GetEntityCategoryIsVisible( entityCategory ) ) {
-				selectionContext.DeselectEntity( entity );
-				continue;
-			}
-
-			if ( !*entityContext.GetEntityCategoryIsSelectable( entityCategory ) ) {
-				selectionContext.DeselectEntity( entity );
-				continue;
-			}
-
-			const auto entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-
-			if ( !*entityContext.GetEntityTypeIsVisible( entityType ) ) {
-				selectionContext.DeselectEntity( entity );
-				continue;
-			}
-
-			if ( !*entityContext.GetEntityTypeIsSelectable( entityType ) ) {
-				selectionContext.DeselectEntity( entity );
-				continue;
-			}
-
-			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) {
-				selectionContext.DeselectEntity( entity );
-				continue;
-			}
-
-			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Selectable>( entity ) ) ) {
-				selectionContext.DeselectEntity( entity );
-				continue;
-			}
-		}
-	}
 }

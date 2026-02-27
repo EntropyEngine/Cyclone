@@ -79,3 +79,56 @@ void Cyclone::Core::LevelInterface::ReleaseResources()
 	// Release device
 	mDevice.Reset();
 }
+
+void Cyclone::Core::LevelInterface::OnUpdateEnd()
+{
+	if ( mEntityContext.CanAquireActionLock() ) {
+
+		// NOT A REFERENCE
+		const auto previousSelection = mSelectionTool.GetSelectedEntities();
+
+		const entt::registry &cregistry = GetRegistry();
+		auto view = cregistry.view<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable>();
+		for ( const entt::entity entity : previousSelection ) {
+
+			if ( !view.contains( entity ) ) {
+				mSelectionTool.DeselectEntity( entity );
+				continue;
+			}
+
+			const auto entityCategory = view.get<Component::EntityCategory>( entity );
+
+			if ( !*mEntityContext.GetEntityCategoryIsVisible( entityCategory ) ) {
+				mSelectionTool.DeselectEntity( entity );
+				continue;
+			}
+
+			if ( !*mEntityContext.GetEntityCategoryIsSelectable( entityCategory ) ) {
+				mSelectionTool.DeselectEntity( entity );
+				continue;
+			}
+
+			const auto entityType = view.get<Component::EntityType>( entity );
+
+			if ( !*mEntityContext.GetEntityTypeIsVisible( entityType ) ) {
+				mSelectionTool.DeselectEntity( entity );
+				continue;
+			}
+
+			if ( !*mEntityContext.GetEntityTypeIsSelectable( entityType ) ) {
+				mSelectionTool.DeselectEntity( entity );
+				continue;
+			}
+
+			if ( !static_cast<bool>( view.get<Component::Visible>( entity ) ) ) {
+				mSelectionTool.DeselectEntity( entity );
+				continue;
+			}
+
+			if ( !static_cast<bool>( view.get<Component::Selectable>( entity ) ) ) {
+				mSelectionTool.DeselectEntity( entity );
+				continue;
+			}
+		}
+	}
+}

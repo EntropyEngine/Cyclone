@@ -42,7 +42,6 @@ namespace Cyclone::Core
 		const bool *			GetEntityCategoryIsVisible( Component::EntityCategory inType ) const	{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
 
 		bool					CanAquireActionLock() const	{ return !mUndoStackLock; }
-		auto					AquireActionLock()			{ assert( !mUndoStackLock ); return std::unique_lock( mUndoStackMutex ); }
 		void					BeginAction();
 		void					EndAction();
 

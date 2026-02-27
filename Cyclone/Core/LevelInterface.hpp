@@ -24,6 +24,8 @@ namespace Cyclone::Core
 		void						SetDevice( ID3D11Device3 *inDevice );
 		void						ReleaseResources();
 
+		void						OnUpdateEnd();
+
 		const ID3D11Device3 *		GetDevice() const					{ return mDevice.Get(); }
 		ID3D11Device3 *				GetDevice()							{ return mDevice.Get(); }
 
