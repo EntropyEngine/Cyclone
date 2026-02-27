@@ -118,7 +118,15 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 
 	if ( auto &entityContext = inLevelInterface->GetEntityCtx(); entityContext.CanAquireActionLock() ) {
 		if( ImGui::IsKeyChordPressed( ImGuiKey_Z | ImGuiMod_Ctrl ) ) entityContext.UndoAction( inLevelInterface->GetRegistry() );
-		if( ImGui::IsKeyChordPressed( ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift ) ) entityContext.RedoAction( inLevelInterface->GetRegistry() );
+		if( ImGui::IsKeyChordPressed( ImGuiKey_Y | ImGuiMod_Ctrl ) ) entityContext.RedoAction( inLevelInterface->GetRegistry() );
+
+		if ( ImGui::IsKeyChordPressed( ImGuiKey_Delete ) ) {
+			entityContext.BeginAction();
+			for ( entt::entity entity : inLevelInterface->GetSelectionCtx().GetSelectedEntities() ) {
+				entityContext.DeleteEntity( entity, inLevelInterface->GetRegistry() );
+			}
+			entityContext.EndAction();
+		}
 	}
 
 	DeselectDisabledEntities( inLevelInterface );

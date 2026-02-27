@@ -51,6 +51,7 @@ namespace Cyclone::Core
 
 		entt::entity			CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition );
 		void					UpdateEntity( entt::entity inEntity, entt::registry &inRegistry );
+		void					DeleteEntity( entt::entity inEntity, entt::registry &inRegistry );
 
 
 		size_t					GetUndoEpoch() const { return static_cast<size_t>( mUndoStackEpoch ); }

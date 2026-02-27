@@ -125,7 +125,7 @@ bool Cyclone::Core::EntityContext::UndoAction( entt::registry &inRegistry )
 		// TODO: do we get current type, or previous type?
 		const auto previousType = static_cast<entt::id_type>( lastModifiedEpochRegistry.get<Component::EntityType>( entity ) );
 		entt::resolve( mEntityMetaContext, previousType ).func( "restore_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( lastModifiedEpochRegistry ), entity );
-		inRegistry.replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( lastModifiedEpochIdx ) ); // TODO: cast overloads
+		inRegistry.emplace_or_replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( lastModifiedEpochIdx ) ); // TODO: cast overloads
 	}
 
 	const auto &currentTopViewDelete = currentTop.view<Component::EntityType>( entt::exclude<Component::EpochNumber> );
@@ -168,6 +168,15 @@ bool Cyclone::Core::EntityContext::RedoAction( entt::registry & inRegistry )
 		const auto nextType = static_cast<entt::id_type>( nextTopView.get<Component::EntityType>( entity ) );
 		entt::resolve( mEntityMetaContext, nextType ).func( "restore_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( nextTop ), entity );
 		inRegistry.emplace_or_replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( nextTopEpoch ) ); // TODO: cast overloads
+	}
+
+	const auto nextTopDeletedView = nextTop.view<Component::EpochNumber>( entt::exclude<Component::EntityType> );
+
+	for ( const entt::entity entity : nextTopDeletedView ) {
+		// Ensure entity stays orphaned, not deleted
+		inRegistry.destroy( entity );
+		entt::entity created = inRegistry.create( entity );
+		assert( created == entity );
 	}
 
 	mUndoStackLockHeld = false;
@@ -222,4 +231,27 @@ void Cyclone::Core::EntityContext::UpdateEntity( entt::entity inEntity, entt::re
 	entt::resolve( mEntityMetaContext, type ).func( "save_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( mUndoStack[epochToUpdate] ), inEntity );
 	mUndoStack[epochToUpdate].emplace_or_replace<Component::EpochNumber>( inEntity, inRegistry.get<Component::EpochNumber>( inEntity ) );
 	inRegistry.emplace_or_replace<Component::EpochNumber>( inEntity, static_cast<Component::EpochNumber>( epochToUpdate ) ); // TODO: incrementation overloads
+}
+
+void Cyclone::Core::EntityContext::DeleteEntity( entt::entity inEntity, entt::registry & inRegistry )
+{
+	assert( mUndoStackLockHeld && "Can only delete entities within Begin()/End()" );
+
+	size_t epochToUpdate = mUndoStackEpoch + 1;
+
+	entt::registry &currentTop = mUndoStack[epochToUpdate]; 
+
+	// Create in undo stack if non existent
+	if ( !currentTop.valid( inEntity ) ) {
+		auto retEntity = currentTop.create( inEntity );
+		assert( retEntity == inEntity );
+	}
+
+	// Only provide epoch number
+	mUndoStack[epochToUpdate].emplace_or_replace<Component::EpochNumber>( inEntity, inRegistry.get<Component::EpochNumber>( inEntity ) );
+
+	// Ensure entity stays orphaned, not deleted
+	inRegistry.destroy( inEntity );
+	entt::entity created = inRegistry.create( inEntity );
+	assert( created == inEntity );
 }
