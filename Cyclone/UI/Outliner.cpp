@@ -287,8 +287,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					const size_t currentEpoch = inLevelInterface->GetEntityCtx().GetUndoEpoch();
 					size_t chosenEpoch = currentEpoch;
 
-					for ( size_t epoch = 0; epoch < undoStack.size(); ++epoch ) {
-						ImGui::PushID( static_cast<int>( epoch ) );
+					for ( int epoch = static_cast<int>( undoStack.size() ) - 1; epoch >= 0; --epoch ) {
+						ImGui::PushID( epoch );
 
 						const entt::registry &epochRegistry = undoStack[epoch];
 
@@ -305,6 +305,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 						ImGui::TableSetColumnIndex( 0 );
 						if ( ImGui::Selectable( Cyclone::Util::PrefixString( "", epoch ), isCurrent, ImGuiSelectableFlags_SpanAllColumns ) ) {
 							chosenEpoch = epoch;
+
 						};
 
 						ImGui::TableSetColumnIndex( 1 );
