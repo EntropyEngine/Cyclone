@@ -20,6 +20,20 @@
 // STL
 #include <format>
 
+namespace
+{
+	bool DrawTreeNodeCheckbox( ImGuiStyle &inStyle, const char *inLabel, bool inActive )
+	{
+		ImDrawList *drawList = ImGui::GetWindowDrawList();
+		ImGui::SetCursorPosX( ImGui::GetCursorPosX() - inStyle.FramePadding.x );
+		if ( inActive ) {
+			ImGui::RenderCheckMark( drawList, { ImGui::GetCursorScreenPos().x + inStyle.FramePadding.x, ImGui::GetCursorScreenPos().y + inStyle.FramePadding.y }, ImGui::GetColorU32( ImGuiCol_CheckMark ), ImGui::GetTextLineHeight() );
+		}
+		if ( ImGui::InvisibleButton( inLabel, { inStyle.FramePadding.x * 2 + ImGui::GetTextLineHeight(), inStyle.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) return true;
+		return false;
+	}
+}
+
 void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	ImGuiIO &io = ImGui::GetIO();
@@ -59,12 +73,10 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 						bool *categorySelectable = entityContext.GetEntityCategoryIsSelectable( entityCategory );
 
 						ImGui::TableSetColumnIndex( 1 );
-						ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-						if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##cV", entityCategory ), categoryVisible ) );
+						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cV", entityCategory ), *categoryVisible ) ) *categoryVisible ^= true;
 
 						ImGui::TableSetColumnIndex( 2 );
-						if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##cS", entityCategory ), categorySelectable ) );
-						ImGui::PopStyleVar( 1 );
+						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cS", entityCategory ), *categorySelectable ) ) *categorySelectable ^= true;
 
 						ImGui::TableSetColumnIndex( 0 );
 						if ( ImGui::TreeNodeEx( entityContext.GetEntityCategoryName( entityCategory ), treeNodeFlags ) ) {
@@ -77,12 +89,10 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 								bool *entityTypeSelectable = entityContext.GetEntityTypeIsSelectable( entityType );
 
 								ImGui::TableSetColumnIndex( 1 );
-								ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-								if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##tV", entityType ), entityTypeVisible ) );
+								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tV", entityType ), *entityTypeVisible ) ) *entityTypeVisible ^= true;
 
 								ImGui::TableSetColumnIndex( 2 );
-								if ( ImGui::Checkbox( Cyclone::Util::PrefixString( "##tS", entityType ), entityTypeSelectable ) );
-								ImGui::PopStyleVar( 1 );
+								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tS", entityType ), *entityTypeSelectable ) ) *entityTypeSelectable ^= true;
 
 								ImGui::TableSetColumnIndex( 0 );
 								if ( ImGui::TreeNodeEx( entityContext.GetEntityTypeName( entityType ), treeNodeFlags ) ) {
@@ -138,8 +148,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 											ImGui::PopStyleVar( 1 );
 
 											ImGui::TableSetColumnIndex( 1 );
-											ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-											if ( ImGui::Checkbox( "##V", reinterpret_cast<bool *>( &entityVisible ) ) ) {
+											if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
+												*reinterpret_cast<bool *>( &entityVisible ) ^= true;
 												entityContext.BeginAction();
 												selectionContext.DeselectEntity( entity );
 												entityContext.UpdateEntity( entity, registry );
@@ -147,13 +157,13 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 											}
 
 											ImGui::TableSetColumnIndex( 2 );
-											if ( ImGui::Checkbox( "##S", reinterpret_cast<bool *>( &entitySelectable ) ) ) {
+											if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
+												*reinterpret_cast<bool *>( &entitySelectable ) ^= true;
 												entityContext.BeginAction();
 												selectionContext.DeselectEntity( entity );
 												entityContext.UpdateEntity( entity, registry );
 												entityContext.EndAction();
 											}
-											ImGui::PopStyleVar( 1 );
 
 											ImGui::TreePop();
 											ImGui::PopID();
@@ -231,8 +241,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 						auto &entitySelectable = view.get<Cyclone::Core::Component::Selectable>( entity );
 
 						ImGui::TableSetColumnIndex( 2 );
-						ImGui::PushStyleVarY( ImGuiStyleVar_FramePadding, 0.0f );
-						if ( ImGui::Checkbox( "##V", reinterpret_cast<bool *>( &entityVisible ) ) ) {
+						if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
+							*reinterpret_cast<bool *>( &entityVisible ) ^= true;
 							entityContext.BeginAction();
 							selectionContext.DeselectEntity( entity );
 							entityContext.UpdateEntity( entity, registry );
@@ -240,13 +250,13 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 						}
 
 						ImGui::TableSetColumnIndex( 3 );
-						if ( ImGui::Checkbox( "##S", reinterpret_cast<bool *>( &entitySelectable ) ) ) {
+						if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
+							*reinterpret_cast<bool *>( &entitySelectable ) ^= true;
 							entityContext.BeginAction();
 							selectionContext.DeselectEntity( entity );
 							entityContext.UpdateEntity( entity, registry );
 							entityContext.EndAction();
 						}
-						ImGui::PopStyleVar( 1 );
 
 						ImGui::PopID();
 					}
