@@ -74,42 +74,32 @@ void Cyclone::Core::EntityContext::Register()
 	}
 }
 
-bool Cyclone::Core::EntityContext::BeginAction()
+void Cyclone::Core::EntityContext::BeginAction()
 {
-	assert( !mUndoStackLockHeld && "Cannot begin action while stack lock is held!" );
-	bool lock = mUndoStackLock.try_lock();
-	if ( !lock ) return false;
+	assert( !mUndoStackLock && "Cannot begin action while stack lock is held!" );
+	mUndoStackLock = std::unique_lock( mUndoStackMutex );
 
 	if ( mUndoStackEpoch + 1 != mUndoStack.size() ) {
 		mUndoStack.erase( mUndoStack.begin() + mUndoStackEpoch + 1, mUndoStack.end() );
 	}
 
-	mUndoStackLockHeld = true;
-
 	mUndoStack.emplace_back();
-
-	return true;
 }
 
 void Cyclone::Core::EntityContext::EndAction()
 {
-	assert( mUndoStackLockHeld && "Cannot end action with no stack lock held!" );
+	assert( mUndoStackLock && "Cannot end action with no stack lock held!" );
 	mUndoStackLock.unlock();
-
-	mUndoStackLockHeld = false;
 
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 ); // TODO: incrementation overloads
 }
 
-bool Cyclone::Core::EntityContext::UndoAction( entt::registry &inRegistry )
+void Cyclone::Core::EntityContext::UndoAction( entt::registry &inRegistry )
 {
-	if ( mUndoStackEpoch == 0 ) return false;
+	if ( mUndoStackEpoch == 0 ) return;
 
-	assert( !mUndoStackLockHeld && "Cannot undo action while stack lock is held!" );
-	bool lock = mUndoStackLock.try_lock();
-	if ( !lock ) return false;
-
-	mUndoStackLockHeld = true;
+	assert( !mUndoStackLock && "Cannot undo action while stack lock is held!" );
+	mUndoStackLock = std::unique_lock( mUndoStackMutex );
 
 	const entt::registry &currentTop = mUndoStack[mUndoStackEpoch]; // TODO: cast overloads
 
@@ -136,24 +126,17 @@ bool Cyclone::Core::EntityContext::UndoAction( entt::registry &inRegistry )
 		assert( created == entity );
 	}
 
-	mUndoStackLockHeld = false;
-
 	mUndoStackLock.unlock();
 
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch - 1 ); // TODO: incrementation overloads
-
-	return true;
 }
 
-bool Cyclone::Core::EntityContext::RedoAction( entt::registry & inRegistry )
+void Cyclone::Core::EntityContext::RedoAction( entt::registry & inRegistry )
 {
-	if ( mUndoStackEpoch + 1 >= mUndoStack.size() ) return false;
+	if ( mUndoStackEpoch + 1 >= mUndoStack.size() ) return;
 
-	assert( !mUndoStackLockHeld && "Cannot redo action while stack lock is held!" );
-	bool lock = mUndoStackLock.try_lock();
-	if ( !lock ) return false;
-
-	mUndoStackLockHeld = true;
+	assert( !mUndoStackLock && "Cannot redo action while stack lock is held!" );
+	mUndoStackLock = std::unique_lock( mUndoStackMutex );
 
 	size_t nextTopEpoch = mUndoStackEpoch + 1; // TODO: cast overloads
 
@@ -179,18 +162,14 @@ bool Cyclone::Core::EntityContext::RedoAction( entt::registry & inRegistry )
 		assert( created == entity );
 	}
 
-	mUndoStackLockHeld = false;
-
 	mUndoStackLock.unlock();
 
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 ); // TODO: incrementation overloads
-
-	return true;
 }
 
 entt::entity Cyclone::Core::EntityContext::CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
 {
-	assert( mUndoStackLockHeld && "Can only create entities within Begin()/End()" );
+	assert( mUndoStackLock && "Can only create entities within Begin()/End()" );
 
 	size_t epochToUpdate = mUndoStackEpoch + 1;
 
@@ -222,7 +201,7 @@ entt::entity Cyclone::Core::EntityContext::CreateEntity( entt::id_type inType, e
 
 void Cyclone::Core::EntityContext::UpdateEntity( entt::entity inEntity, entt::registry &inRegistry )
 {
-	assert( mUndoStackLockHeld && "Can only update entities within Begin()/End()" );
+	assert( mUndoStackLock && "Can only update entities within Begin()/End()" );
 
 	size_t epochToUpdate = mUndoStackEpoch + 1;
 
@@ -235,7 +214,7 @@ void Cyclone::Core::EntityContext::UpdateEntity( entt::entity inEntity, entt::re
 
 void Cyclone::Core::EntityContext::DeleteEntity( entt::entity inEntity, entt::registry & inRegistry )
 {
-	assert( mUndoStackLockHeld && "Can only delete entities within Begin()/End()" );
+	assert( mUndoStackLock && "Can only delete entities within Begin()/End()" );
 
 	size_t epochToUpdate = mUndoStackEpoch + 1;
 

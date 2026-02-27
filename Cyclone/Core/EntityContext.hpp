@@ -41,13 +41,13 @@ namespace Cyclone::Core
 		bool *					GetEntityCategoryIsVisible( Component::EntityCategory inType )			{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
 		const bool *			GetEntityCategoryIsVisible( Component::EntityCategory inType ) const	{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
 
-		bool					CanAquireActionLock() const	{ return !mUndoStackLockHeld; }
-		auto					AquireActionLock()			{ assert( !mUndoStackLockHeld ); return std::unique_lock<std::mutex>( mUndoStackLock ); }
-		bool					BeginAction();
+		bool					CanAquireActionLock() const	{ return !mUndoStackLock; }
+		auto					AquireActionLock()			{ assert( !mUndoStackLock ); return std::unique_lock( mUndoStackMutex ); }
+		void					BeginAction();
 		void					EndAction();
 
-		bool					UndoAction( entt::registry &inRegistry );
-		bool					RedoAction( entt::registry &inRegistry );
+		void					UndoAction( entt::registry &inRegistry );
+		void					RedoAction( entt::registry &inRegistry );
 
 		entt::entity			CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition );
 		void					UpdateEntity( entt::entity inEntity, entt::registry &inRegistry );
@@ -104,7 +104,7 @@ namespace Cyclone::Core
 		
 		std::deque<entt::registry>			mUndoStack;
 		Component::EpochNumber				mUndoStackEpoch{ Component::EpochNumber::Sentinel };
-		std::mutex							mUndoStackLock;
-		bool								mUndoStackLockHeld{ false };
+		std::mutex							mUndoStackMutex;
+		std::unique_lock<std::mutex>		mUndoStackLock;
 	};
 }
