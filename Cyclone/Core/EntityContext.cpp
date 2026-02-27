@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Cyclone/Core/Entity/EntityContext.hpp"
+#include "Cyclone/Core/EntityContext.hpp"
 
 // Cyclone Entities
 #include "Cyclone/Core/Entity/PointDebug.hpp"
@@ -35,7 +35,7 @@ constexpr uint32_t GetDebugColor()
 }
 
 template<typename T>
-void Cyclone::Core::Entity::EntityContext::RegisterEntityClass()
+void Cyclone::Core::EntityContext::RegisterEntityClass()
 {
 	static_assert( std::is_base_of_v<Cyclone::Core::Entity::BaseEntity<T>, T> );
 
@@ -46,10 +46,10 @@ void Cyclone::Core::Entity::EntityContext::RegisterEntityClass()
 	T::sRegister( mEntityMetaContext );
 }
 
-void Cyclone::Core::Entity::EntityContext::Register()
+void Cyclone::Core::EntityContext::Register()
 {
-	RegisterEntityClass<PointDebug>();
-	RegisterEntityClass<InfoDebug>();
+	RegisterEntityClass<Entity::PointDebug>();
+	RegisterEntityClass<Entity::InfoDebug>();
 	
 	// Sort lists into entity order
 	std::stable_sort( mEntityTypeNameMap.begin(), mEntityTypeNameMap.end() );
@@ -74,7 +74,7 @@ void Cyclone::Core::Entity::EntityContext::Register()
 	}
 }
 
-bool Cyclone::Core::Entity::EntityContext::BeginAction()
+bool Cyclone::Core::EntityContext::BeginAction()
 {
 	assert( !mUndoStackLockHeld && "Cannot begin action while stack lock is held!" );
 	bool lock = mUndoStackLock.try_lock();
@@ -91,7 +91,7 @@ bool Cyclone::Core::Entity::EntityContext::BeginAction()
 	return true;
 }
 
-void Cyclone::Core::Entity::EntityContext::EndAction()
+void Cyclone::Core::EntityContext::EndAction()
 {
 	assert( mUndoStackLockHeld && "Cannot end action with no stack lock held!" );
 	mUndoStackLock.unlock();
@@ -101,7 +101,7 @@ void Cyclone::Core::Entity::EntityContext::EndAction()
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 ); // TODO: incrementation overloads
 }
 
-bool Cyclone::Core::Entity::EntityContext::UndoAction( entt::registry &inRegistry )
+bool Cyclone::Core::EntityContext::UndoAction( entt::registry &inRegistry )
 {
 	if ( mUndoStackEpoch == 0 ) return false;
 
@@ -145,7 +145,7 @@ bool Cyclone::Core::Entity::EntityContext::UndoAction( entt::registry &inRegistr
 	return true;
 }
 
-bool Cyclone::Core::Entity::EntityContext::RedoAction( entt::registry & inRegistry )
+bool Cyclone::Core::EntityContext::RedoAction( entt::registry & inRegistry )
 {
 	if ( mUndoStackEpoch + 1 >= mUndoStack.size() ) return false;
 
@@ -179,7 +179,7 @@ bool Cyclone::Core::Entity::EntityContext::RedoAction( entt::registry & inRegist
 	return true;
 }
 
-entt::entity Cyclone::Core::Entity::EntityContext::CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
+entt::entity Cyclone::Core::EntityContext::CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
 {
 	assert( mUndoStackLockHeld && "Can only create entities within Begin()/End()" );
 
@@ -211,7 +211,7 @@ entt::entity Cyclone::Core::Entity::EntityContext::CreateEntity( entt::id_type i
 	return entity;
 }
 
-void Cyclone::Core::Entity::EntityContext::UpdateEntity( entt::entity inEntity, entt::registry &inRegistry )
+void Cyclone::Core::EntityContext::UpdateEntity( entt::entity inEntity, entt::registry &inRegistry )
 {
 	assert( mUndoStackLockHeld && "Can only update entities within Begin()/End()" );
 

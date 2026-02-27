@@ -5,7 +5,7 @@
 
 // Cyclone core
 #include "Cyclone/Core/Level.hpp"
-#include "Cyclone/Core/Entity/EntityContext.hpp"
+#include "Cyclone/Core/EntityContext.hpp"
 #include "Cyclone/Core/Editor/GridContext.hpp"
 #include "Cyclone/Core/Editor/OrthographicContext.hpp"
 #include "Cyclone/Core/Editor/PerspectiveContext.hpp"
@@ -33,8 +33,8 @@ namespace Cyclone::Core
 		const entt::registry &		GetRegistry() const					{ return mLevel->GetRegistry(); }
 		entt::registry &			GetRegistry()						{ return mLevel->GetRegistry(); }
 
-		Entity::EntityContext &		GetEntityCtx()						{ return mEntityContext; }
-		const Entity::EntityContext & GetEntityCtx() const				{ return mEntityContext; }
+		EntityContext &				GetEntityCtx()						{ return mEntityContext; }
+		const EntityContext &		GetEntityCtx() const				{ return mEntityContext; }
 
 
 		Editor::GridContext &		GetGridCtx()						{ return mGridContext; }
@@ -57,8 +57,7 @@ namespace Cyclone::Core
 		Microsoft::WRL::ComPtr<ID3D11Device3> mDevice;
 
 		std::unique_ptr<Level>		mLevel;
-
-		Entity::EntityContext		mEntityContext;
+		EntityContext				mEntityContext;
 
 		Editor::GridContext			mGridContext;
 		Editor::OrthographicContext mOrthographicContext;

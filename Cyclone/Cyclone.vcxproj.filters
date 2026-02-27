@@ -131,9 +131,6 @@
     <ClInclude Include="Core\Tool\SelectionToolContext.hpp">
       <Filter>Core\Tool</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Entity\EntityContext.hpp">
-      <Filter>Core\Entity</Filter>
-    </ClInclude>
     <ClInclude Include="Core\Entity\InfoDebug.hpp">
       <Filter>Core\Entity</Filter>
     </ClInclude>
@@ -175,6 +172,9 @@
     </ClInclude>
     <ClInclude Include="Core\Component\EpochNumber.hpp">
       <Filter>Core\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\EntityContext.hpp">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -245,9 +245,6 @@
     <ClCompile Include="Core\Tool\SelectionToolContext.cpp">
       <Filter>Core\Tool</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Entity\EntityContext.cpp">
-      <Filter>Core\Entity</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Entity\InfoDebug.cpp">
       <Filter>Core\Entity</Filter>
     </ClCompile>
@@ -259,6 +256,9 @@
     </ClCompile>
     <ClCompile Include="UI\Toolbar.cpp">
       <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\EntityContext.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

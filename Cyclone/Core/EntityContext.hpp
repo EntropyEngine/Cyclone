@@ -15,7 +15,7 @@
 // STL Includes
 #include <mutex>
 
-namespace Cyclone::Core::Entity
+namespace Cyclone::Core
 {
 	class EntityContext: public Cyclone::Util::NonCopyable
 	{
@@ -25,21 +25,21 @@ namespace Cyclone::Core::Entity
 		void Register();
 
 
-		const char *			GetEntityTypeName( Cyclone::Core::Component::EntityType inType ) const					{ auto it = sFindIn( mEntityTypeNameMap, inType ); return it ? *it : nullptr; }
-		const char *			GetEntityCategoryName( Cyclone::Core::Component::EntityCategory inType ) const			{ auto it = sFindIn( mEntityCategoryNameMap, inType ); return it ? *it : nullptr; }
-		uint32_t				GetEntityTypeColor( Cyclone::Core::Component::EntityType inType ) const					{ auto it = sFindIn( mEntityTypeColorMap, inType ); return it ? *it : Cyclone::Util::ColorU32( 0xFF, 0xFF, 0xFF ); }
+		const char *			GetEntityTypeName( Component::EntityType inType ) const					{ auto it = sFindIn( mEntityTypeNameMap, inType ); return it ? *it : nullptr; }
+		const char *			GetEntityCategoryName( Component::EntityCategory inType ) const			{ auto it = sFindIn( mEntityCategoryNameMap, inType ); return it ? *it : nullptr; }
+		uint32_t				GetEntityTypeColor( Component::EntityType inType ) const				{ auto it = sFindIn( mEntityTypeColorMap, inType ); return it ? *it : Cyclone::Util::ColorU32( 0xFF, 0xFF, 0xFF ); }
 
-		bool *					GetEntityTypeIsSelectable( Cyclone::Core::Component::EntityType inType )				{ auto it = sFindIn( mEntityTypeSelectable, inType ); return it ? it : nullptr; }
-		const bool *			GetEntityTypeIsSelectable( Cyclone::Core::Component::EntityType inType ) const			{ auto it = sFindIn( mEntityTypeSelectable, inType ); return it ? it : nullptr; }
+		bool *					GetEntityTypeIsSelectable( Component::EntityType inType )				{ auto it = sFindIn( mEntityTypeSelectable, inType ); return it ? it : nullptr; }
+		const bool *			GetEntityTypeIsSelectable( Component::EntityType inType ) const			{ auto it = sFindIn( mEntityTypeSelectable, inType ); return it ? it : nullptr; }
 
-		bool *					GetEntityTypeIsVisible( Cyclone::Core::Component::EntityType inType )					{ auto it = sFindIn( mEntityTypeVisible, inType ); return it ? it : nullptr; }
-		const bool *			GetEntityTypeIsVisible( Cyclone::Core::Component::EntityType inType ) const				{ auto it = sFindIn( mEntityTypeVisible, inType ); return it ? it : nullptr; }
+		bool *					GetEntityTypeIsVisible( Component::EntityType inType )					{ auto it = sFindIn( mEntityTypeVisible, inType ); return it ? it : nullptr; }
+		const bool *			GetEntityTypeIsVisible( Component::EntityType inType ) const			{ auto it = sFindIn( mEntityTypeVisible, inType ); return it ? it : nullptr; }
 
-		bool *					GetEntityCategoryIsSelectable( Cyclone::Core::Component::EntityCategory inType )		{ auto it = sFindIn( mEntityCategorySelectable, inType ); return it ? it : nullptr; }
-		const bool *			GetEntityCategoryIsSelectable( Cyclone::Core::Component::EntityCategory inType ) const	{ auto it = sFindIn( mEntityCategorySelectable, inType ); return it ? it : nullptr; }
+		bool *					GetEntityCategoryIsSelectable( Component::EntityCategory inType )		{ auto it = sFindIn( mEntityCategorySelectable, inType ); return it ? it : nullptr; }
+		const bool *			GetEntityCategoryIsSelectable( Component::EntityCategory inType ) const	{ auto it = sFindIn( mEntityCategorySelectable, inType ); return it ? it : nullptr; }
 
-		bool *					GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType )			{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
-		const bool *			GetEntityCategoryIsVisible( Cyclone::Core::Component::EntityCategory inType ) const		{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
+		bool *					GetEntityCategoryIsVisible( Component::EntityCategory inType )			{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
+		const bool *			GetEntityCategoryIsVisible( Component::EntityCategory inType ) const	{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? it : nullptr; }
 
 		bool					CanAquireActionLock() const	{ return !mUndoStackLockHeld; }
 		auto					AquireActionLock()			{ assert( !mUndoStackLockHeld ); return std::unique_lock<std::mutex>( mUndoStackLock ); }

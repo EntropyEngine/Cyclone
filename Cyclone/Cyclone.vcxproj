@@ -146,8 +146,8 @@
     <ClInclude Include="Core\Editor\GridContext.hpp" />
     <ClInclude Include="Core\Editor\OrthographicContext.hpp" />
     <ClInclude Include="Core\Editor\PerspectiveContext.hpp" />
+    <ClInclude Include="Core\EntityContext.hpp" />
     <ClInclude Include="Core\Entity\BaseEntity.hpp" />
-    <ClInclude Include="Core\Entity\EntityContext.hpp" />
     <ClInclude Include="Core\Entity\InfoDebug.hpp" />
     <ClInclude Include="Core\Entity\PointDebug.hpp" />
     <ClInclude Include="Core\LevelInterface.hpp" />
@@ -182,7 +182,7 @@
     <ClInclude Include="Util\TypeList.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core\Entity\EntityContext.cpp" />
+    <ClCompile Include="Core\EntityContext.cpp" />
     <ClCompile Include="Core\Entity\InfoDebug.cpp" />
     <ClCompile Include="Core\Entity\PointDebug.cpp" />
     <ClCompile Include="Core\LevelInterface.cpp" />
