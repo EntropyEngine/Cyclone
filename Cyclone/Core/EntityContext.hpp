@@ -60,6 +60,9 @@ namespace Cyclone::Core
 		template<typename T>
 		void RegisterEntityClass();
 
+		void RestoreContextStatePreUndo(); ///< We need to do an extra step for undo actions which flips the context state
+		void RestoreContextStatePostAction();
+
 		template<typename T>
 		struct HashPair
 		{
