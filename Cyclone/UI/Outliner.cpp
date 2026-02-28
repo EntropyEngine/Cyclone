@@ -19,6 +19,7 @@
 
 // STL
 #include <format>
+#include <execution>
 
 namespace
 {
@@ -31,6 +32,41 @@ namespace
 		}
 		if ( ImGui::InvisibleButton( inLabel, { inStyle.FramePadding.x * 2 + ImGui::GetTextLineHeight(), inStyle.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) return true;
 		return false;
+	}
+
+	template<typename T, typename P>
+	void UpdateBoolPerPredicate( entt::registry &inRegistry, Cyclone::Core::EntityContext &inEntityContext, P inPredicate, bool inSet )
+	{
+		inEntityContext.BeginAction();
+		for ( auto [entity, type, tag] : inRegistry.view<const P, T>().each() ) {
+			if ( inPredicate == type ) tag = static_cast<T>( inSet );
+			inEntityContext.UpdateEntity( entity, inRegistry );
+		}
+		inEntityContext.EndAction();
+	}
+
+	void HandleEntityClick( Cyclone::Core::Tool::SelectionToolContext &inSelectionContext, ImGuiIO &inIo, entt::entity inEntity, bool inEntityIsSelected )
+	{
+		if ( inIo.KeyCtrl ) {
+			if ( inEntityIsSelected ) {
+				inSelectionContext.DeselectEntity( inEntity );
+			}
+			else {
+				inSelectionContext.AddSelectedEntity( inEntity );
+			}
+		}
+		else {
+			inSelectionContext.SetSelectedEntity( inEntity );
+		}
+	}
+
+	void UpdateBoolPerEntity( entt::registry &inRegistry, Cyclone::Core::EntityContext &inEntityContext, Cyclone::Core::Tool::SelectionToolContext &inSelectionContext, entt::entity inEntity, auto &ioTag )
+	{
+		inEntityContext.BeginAction();
+		*reinterpret_cast<bool *>( &ioTag ) ^= true;
+		inSelectionContext.DeselectEntity( inEntity );
+		inEntityContext.UpdateEntity( inEntity, inRegistry );
+		inEntityContext.EndAction();
 	}
 }
 
@@ -96,39 +132,11 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 									}
 								};
 								ImGui::Separator();
-								if ( ImGui::Selectable( "Set all children Visible" ) ) {
-									entityContext.BeginAction();
-									for ( auto [entity, category, visible] : registry.view<const Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Visible>().each() ) {
-										if ( entityCategory == category ) visible = static_cast<Cyclone::Core::Component::Visible>( true );
-										entityContext.UpdateEntity( entity, registry );
-									}
-									entityContext.EndAction();
-								}
-								if ( ImGui::Selectable( "Set all children Hidden" ) ) {
-									entityContext.BeginAction();
-									for ( auto [entity, category, visible] : registry.view<const Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Visible>().each() ) {
-										if ( entityCategory == category ) visible = static_cast<Cyclone::Core::Component::Visible>( false );
-										entityContext.UpdateEntity( entity, registry );
-									}
-									entityContext.EndAction();
-								}
+								if ( ImGui::Selectable( "Set all children Visible" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityContext, entityCategory, true );
+								if ( ImGui::Selectable( "Set all children Hidden" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityContext, entityCategory, false );
 								ImGui::Separator();
-								if ( ImGui::Selectable( "Set all children Selectable" ) ) {
-									entityContext.BeginAction();
-									for ( auto [entity, category, selectable] : registry.view<const Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Selectable>().each() ) {
-										if ( entityCategory == category ) selectable = static_cast<Cyclone::Core::Component::Selectable>( true );
-										entityContext.UpdateEntity( entity, registry );
-									}
-									entityContext.EndAction();
-								}
-								if ( ImGui::Selectable( "Set all children Unselectable" ) ) {
-									entityContext.BeginAction();
-									for ( auto [entity, category, selectable] : registry.view<const Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Selectable>().each() ) {
-										if ( entityCategory == category ) selectable = static_cast<Cyclone::Core::Component::Selectable>( false );
-										entityContext.UpdateEntity( entity, registry );
-									}
-									entityContext.EndAction();
-								}
+								if ( ImGui::Selectable( "Set all children Selectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( registry, entityContext, entityCategory, true );
+								if ( ImGui::Selectable( "Set all children Unselectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( registry, entityContext, entityCategory, false );
 								ImGui::EndPopup();
 							}
 							ImGui::PopStyleVar( 2 );
@@ -167,39 +175,11 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 											}
 										};
 										ImGui::Separator();
-										if ( ImGui::Selectable( "Set all children Visible" ) ) {
-											entityContext.BeginAction();
-											for ( auto [entity, type, visible] : registry.view<const Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible>().each() ) {
-												if ( entityType == type ) visible = static_cast<Cyclone::Core::Component::Visible>( true );
-												entityContext.UpdateEntity( entity, registry );
-											}
-											entityContext.EndAction();
-										}
-										if ( ImGui::Selectable( "Set all children Hidden" ) ) {
-											entityContext.BeginAction();
-											for ( auto [entity, type, visible] : registry.view<const Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible>().each() ) {
-												if ( entityType == type ) visible = static_cast<Cyclone::Core::Component::Visible>( false );
-												entityContext.UpdateEntity( entity, registry );
-											}
-											entityContext.EndAction();
-										}
+										if ( ImGui::Selectable( "Set all children Visible" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityContext, entityType, true );
+										if ( ImGui::Selectable( "Set all children Hidden" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityContext, entityType, false );
 										ImGui::Separator();
-										if ( ImGui::Selectable( "Set all children Selectable" ) ) {
-											entityContext.BeginAction();
-											for ( auto [entity, type, selectable] : registry.view<const Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Selectable>().each() ) {
-												if ( entityType == type ) selectable = static_cast<Cyclone::Core::Component::Selectable>( true );
-												entityContext.UpdateEntity( entity, registry );
-											}
-											entityContext.EndAction();
-										}
-										if ( ImGui::Selectable( "Set all children Unselectable" ) ) {
-											entityContext.BeginAction();
-											for ( auto [entity, type, selectable] : registry.view<const Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Selectable>().each() ) {
-												if ( entityType == type ) selectable = static_cast<Cyclone::Core::Component::Selectable>( false );
-												entityContext.UpdateEntity( entity, registry );
-											}
-											entityContext.EndAction();
-										}
+										if ( ImGui::Selectable( "Set all children Selectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( registry, entityContext, entityType, true );
+										if ( ImGui::Selectable( "Set all children Unselectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( registry, entityContext, entityType, false );
 										ImGui::EndPopup();
 									}
 									ImGui::PopStyleVar( 2 );
@@ -244,36 +224,18 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 											ImGui::SetNextItemAllowOverlap();
 											ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
 											if ( ImGui::Selectable( entityIdString.Value(), entityInSelection, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
-												if ( io.KeyCtrl ) {
-													if ( entityIsSelected ) {
-														selectionContext.DeselectEntity( entity );
-													}
-													else {
-														selectionContext.AddSelectedEntity( entity );
-													}
-												}
-												else {
-													selectionContext.SetSelectedEntity( entity );
-												}
+												HandleEntityClick( selectionContext, io, entity, entityIsSelected );
 											}
 											ImGui::PopStyleVar( 1 );
 
 											ImGui::TableSetColumnIndex( 1 );
 											if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
-												entityContext.BeginAction();
-												*reinterpret_cast<bool *>( &entityVisible ) ^= true;
-												selectionContext.DeselectEntity( entity );
-												entityContext.UpdateEntity( entity, registry );
-												entityContext.EndAction();
+												UpdateBoolPerEntity( registry, entityContext, selectionContext, entity, entityVisible );
 											}
 
 											ImGui::TableSetColumnIndex( 2 );
 											if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
-												entityContext.BeginAction();
-												*reinterpret_cast<bool *>( &entitySelectable ) ^= true;
-												selectionContext.DeselectEntity( entity );
-												entityContext.UpdateEntity( entity, registry );
-												entityContext.EndAction();
+												UpdateBoolPerEntity( registry, entityContext, selectionContext, entity, entitySelectable );
 											}
 
 											ImGui::TreePop();
@@ -330,17 +292,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 						ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
 						ImGui::SetNextItemAllowOverlap();
 						if ( ImGui::Selectable( entityContext.GetEntityTypeName( entityType ), true, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
-							if ( io.KeyCtrl ) {
-								if ( entityIsSelected ) {
-									selectionContext.DeselectEntity( entity );
-								}
-								else {
-									selectionContext.AddSelectedEntity( entity );
-								}
-							}
-							else {
-								selectionContext.SetSelectedEntity( entity );
-							}
+							HandleEntityClick( selectionContext, io, entity, entityIsSelected );
 						}
 						ImGui::PopStyleVar( 1 );
 
@@ -353,20 +305,12 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 						ImGui::TableSetColumnIndex( 2 );
 						if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
-							entityContext.BeginAction();
-							*reinterpret_cast<bool *>( &entityVisible ) ^= true;
-							selectionContext.DeselectEntity( entity );
-							entityContext.UpdateEntity( entity, registry );
-							entityContext.EndAction();
+							UpdateBoolPerEntity( registry, entityContext, selectionContext, entity, entityVisible );
 						}
 
 						ImGui::TableSetColumnIndex( 3 );
 						if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
-							entityContext.BeginAction();
-							*reinterpret_cast<bool *>( &entitySelectable ) ^= true;
-							selectionContext.DeselectEntity( entity );
-							entityContext.UpdateEntity( entity, registry );
-							entityContext.EndAction();
+							UpdateBoolPerEntity( registry, entityContext, selectionContext, entity, entitySelectable );
 						}
 
 						ImGui::PopID();
@@ -416,7 +360,6 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 						ImGui::TableSetColumnIndex( 0 );
 						if ( ImGui::Selectable( Cyclone::Util::PrefixString( "", epoch ), isCurrent, ImGuiSelectableFlags_SpanAllColumns ) ) {
 							chosenEpoch = epoch;
-
 						};
 
 						ImGui::TableSetColumnIndex( 1 );
@@ -485,7 +428,7 @@ void Cyclone::UI::Outliner::RebuildTree( const Cyclone::Core::LevelInterface *in
 
 	for ( auto &[entityCategory, typeMap] : mOutlinerTree ) {
 		for ( auto &[entityType, entityList] : typeMap ) {
-			std::sort( entityList.begin(), entityList.end() );
+			std::stable_sort( std::execution::par_unseq, entityList.begin(), entityList.end() );
 		}
 	}
 }
