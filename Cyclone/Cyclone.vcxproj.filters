@@ -44,6 +44,9 @@
     <Filter Include="Core\Editor">
       <UniqueIdentifier>{3f8d375e-e8b7-4f57-a06e-402e9a9abcc7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assets">
+      <UniqueIdentifier>{3949a00f-b3b0-4503-9564-8b63bd789d80}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -311,5 +314,13 @@
     <Natvis Include="natvis\signal.natvis">
       <Filter>natvis</Filter>
     </Natvis>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Assets\unispace.bold.otf">
+      <Filter>Assets</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Assets\unispace.regular.otf">
+      <Filter>Assets</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>
