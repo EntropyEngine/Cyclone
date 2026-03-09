@@ -242,6 +242,7 @@ void Cyclone::Core::EntityManager::UndoAction( entt::registry &inRegistry )
 		assert( created == entity );
 	}
 
+	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch - 1 );
 	RestoreContextStatePostAction();
 
 	// NOT A REFERENCE
@@ -291,7 +292,7 @@ void Cyclone::Core::EntityManager::UndoAction( entt::registry &inRegistry )
 		}
 	}
 
-	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch - 1 );
+	
 	mUndoStackLock.unlock();
 }
 
@@ -326,6 +327,7 @@ void Cyclone::Core::EntityManager::RedoAction( entt::registry & inRegistry )
 		assert( created == entity );
 	}
 
+	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 );
 	RestoreContextStatePostAction();
 
 	// NOT A REFERENCE
@@ -376,7 +378,7 @@ void Cyclone::Core::EntityManager::RedoAction( entt::registry & inRegistry )
 	}
 
 
-	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 );
+	
 	mUndoStackLock.unlock();
 }
 
