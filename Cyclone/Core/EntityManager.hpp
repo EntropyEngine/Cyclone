@@ -3,6 +3,7 @@
 // Cyclone Utils
 #include "Cyclone/Util/NonCopyable.hpp"
 #include "Cyclone/Util/Color.hpp"
+#include "Cyclone/Util/HashMap.hpp"
 
 // Cyclone components
 #include "Cyclone/Core/Component/EntityType.hpp"
@@ -25,20 +26,20 @@ namespace Cyclone::Core
 		void Register();
 
 
-		const char *			GetEntityTypeName( Component::EntityType inType ) const					{ auto it = sFindIn( mEntityTypeNameMap, inType ); return it ? *it : nullptr; }
-		const char *			GetEntityCategoryName( Component::EntityCategory inType ) const			{ auto it = sFindIn( mEntityCategoryNameMap, inType ); return it ? *it : nullptr; }
-		uint32_t				GetEntityTypeColor( Component::EntityType inType ) const				{ auto it = sFindIn( mEntityTypeColorMap, inType ); return it ? *it : Cyclone::Util::ColorU32( 0xFF, 0xFF, 0xFF ); }
+		const char *			GetEntityTypeName( Component::EntityType inType ) const					{ return mEntityTypeNameMap.FindOr( inType, nullptr ); }
+		const char *			GetEntityCategoryName( Component::EntityCategory inType ) const			{ return mEntityCategoryNameMap.FindOr( inType, nullptr ); }
+		uint32_t				GetEntityTypeColor( Component::EntityType inType ) const				{ return mEntityTypeColorMap.FindOr( inType, Cyclone::Util::ColorU32( 0xFF, 0xFF, 0xFF ) ); }
 
-		bool					GetEntityTypeIsSelectable( Component::EntityType inType ) const			{ auto it = sFindIn( mEntityTypeSelectable, inType ); return it ? *it : false; }
+		bool					GetEntityTypeIsSelectable( Component::EntityType inType ) const			{ return mEntityTypeSelectable.FindOr( inType, false ); }
 		void					SetEntityTypeIsSelectable( Component::EntityType inType, bool inV );
 
-		bool					GetEntityTypeIsVisible( Component::EntityType inType ) const			{ auto it = sFindIn( mEntityTypeVisible, inType ); return it ? *it : false; }
+		bool					GetEntityTypeIsVisible( Component::EntityType inType ) const			{ return mEntityTypeVisible.FindOr( inType, false ); }
 		void					SetEntityTypeIsVisible( Component::EntityType inType, bool inV );
 
-		bool					GetEntityCategoryIsSelectable( Component::EntityCategory inType ) const	{ auto it = sFindIn( mEntityCategorySelectable, inType ); return it ? *it : false; }
+		bool					GetEntityCategoryIsSelectable( Component::EntityCategory inType ) const	{ return mEntityCategorySelectable.FindOr( inType, false ); }
 		void					SetEntityCategoryIsSelectable( Component::EntityCategory inType, bool inV );
 
-		bool					GetEntityCategoryIsVisible( Component::EntityCategory inType ) const	{ auto it = sFindIn( mEntityCategoryVisible, inType ); return it ? *it : false; }
+		bool					GetEntityCategoryIsVisible( Component::EntityCategory inType ) const	{ return mEntityCategoryVisible.FindOr( inType, false ); }
 		void					SetEntityCategoryIsVisible( Component::EntityCategory inType, bool inV );
 
 		bool					CanAquireActionLock() const	{ return !mUndoStackLock; }
@@ -63,46 +64,18 @@ namespace Cyclone::Core
 		void RestoreContextStatePreUndo(); ///< We need to do an extra step for undo actions which flips the context state
 		void RestoreContextStatePostAction();
 
-		template<typename T>
-		struct HashPair
-		{
-			entt::hashed_string::hash_type	mKey;
-			T								mValue;
-			bool operator < ( const HashPair &inRhs ) const { return mKey < inRhs.mKey; }
-			bool operator ==( const HashPair &inRhs ) const { return mKey == inRhs.mKey; }
-			operator entt::hashed_string::hash_type() const { return mKey; }
-		};
+		Cyclone::Util::HashMap<uint32_t>	mEntityTypeColorMap;
+		Cyclone::Util::HashMap<const char *>mEntityTypeNameMap;
+		Cyclone::Util::HashMap<const char *>mEntityCategoryNameMap;
 
-		template<typename T>
-		static const T *sFindIn( const std::vector<HashPair<T>> &inVector, auto inType )
-		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( inVector.begin(), inVector.end(), hash );
-			if ( it != inVector.end() && it->mKey == hash ) return &it->mValue;
-			return nullptr;
-		}
+		Cyclone::Util::HashMap<bool>		mEntityTypeSelectable;
+		Cyclone::Util::HashMap<bool>		mEntityTypeVisible;
 
-		template<typename T>
-		static T *sFindIn( std::vector<HashPair<T>> &inVector, auto inType )
-		{
-			auto hash = static_cast<entt::hashed_string::hash_type>( inType );
-			const auto it = std::lower_bound( inVector.begin(), inVector.end(), hash );
-			if ( it != inVector.end() && it->mKey == hash ) return &it->mValue;
-			return nullptr;
-		}
+		Cyclone::Util::HashMap<bool>		mEntityCategorySelectable;
+		Cyclone::Util::HashMap<bool>		mEntityCategoryVisible;
 
-		std::vector<HashPair<uint32_t>>		mEntityTypeColorMap;
-		std::vector<HashPair<const char *>>	mEntityTypeNameMap;
-		std::vector<HashPair<const char *>>	mEntityCategoryNameMap;
-
-		std::vector<HashPair<bool>>			mEntityTypeSelectable;
-		std::vector<HashPair<bool>>			mEntityTypeVisible;
-
-		std::vector<HashPair<bool>>			mEntityCategorySelectable;
-		std::vector<HashPair<bool>>			mEntityCategoryVisible;
-
-		std::vector<HashPair<const char *>> mEntitiesSpawnable;
-		std::vector<HashPair<const char *>> mEntitiesBrushable;
+		std::vector<Cyclone::Util::HashPair<const char *>> mEntitiesSpawnable;
+		std::vector<Cyclone::Util::HashPair<const char *>> mEntitiesBrushable;
 
 		entt::meta_ctx						mEntityMetaContext{};
 

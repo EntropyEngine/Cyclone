@@ -179,6 +179,9 @@
     <ClInclude Include="Core\EntityManager.hpp">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="Util\HashMap.hpp">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">

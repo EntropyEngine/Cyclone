@@ -5,6 +5,8 @@
 #include "Cyclone/Core/Entity/PointDebug.hpp"
 #include "Cyclone/Core/Entity/InfoDebug.hpp"
 
+using Cyclone::Util::HashPair;
+
 template<typename T>
 constexpr uint32_t GetDebugColor()
 {
@@ -39,9 +41,9 @@ void Cyclone::Core::EntityManager::RegisterEntityClass()
 {
 	static_assert( std::is_base_of_v<Cyclone::Core::Entity::BaseEntity<T>, T> );
 
-	mEntityTypeColorMap.emplace_back( T::kEntityType.value(), GetDebugColor<T>() );
-	mEntityTypeNameMap.emplace_back( T::kEntityType.value(), T::kEntityType.data() );
-	mEntityCategoryNameMap.emplace_back( T::kEntityCategory.value(), T::kEntityCategory.data() );
+	mEntityTypeColorMap.Insert( T::kEntityType.value(), GetDebugColor<T>() );
+	mEntityTypeNameMap.Insert( T::kEntityType.value(), T::kEntityType.data() );
+	mEntityCategoryNameMap.Insert( T::kEntityCategory.value(), T::kEntityCategory.data() );
 
 	T::sRegister( mEntityMetaContext );
 }
@@ -52,25 +54,20 @@ void Cyclone::Core::EntityManager::Register()
 	RegisterEntityClass<Entity::InfoDebug>();
 	
 	// Sort lists into entity order
-	std::stable_sort( mEntityTypeNameMap.begin(), mEntityTypeNameMap.end() );
-	std::stable_sort( mEntityCategoryNameMap.begin(), mEntityCategoryNameMap.end() );
-	std::stable_sort( mEntityTypeColorMap.begin(), mEntityTypeColorMap.end() );
+	mEntityTypeNameMap.Sort();
+	mEntityCategoryNameMap.Sort();
+	mEntityTypeColorMap.Sort();
 
-	// Makes all lists unique
-	mEntityTypeNameMap.erase( std::unique( mEntityTypeNameMap.begin(), mEntityTypeNameMap.end() ), mEntityTypeNameMap.end() );
-	mEntityCategoryNameMap.erase( std::unique( mEntityCategoryNameMap.begin(), mEntityCategoryNameMap.end() ), mEntityCategoryNameMap.end() );
-	mEntityTypeColorMap.erase( std::unique( mEntityTypeColorMap.begin(), mEntityTypeColorMap.end() ), mEntityTypeColorMap.end() );
-
-	// Create selection/visibility map for categories
+	// Create selection/visibility map from sorted categories
 	for ( const auto &i : mEntityCategoryNameMap ) {
-		mEntityCategorySelectable.emplace_back( i.mKey, true );
-		mEntityCategoryVisible.emplace_back( i.mKey, true );
+		mEntityCategorySelectable.Insert( i.mKey, true );
+		mEntityCategoryVisible.Insert( i.mKey, true );
 	}
 
-	// Create selection/visibility map for types
+	// Create selection/visibility map from sorted types
 	for ( const auto &i : mEntityTypeNameMap ) {
-		mEntityTypeSelectable.emplace_back( i.mKey, true );
-		mEntityTypeVisible.emplace_back( i.mKey, true );
+		mEntityTypeSelectable.Insert( i.mKey, true );
+		mEntityTypeVisible.Insert( i.mKey, true );
 	}
 
 	// Create entity list for spawnable entities
@@ -91,7 +88,7 @@ void Cyclone::Core::EntityManager::Register()
 
 void Cyclone::Core::EntityManager::SetEntityTypeIsSelectable( Component::EntityType inType, bool inV )
 {
-	auto currentValue = sFindIn( mEntityTypeSelectable, inType );
+	auto currentValue = mEntityTypeSelectable.Find( inType );
 	if ( *currentValue == inV ) return;
 
 	BeginAction();
@@ -105,7 +102,7 @@ void Cyclone::Core::EntityManager::SetEntityTypeIsSelectable( Component::EntityT
 
 void Cyclone::Core::EntityManager::SetEntityTypeIsVisible( Component::EntityType inType, bool inV )
 {
-	auto currentValue = sFindIn( mEntityTypeVisible, inType );
+	auto currentValue = mEntityTypeVisible.Find( inType );
 	if ( *currentValue == inV ) return;
 
 	BeginAction();
@@ -119,7 +116,7 @@ void Cyclone::Core::EntityManager::SetEntityTypeIsVisible( Component::EntityType
 
 void Cyclone::Core::EntityManager::SetEntityCategoryIsSelectable( Component::EntityCategory inType, bool inV )
 {
-	auto currentValue = sFindIn( mEntityCategorySelectable, inType );
+	auto currentValue = mEntityCategorySelectable.Find( inType );
 	if ( *currentValue == inV ) return;
 
 	BeginAction();
@@ -133,7 +130,7 @@ void Cyclone::Core::EntityManager::SetEntityCategoryIsSelectable( Component::Ent
 
 void Cyclone::Core::EntityManager::SetEntityCategoryIsVisible( Component::EntityCategory inType, bool inV )
 {
-	auto currentValue = sFindIn( mEntityCategoryVisible, inType );
+	auto currentValue = mEntityCategoryVisible.Find( inType );
 	if ( *currentValue == inV ) return;
 
 	BeginAction();
@@ -316,16 +313,16 @@ void Cyclone::Core::EntityManager::RestoreContextStatePreUndo()
 	const entt::registry &currentTop = mUndoStack[mUndoStackEpoch];
 
 	const auto entityTypeSelectableCtx = currentTop.ctx().find<HashPair<bool>>( "entity_type_selectable"_hs );
-	if ( entityTypeSelectableCtx ) *sFindIn( mEntityTypeSelectable, entityTypeSelectableCtx->mKey ) = !entityTypeSelectableCtx->mValue;
+	if ( entityTypeSelectableCtx ) *mEntityTypeSelectable.Find( entityTypeSelectableCtx->mKey ) = !entityTypeSelectableCtx->mValue;
 
 	const auto entityTypeVisibleCtx = currentTop.ctx().find<HashPair<bool>>( "entity_type_visible"_hs );
-	if ( entityTypeVisibleCtx ) *sFindIn( mEntityTypeVisible, entityTypeVisibleCtx->mKey ) = !entityTypeVisibleCtx->mValue;
+	if ( entityTypeVisibleCtx ) *mEntityTypeVisible.Find( entityTypeVisibleCtx->mKey ) = !entityTypeVisibleCtx->mValue;
 
 	const auto entityCategorySelectableCtx = currentTop.ctx().find<HashPair<bool>>( "entity_category_selectable"_hs );
-	if ( entityCategorySelectableCtx ) *sFindIn( mEntityCategorySelectable, entityCategorySelectableCtx->mKey ) = !entityCategorySelectableCtx->mValue;
+	if ( entityCategorySelectableCtx ) *mEntityCategorySelectable.Find( entityCategorySelectableCtx->mKey ) = !entityCategorySelectableCtx->mValue;
 
 	const auto entityCategoryVisibleCtx = currentTop.ctx().find<HashPair<bool>>( "entity_category_visible"_hs );
-	if ( entityCategoryVisibleCtx ) *sFindIn( mEntityCategoryVisible, entityCategoryVisibleCtx->mKey ) = !entityCategoryVisibleCtx->mValue;
+	if ( entityCategoryVisibleCtx ) *mEntityCategoryVisible.Find( entityCategoryVisibleCtx->mKey ) = !entityCategoryVisibleCtx->mValue;
 }
 
 void Cyclone::Core::EntityManager::RestoreContextStatePostAction()
@@ -333,14 +330,14 @@ void Cyclone::Core::EntityManager::RestoreContextStatePostAction()
 	const auto &newTop = mUndoStack[mUndoStackEpoch];
 
 	const auto entityTypeSelectableCtx = newTop.ctx().find<HashPair<bool>>( "entity_type_selectable"_hs );
-	if ( entityTypeSelectableCtx ) *sFindIn( mEntityTypeSelectable, entityTypeSelectableCtx->mKey ) = entityTypeSelectableCtx->mValue;
+	if ( entityTypeSelectableCtx ) *mEntityTypeSelectable.Find( entityTypeSelectableCtx->mKey ) = entityTypeSelectableCtx->mValue;
 
 	const auto entityTypeVisibleCtx = newTop.ctx().find<HashPair<bool>>( "entity_type_visible"_hs );
-	if ( entityTypeVisibleCtx ) *sFindIn( mEntityTypeVisible, entityTypeVisibleCtx->mKey ) = entityTypeVisibleCtx->mValue;
+	if ( entityTypeVisibleCtx ) *mEntityTypeVisible.Find( entityTypeVisibleCtx->mKey ) = entityTypeVisibleCtx->mValue;
 
 	const auto entityCategorySelectableCtx = newTop.ctx().find<HashPair<bool>>( "entity_category_selectable"_hs );
-	if ( entityCategorySelectableCtx ) *sFindIn( mEntityCategorySelectable, entityCategorySelectableCtx->mKey ) = entityCategorySelectableCtx->mValue;
+	if ( entityCategorySelectableCtx ) *mEntityCategorySelectable.Find( entityCategorySelectableCtx->mKey ) = entityCategorySelectableCtx->mValue;
 
 	const auto entityCategoryVisibleCtx = newTop.ctx().find<HashPair<bool>>( "entity_category_visible"_hs );
-	if ( entityCategoryVisibleCtx ) *sFindIn( mEntityCategoryVisible, entityCategoryVisibleCtx->mKey ) = entityCategoryVisibleCtx->mValue;
+	if ( entityCategoryVisibleCtx ) *mEntityCategoryVisible.Find( entityCategoryVisibleCtx->mKey ) = entityCategoryVisibleCtx->mValue;
 }

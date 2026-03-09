@@ -186,6 +186,7 @@
     <ClInclude Include="UI\ViewportManager.hpp" />
     <ClInclude Include="UI\ViewportType.hpp" />
     <ClInclude Include="Util\Color.hpp" />
+    <ClInclude Include="Util\HashMap.hpp" />
     <ClInclude Include="Util\NonCopyable.hpp" />
     <ClInclude Include="Util\Render.hpp" />
     <ClInclude Include="Util\String.hpp" />
