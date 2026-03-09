@@ -60,7 +60,7 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 			if ( !transformContext.IsActiveEntity( selectedEntity ) ) {
 				assert( transformContext.GetActiveEntity() == entt::null );
 
-				inLevelInterface->GetEntityCtx().BeginAction();
+				inLevelInterface->GetEntityManager().BeginAction();
 				transformContext.SetActiveEntity( selectedEntity, currentPosition );
 			}
 
@@ -89,9 +89,9 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 		}
 		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) && transformContext.GetActiveEntity() != entt::null ) {
 			for ( const entt::entity entity : selectedEntities ) {
-				inLevelInterface->GetEntityCtx().UpdateEntity( entity, registry );
+				inLevelInterface->GetEntityManager().UpdateEntity( entity, registry );
 			}
-			inLevelInterface->GetEntityCtx().EndAction();
+			inLevelInterface->GetEntityManager().EndAction();
 
 			transformContext.Deactivate();
 		}

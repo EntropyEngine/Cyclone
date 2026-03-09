@@ -14,40 +14,40 @@ Cyclone::Core::LevelInterface::LevelInterface()
 void Cyclone::Core::LevelInterface::Initialize()
 {
 	mLevel->Initialize();
-	mEntityContext.Register();
+	mEntityManager.Register();
 
 	mSelectionTool.ClearSelection();
 
-	mEntityContext.BeginAction();
+	mEntityManager.BeginAction();
 
-	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
-	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 0.0, 2.0 } );
-	mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 2.0, 0.0 } );
-	auto j = mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { 2.0, 0.0, 0.0 } );
+	mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
+	mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 0.0, 2.0 } );
+	mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 2.0, 0.0 } );
+	auto j = mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 2.0, 0.0, 0.0 } );
 
-	mEntityContext.EndAction();
+	mEntityManager.EndAction();
 
-	mEntityContext.BeginAction();
+	mEntityManager.BeginAction();
 
-	mEntityContext.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 0.0, 0.0 } );
-	mEntityContext.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 0.0, 2.0 } );
-	mEntityContext.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 2.0, 0.0 } );
-	auto i = mEntityContext.CreateEntity( "info_debug"_hs, GetRegistry(), { -2.0, 0.0, 0.0 } );
+	mEntityManager.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 0.0, 0.0 } );
+	mEntityManager.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 0.0, 2.0 } );
+	mEntityManager.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 2.0, 0.0 } );
+	auto i = mEntityManager.CreateEntity( "info_debug"_hs, GetRegistry(), { -2.0, 0.0, 0.0 } );
 
-	mEntityContext.EndAction();
+	mEntityManager.EndAction();
 
-	mEntityContext.BeginAction();
-	mEntityContext.DeleteEntity( i, GetRegistry() );
-	mEntityContext.DeleteEntity( j, GetRegistry() );
-	mEntityContext.EndAction();
+	mEntityManager.BeginAction();
+	mEntityManager.DeleteEntity( i, GetRegistry() );
+	mEntityManager.DeleteEntity( j, GetRegistry() );
+	mEntityManager.EndAction();
 
-	mEntityContext.BeginAction();
+	mEntityManager.BeginAction();
 	for ( int x = 0; x < 16; ++x ) {
 		for ( int y = 0; y < 16; ++y ) {
-			mEntityContext.CreateEntity( "point_debug"_hs, GetRegistry(), { double( x * 2 + 16 ), 0.0, double( y * 2 + 16 ) } );
+			mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { double( x * 2 + 16 ), 0.0, double( y * 2 + 16 ) } );
 		}
 	}
-	mEntityContext.EndAction();
+	mEntityManager.EndAction();
 
 	//entt::registry save;
 	//Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::InfoDebug>::sSaveHistory( GetRegistry(), save, i );
@@ -58,7 +58,7 @@ void Cyclone::Core::LevelInterface::Initialize()
 
 	//__debugbreak();
 
-	//mEntityContext.UndoAction( GetRegistry() );
+	//mEntityManager.UndoAction( GetRegistry() );
 
 }
 
@@ -82,7 +82,7 @@ void Cyclone::Core::LevelInterface::ReleaseResources()
 
 void Cyclone::Core::LevelInterface::OnUpdateEnd()
 {
-	if ( mEntityContext.CanAquireActionLock() ) {
+	if ( mEntityManager.CanAquireActionLock() ) {
 
 		// NOT A REFERENCE
 		const auto previousSelection = mSelectionTool.GetSelectedEntities();
@@ -98,24 +98,24 @@ void Cyclone::Core::LevelInterface::OnUpdateEnd()
 
 			const auto entityCategory = view.get<Component::EntityCategory>( entity );
 
-			if ( !mEntityContext.GetEntityCategoryIsVisible( entityCategory ) ) {
+			if ( !mEntityManager.GetEntityCategoryIsVisible( entityCategory ) ) {
 				mSelectionTool.DeselectEntity( entity );
 				continue;
 			}
 
-			if ( !mEntityContext.GetEntityCategoryIsSelectable( entityCategory ) ) {
+			if ( !mEntityManager.GetEntityCategoryIsSelectable( entityCategory ) ) {
 				mSelectionTool.DeselectEntity( entity );
 				continue;
 			}
 
 			const auto entityType = view.get<Component::EntityType>( entity );
 
-			if ( !mEntityContext.GetEntityTypeIsVisible( entityType ) ) {
+			if ( !mEntityManager.GetEntityTypeIsVisible( entityType ) ) {
 				mSelectionTool.DeselectEntity( entity );
 				continue;
 			}
 
-			if ( !mEntityContext.GetEntityTypeIsSelectable( entityType ) ) {
+			if ( !mEntityManager.GetEntityTypeIsSelectable( entityType ) ) {
 				mSelectionTool.DeselectEntity( entity );
 				continue;
 			}

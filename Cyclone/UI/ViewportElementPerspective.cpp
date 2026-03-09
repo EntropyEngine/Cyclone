@@ -124,7 +124,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
 
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
-	const auto &entityContext = inLevelInterface->GetEntityCtx();
+	const auto &entityManager = inLevelInterface->GetEntityManager();
 
 	mWireframeGridBatch->Begin();
 	{
@@ -134,10 +134,10 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 		for ( const entt::entity entity : view ) {
 
 			const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
-			if ( !entityContext.GetEntityCategoryIsVisible( entityCategory ) ) continue;
+			if ( !entityManager.GetEntityCategoryIsVisible( entityCategory ) ) continue;
 
 			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-			if ( !entityContext.GetEntityTypeIsVisible( entityType ) ) continue;
+			if ( !entityManager.GetEntityTypeIsVisible( entityType ) ) continue;
 
 			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
 
@@ -155,7 +155,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 				entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
 			}
 			else {
-				entityColorU32 = inLevelInterface->GetEntityCtx().GetEntityTypeColor( entityType );
+				entityColorU32 = inLevelInterface->GetEntityManager().GetEntityTypeColor( entityType );
 			}
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );

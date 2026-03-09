@@ -17,10 +17,10 @@
 
 namespace Cyclone::Core
 {
-	class EntityContext: public Cyclone::Util::NonCopyable
+	class EntityManager: public Cyclone::Util::NonCopyable
 	{
 	public:
-		EntityContext() {}
+		EntityManager() {}
 
 		void Register();
 

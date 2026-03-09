@@ -35,8 +35,8 @@ namespace Cyclone::Core
 		const entt::registry &		GetRegistry() const					{ return mLevel->GetRegistry(); }
 		entt::registry &			GetRegistry()						{ return mLevel->GetRegistry(); }
 
-		EntityContext &				GetEntityCtx()						{ return mEntityContext; }
-		const EntityContext &		GetEntityCtx() const				{ return mEntityContext; }
+		EntityManager &				GetEntityManager()					{ return mEntityManager; }
+		const EntityManager &		GetEntityManager() const			{ return mEntityManager; }
 
 
 		Editor::GridContext &		GetGridCtx()						{ return mGridContext; }
@@ -59,7 +59,7 @@ namespace Cyclone::Core
 		Microsoft::WRL::ComPtr<ID3D11Device3> mDevice;
 
 		std::unique_ptr<Level>		mLevel;
-		EntityContext				mEntityContext;
+		EntityManager				mEntityManager;
 
 		Editor::GridContext			mGridContext;
 		Editor::OrthographicContext mOrthographicContext;

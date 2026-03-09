@@ -35,14 +35,14 @@ namespace
 	}
 
 	template<typename T, typename P>
-	void UpdateBoolPerPredicate( entt::registry &inRegistry, Cyclone::Core::EntityContext &inEntityContext, P inPredicate, bool inSet )
+	void UpdateBoolPerPredicate( entt::registry &inRegistry, Cyclone::Core::EntityManager &inEntityManager, P inPredicate, bool inSet )
 	{
-		inEntityContext.BeginAction();
+		inEntityManager.BeginAction();
 		for ( auto [entity, type, tag] : inRegistry.view<const P, T>().each() ) {
 			if ( inPredicate == type ) tag = static_cast<T>( inSet );
-			inEntityContext.UpdateEntity( entity, inRegistry );
+			inEntityManager.UpdateEntity( entity, inRegistry );
 		}
-		inEntityContext.EndAction();
+		inEntityManager.EndAction();
 	}
 
 	void HandleEntityClick( Cyclone::Core::Tool::SelectionToolContext &inSelectionContext, ImGuiIO &inIo, entt::entity inEntity, bool inEntityIsSelected )
@@ -60,13 +60,13 @@ namespace
 		}
 	}
 
-	void UpdateBoolPerEntity( entt::registry &inRegistry, Cyclone::Core::EntityContext &inEntityContext, Cyclone::Core::Tool::SelectionToolContext &inSelectionContext, entt::entity inEntity, auto &ioTag )
+	void UpdateBoolPerEntity( entt::registry &inRegistry, Cyclone::Core::EntityManager &inEntityManager, Cyclone::Core::Tool::SelectionToolContext &inSelectionContext, entt::entity inEntity, auto &ioTag )
 	{
-		inEntityContext.BeginAction();
+		inEntityManager.BeginAction();
 		*reinterpret_cast<bool *>( &ioTag ) ^= true;
 		inSelectionContext.DeselectEntity( inEntity );
-		inEntityContext.UpdateEntity( inEntity, inRegistry );
-		inEntityContext.EndAction();
+		inEntityManager.UpdateEntity( inEntity, inRegistry );
+		inEntityManager.EndAction();
 	}
 }
 
@@ -76,7 +76,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 	ImGuiStyle &style = ImGui::GetStyle();
 
 	auto &selectionContext = inLevelInterface->GetSelectionCtx();
-	auto &entityContext = inLevelInterface->GetEntityCtx();
+	auto &entityManager = inLevelInterface->GetEntityManager();
 	entt::registry &registry = inLevelInterface->GetRegistry();
 
 	ImGuiChildFlags sectionChildFlags = ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeY;
@@ -86,7 +86,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 	float origHeight = ImGui::GetContentRegionAvail().y;
 
-	ImGui::BeginDisabled( !entityContext.CanAquireActionLock() );
+	ImGui::BeginDisabled( !entityManager.CanAquireActionLock() );
 	{
 		if ( ImGui::CollapsingHeader( "Outliner", ImGuiTreeNodeFlags_DefaultOpen ) ) {
 			RebuildTree( inLevelInterface );
@@ -105,17 +105,17 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					for ( const auto &[entityCategory, typeMap] : mOutlinerTree ) {
 						ImGui::TableNextRow();
 
-						bool categoryVisible = entityContext.GetEntityCategoryIsVisible( entityCategory );
-						bool categorySelectable = entityContext.GetEntityCategoryIsSelectable( entityCategory );
+						bool categoryVisible = entityManager.GetEntityCategoryIsVisible( entityCategory );
+						bool categorySelectable = entityManager.GetEntityCategoryIsSelectable( entityCategory );
 
 						ImGui::TableSetColumnIndex( 1 );
-						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cV", entityCategory ), categoryVisible ) ) entityContext.SetEntityCategoryIsVisible( entityCategory, categoryVisible ^= true );
+						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cV", entityCategory ), categoryVisible ) ) entityManager.SetEntityCategoryIsVisible( entityCategory, categoryVisible ^= true );
 
 						ImGui::TableSetColumnIndex( 2 );
-						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cS", entityCategory ), categorySelectable ) ) entityContext.SetEntityCategoryIsSelectable( entityCategory, categorySelectable ^= true );
+						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cS", entityCategory ), categorySelectable ) ) entityManager.SetEntityCategoryIsSelectable( entityCategory, categorySelectable ^= true );
 
 						ImGui::TableSetColumnIndex( 0 );
-						bool entityCategoryNodeOpen = ImGui::TreeNodeEx( entityContext.GetEntityCategoryName( entityCategory ), treeNodeFlags );
+						bool entityCategoryNodeOpen = ImGui::TreeNodeEx( entityManager.GetEntityCategoryName( entityCategory ), treeNodeFlags );
 
 						{
 							ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
@@ -132,11 +132,11 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 									}
 								};
 								ImGui::Separator();
-								if ( ImGui::Selectable( "Set all children Visible" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityContext, entityCategory, true );
-								if ( ImGui::Selectable( "Set all children Hidden" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityContext, entityCategory, false );
+								if ( ImGui::Selectable( "Set all children Visible" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityManager, entityCategory, true );
+								if ( ImGui::Selectable( "Set all children Hidden" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityManager, entityCategory, false );
 								ImGui::Separator();
-								if ( ImGui::Selectable( "Set all children Selectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( registry, entityContext, entityCategory, true );
-								if ( ImGui::Selectable( "Set all children Unselectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( registry, entityContext, entityCategory, false );
+								if ( ImGui::Selectable( "Set all children Selectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( registry, entityManager, entityCategory, true );
+								if ( ImGui::Selectable( "Set all children Unselectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( registry, entityManager, entityCategory, false );
 								ImGui::EndPopup();
 							}
 							ImGui::PopStyleVar( 2 );
@@ -148,17 +148,17 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 								ImGui::TableNextRow();
 
-								bool entityTypeVisible = entityContext.GetEntityTypeIsVisible( entityType );
-								bool entityTypeSelectable = entityContext.GetEntityTypeIsSelectable( entityType );
+								bool entityTypeVisible = entityManager.GetEntityTypeIsVisible( entityType );
+								bool entityTypeSelectable = entityManager.GetEntityTypeIsSelectable( entityType );
 
 								ImGui::TableSetColumnIndex( 1 );
-								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tV", entityType ), entityTypeVisible ) ) entityContext.SetEntityTypeIsVisible( entityType, entityTypeVisible ^= true );
+								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tV", entityType ), entityTypeVisible ) ) entityManager.SetEntityTypeIsVisible( entityType, entityTypeVisible ^= true );
 
 								ImGui::TableSetColumnIndex( 2 );
-								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tS", entityType ), entityTypeSelectable ) ) entityContext.SetEntityTypeIsSelectable( entityType, entityTypeSelectable ^= true );
+								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tS", entityType ), entityTypeSelectable ) ) entityManager.SetEntityTypeIsSelectable( entityType, entityTypeSelectable ^= true );
 
 								ImGui::TableSetColumnIndex( 0 );
-								bool entityTypeNodeOpen = ImGui::TreeNodeEx( entityContext.GetEntityTypeName( entityType ), treeNodeFlags );
+								bool entityTypeNodeOpen = ImGui::TreeNodeEx( entityManager.GetEntityTypeName( entityType ), treeNodeFlags );
 
 								{
 									ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
@@ -175,11 +175,11 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 											}
 										};
 										ImGui::Separator();
-										if ( ImGui::Selectable( "Set all children Visible" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityContext, entityType, true );
-										if ( ImGui::Selectable( "Set all children Hidden" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityContext, entityType, false );
+										if ( ImGui::Selectable( "Set all children Visible" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityManager, entityType, true );
+										if ( ImGui::Selectable( "Set all children Hidden" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityManager, entityType, false );
 										ImGui::Separator();
-										if ( ImGui::Selectable( "Set all children Selectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( registry, entityContext, entityType, true );
-										if ( ImGui::Selectable( "Set all children Unselectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( registry, entityContext, entityType, false );
+										if ( ImGui::Selectable( "Set all children Selectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( registry, entityManager, entityType, true );
+										if ( ImGui::Selectable( "Set all children Unselectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( registry, entityManager, entityType, false );
 										ImGui::EndPopup();
 									}
 									ImGui::PopStyleVar( 2 );
@@ -230,12 +230,12 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 											ImGui::TableSetColumnIndex( 1 );
 											if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
-												UpdateBoolPerEntity( registry, entityContext, selectionContext, entity, entityVisible );
+												UpdateBoolPerEntity( registry, entityManager, selectionContext, entity, entityVisible );
 											}
 
 											ImGui::TableSetColumnIndex( 2 );
 											if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
-												UpdateBoolPerEntity( registry, entityContext, selectionContext, entity, entitySelectable );
+												UpdateBoolPerEntity( registry, entityManager, selectionContext, entity, entitySelectable );
 											}
 
 											ImGui::TreePop();
@@ -291,7 +291,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 						const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
 						ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
 						ImGui::SetNextItemAllowOverlap();
-						if ( ImGui::Selectable( entityContext.GetEntityTypeName( entityType ), true, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
+						if ( ImGui::Selectable( entityManager.GetEntityTypeName( entityType ), true, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
 							HandleEntityClick( selectionContext, io, entity, entityIsSelected );
 						}
 						ImGui::PopStyleVar( 1 );
@@ -305,12 +305,12 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 						ImGui::TableSetColumnIndex( 2 );
 						if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
-							UpdateBoolPerEntity( registry, entityContext, selectionContext, entity, entityVisible );
+							UpdateBoolPerEntity( registry, entityManager, selectionContext, entity, entityVisible );
 						}
 
 						ImGui::TableSetColumnIndex( 3 );
 						if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
-							UpdateBoolPerEntity( registry, entityContext, selectionContext, entity, entitySelectable );
+							UpdateBoolPerEntity( registry, entityManager, selectionContext, entity, entitySelectable );
 						}
 
 						ImGui::PopID();
@@ -338,8 +338,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					ImGui::TableSetupScrollFreeze( 0, 1 );
 					ImGui::TableHeadersRow();
 
-					const auto &undoStack = inLevelInterface->GetEntityCtx().GetUndoStack();
-					const size_t currentEpoch = inLevelInterface->GetEntityCtx().GetUndoEpoch();
+					const auto &undoStack = inLevelInterface->GetEntityManager().GetUndoStack();
+					const size_t currentEpoch = inLevelInterface->GetEntityManager().GetUndoEpoch();
 					size_t chosenEpoch = currentEpoch;
 
 					for ( int epoch = static_cast<int>( undoStack.size() ) - 1; epoch >= 0; --epoch ) {
@@ -377,12 +377,12 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					}
 
 					if ( chosenEpoch != currentEpoch ) {
-						while ( inLevelInterface->GetEntityCtx().GetUndoEpoch() > chosenEpoch ) {
-							inLevelInterface->GetEntityCtx().UndoAction( inLevelInterface->GetRegistry() );
+						while ( inLevelInterface->GetEntityManager().GetUndoEpoch() > chosenEpoch ) {
+							inLevelInterface->GetEntityManager().UndoAction( inLevelInterface->GetRegistry() );
 						}
 
-						while ( inLevelInterface->GetEntityCtx().GetUndoEpoch() < chosenEpoch ) {
-							inLevelInterface->GetEntityCtx().RedoAction( inLevelInterface->GetRegistry() );
+						while ( inLevelInterface->GetEntityManager().GetUndoEpoch() < chosenEpoch ) {
+							inLevelInterface->GetEntityManager().RedoAction( inLevelInterface->GetRegistry() );
 						}
 					}
 

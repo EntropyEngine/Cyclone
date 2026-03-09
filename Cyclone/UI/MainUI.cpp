@@ -116,26 +116,26 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	ImGui::End();
 	ImGui::PopStyleVar( 3 );
 
-	if ( auto &entityContext = inLevelInterface->GetEntityCtx(); entityContext.CanAquireActionLock() ) {
-		if( ImGui::IsKeyChordPressed( ImGuiKey_Z | ImGuiMod_Ctrl ) ) entityContext.UndoAction( inLevelInterface->GetRegistry() );
-		if( ImGui::IsKeyChordPressed( ImGuiKey_Y | ImGuiMod_Ctrl ) ) entityContext.RedoAction( inLevelInterface->GetRegistry() );
+	if ( auto &entityManager = inLevelInterface->GetEntityManager(); entityManager.CanAquireActionLock() ) {
+		if( ImGui::IsKeyChordPressed( ImGuiKey_Z | ImGuiMod_Ctrl ) ) entityManager.UndoAction( inLevelInterface->GetRegistry() );
+		if( ImGui::IsKeyChordPressed( ImGuiKey_Y | ImGuiMod_Ctrl ) ) entityManager.RedoAction( inLevelInterface->GetRegistry() );
 
 		if ( ImGui::IsKeyChordPressed( ImGuiKey_Delete ) ) {
-			entityContext.BeginAction();
+			entityManager.BeginAction();
 			for ( entt::entity entity : inLevelInterface->GetSelectionCtx().GetSelectedEntities() ) {
-				entityContext.DeleteEntity( entity, inLevelInterface->GetRegistry() );
+				entityManager.DeleteEntity( entity, inLevelInterface->GetRegistry() );
 			}
-			entityContext.EndAction();
+			entityManager.EndAction();
 		}
 
 		if ( ImGui::IsKeyChordPressed( ImGuiKey_H | ImGuiMod_Ctrl ) ) {
-			entityContext.BeginAction();
+			entityManager.BeginAction();
 			auto view = inLevelInterface->GetRegistry().view<Cyclone::Core::Component::Visible>();
 			for ( entt::entity entity : inLevelInterface->GetSelectionCtx().GetSelectedEntities() ) {
 				view.get<Cyclone::Core::Component::Visible>( entity ) = static_cast<Cyclone::Core::Component::Visible>( false );
-				entityContext.UpdateEntity( entity, inLevelInterface->GetRegistry() );
+				entityManager.UpdateEntity( entity, inLevelInterface->GetRegistry() );
 			}
-			entityContext.EndAction();
+			entityManager.EndAction();
 		}
 	}
 

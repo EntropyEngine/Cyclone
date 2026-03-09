@@ -35,7 +35,7 @@ constexpr uint32_t GetDebugColor()
 }
 
 template<typename T>
-void Cyclone::Core::EntityContext::RegisterEntityClass()
+void Cyclone::Core::EntityManager::RegisterEntityClass()
 {
 	static_assert( std::is_base_of_v<Cyclone::Core::Entity::BaseEntity<T>, T> );
 
@@ -46,7 +46,7 @@ void Cyclone::Core::EntityContext::RegisterEntityClass()
 	T::sRegister( mEntityMetaContext );
 }
 
-void Cyclone::Core::EntityContext::Register()
+void Cyclone::Core::EntityManager::Register()
 {
 	RegisterEntityClass<Entity::PointDebug>();
 	RegisterEntityClass<Entity::InfoDebug>();
@@ -89,7 +89,7 @@ void Cyclone::Core::EntityContext::Register()
 	std::stable_sort( mEntitiesBrushable.begin(), mEntitiesBrushable.end(), []( const auto &inLhs, const auto &inRhs ) { return std::strcmp( inLhs.mValue, inRhs.mValue ) < 0; } );
 }
 
-void Cyclone::Core::EntityContext::SetEntityTypeIsSelectable( Component::EntityType inType, bool inV )
+void Cyclone::Core::EntityManager::SetEntityTypeIsSelectable( Component::EntityType inType, bool inV )
 {
 	auto currentValue = sFindIn( mEntityTypeSelectable, inType );
 	if ( *currentValue == inV ) return;
@@ -103,7 +103,7 @@ void Cyclone::Core::EntityContext::SetEntityTypeIsSelectable( Component::EntityT
 	EndAction();
 }
 
-void Cyclone::Core::EntityContext::SetEntityTypeIsVisible( Component::EntityType inType, bool inV )
+void Cyclone::Core::EntityManager::SetEntityTypeIsVisible( Component::EntityType inType, bool inV )
 {
 	auto currentValue = sFindIn( mEntityTypeVisible, inType );
 	if ( *currentValue == inV ) return;
@@ -117,7 +117,7 @@ void Cyclone::Core::EntityContext::SetEntityTypeIsVisible( Component::EntityType
 	EndAction();
 }
 
-void Cyclone::Core::EntityContext::SetEntityCategoryIsSelectable( Component::EntityCategory inType, bool inV )
+void Cyclone::Core::EntityManager::SetEntityCategoryIsSelectable( Component::EntityCategory inType, bool inV )
 {
 	auto currentValue = sFindIn( mEntityCategorySelectable, inType );
 	if ( *currentValue == inV ) return;
@@ -131,7 +131,7 @@ void Cyclone::Core::EntityContext::SetEntityCategoryIsSelectable( Component::Ent
 	EndAction();
 }
 
-void Cyclone::Core::EntityContext::SetEntityCategoryIsVisible( Component::EntityCategory inType, bool inV )
+void Cyclone::Core::EntityManager::SetEntityCategoryIsVisible( Component::EntityCategory inType, bool inV )
 {
 	auto currentValue = sFindIn( mEntityCategoryVisible, inType );
 	if ( *currentValue == inV ) return;
@@ -145,7 +145,7 @@ void Cyclone::Core::EntityContext::SetEntityCategoryIsVisible( Component::Entity
 	EndAction();
 }
 
-void Cyclone::Core::EntityContext::BeginAction()
+void Cyclone::Core::EntityManager::BeginAction()
 {
 	assert( !mUndoStackLock && "Cannot begin action while stack lock is held!" );
 	mUndoStackLock = std::unique_lock( mUndoStackMutex );
@@ -157,7 +157,7 @@ void Cyclone::Core::EntityContext::BeginAction()
 	mUndoStack.emplace_back();
 }
 
-void Cyclone::Core::EntityContext::EndAction()
+void Cyclone::Core::EntityManager::EndAction()
 {
 	assert( mUndoStackLock && "Cannot end action with no stack lock held!" );
 	mUndoStackLock.unlock();
@@ -165,7 +165,7 @@ void Cyclone::Core::EntityContext::EndAction()
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 );
 }
 
-void Cyclone::Core::EntityContext::UndoAction( entt::registry &inRegistry )
+void Cyclone::Core::EntityManager::UndoAction( entt::registry &inRegistry )
 {
 	if ( mUndoStackEpoch == 0 ) return;
 
@@ -205,7 +205,7 @@ void Cyclone::Core::EntityContext::UndoAction( entt::registry &inRegistry )
 	RestoreContextStatePostAction();
 }
 
-void Cyclone::Core::EntityContext::RedoAction( entt::registry & inRegistry )
+void Cyclone::Core::EntityManager::RedoAction( entt::registry & inRegistry )
 {
 	if ( mUndoStackEpoch + 1 >= mUndoStack.size() ) return;
 
@@ -243,7 +243,7 @@ void Cyclone::Core::EntityContext::RedoAction( entt::registry & inRegistry )
 	RestoreContextStatePostAction();
 }
 
-entt::entity Cyclone::Core::EntityContext::CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
+entt::entity Cyclone::Core::EntityManager::CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
 {
 	assert( mUndoStackLock && "Can only create entities within Begin()/End()" );
 
@@ -275,7 +275,7 @@ entt::entity Cyclone::Core::EntityContext::CreateEntity( entt::id_type inType, e
 	return entity;
 }
 
-void Cyclone::Core::EntityContext::UpdateEntity( entt::entity inEntity, entt::registry &inRegistry )
+void Cyclone::Core::EntityManager::UpdateEntity( entt::entity inEntity, entt::registry &inRegistry )
 {
 	assert( mUndoStackLock && "Can only update entities within Begin()/End()" );
 
@@ -288,7 +288,7 @@ void Cyclone::Core::EntityContext::UpdateEntity( entt::entity inEntity, entt::re
 	inRegistry.emplace_or_replace<Component::EpochNumber>( inEntity, static_cast<Component::EpochNumber>( epochToUpdate ) );
 }
 
-void Cyclone::Core::EntityContext::DeleteEntity( entt::entity inEntity, entt::registry & inRegistry )
+void Cyclone::Core::EntityManager::DeleteEntity( entt::entity inEntity, entt::registry & inRegistry )
 {
 	assert( mUndoStackLock && "Can only delete entities within Begin()/End()" );
 
@@ -311,7 +311,7 @@ void Cyclone::Core::EntityContext::DeleteEntity( entt::entity inEntity, entt::re
 	assert( created == inEntity );
 }
 
-void Cyclone::Core::EntityContext::RestoreContextStatePreUndo()
+void Cyclone::Core::EntityManager::RestoreContextStatePreUndo()
 {
 	const entt::registry &currentTop = mUndoStack[mUndoStackEpoch];
 
@@ -328,7 +328,7 @@ void Cyclone::Core::EntityContext::RestoreContextStatePreUndo()
 	if ( entityCategoryVisibleCtx ) *sFindIn( mEntityCategoryVisible, entityCategoryVisibleCtx->mKey ) = !entityCategoryVisibleCtx->mValue;
 }
 
-void Cyclone::Core::EntityContext::RestoreContextStatePostAction()
+void Cyclone::Core::EntityManager::RestoreContextStatePostAction()
 {
 	const auto &newTop = mUndoStack[mUndoStackEpoch];
 
