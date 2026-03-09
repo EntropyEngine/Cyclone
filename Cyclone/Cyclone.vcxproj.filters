@@ -176,7 +176,7 @@
     <ClInclude Include="Core\Component\EpochNumber.hpp">
       <Filter>Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="Core\EntityContext.hpp">
+    <ClInclude Include="Core\EntityManager.hpp">
       <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
@@ -260,7 +260,7 @@
     <ClCompile Include="UI\Toolbar.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="Core\EntityContext.cpp">
+    <ClCompile Include="Core\EntityManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
