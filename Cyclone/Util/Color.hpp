@@ -1,5 +1,7 @@
 #pragma once
 
+#include <immintrin.h>
+
 namespace Cyclone::Util
 {
 	/// Converts 8 bit colour components to an ABGR packed integer
@@ -11,11 +13,13 @@ namespace Cyclone::Util
 	/// Converts 8 bit ABGR to XM RGBA
 	inline DirectX::XMVECTOR XM_CALLCONV ColorU32ToXMVECTOR( uint32_t inARGB )
 	{
-		return DirectX::XMVECTORF32{
-			static_cast<float>( ( inARGB & 0x000000FF ) >> 0 ) / 255.0f,
-			static_cast<float>( ( inARGB & 0x0000FF00 ) >> 8 ) / 255.0f,
-			static_cast<float>( ( inARGB & 0x00FF0000 ) >> 16 ) / 255.0f,
-			static_cast<float>( ( inARGB & 0xFF000000 ) >> 24 ) / 255.0f
-		};
+		__m128i px = _mm_set1_epi32((int)inARGB);
+
+		__m128i shifted = _mm_srlv_epi32(px, _mm_set_epi32(24, 16, 8, 0));
+
+		__m128i channels = _mm_and_si128(shifted, _mm_set1_epi32(0xFF));
+
+		__m128 f = _mm_cvtepi32_ps(channels);
+		return _mm_mul_ps(f, _mm_set1_ps(1.0f / 255.0f));
 	}
 }
