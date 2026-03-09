@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Cyclone/Core/EntityContext.hpp"
+#include "Cyclone/Core/EntityManager.hpp"
 
 // Cyclone Entities
 #include "Cyclone/Core/Entity/PointDebug.hpp"

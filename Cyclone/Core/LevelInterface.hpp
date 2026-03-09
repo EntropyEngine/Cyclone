@@ -5,7 +5,7 @@
 
 // Cyclone core
 #include "Cyclone/Core/Level.hpp"
-#include "Cyclone/Core/EntityContext.hpp"
+#include "Cyclone/Core/EntityManager.hpp"
 #include "Cyclone/Core/Editor/GridContext.hpp"
 #include "Cyclone/Core/Editor/OrthographicContext.hpp"
 #include "Cyclone/Core/Editor/PerspectiveContext.hpp"
