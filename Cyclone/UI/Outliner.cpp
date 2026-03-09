@@ -337,8 +337,8 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					ImGui::TableSetupScrollFreeze( 0, 1 );
 					ImGui::TableHeadersRow();
 
-					const auto &undoStack = inLevelInterface->GetEntityManager().GetUndoStack();
-					const size_t currentEpoch = inLevelInterface->GetEntityManager().GetUndoEpoch();
+					const auto &undoStack = entityManager.GetUndoStack();
+					const size_t currentEpoch = entityManager.GetUndoEpoch();
 					size_t chosenEpoch = currentEpoch;
 
 					for ( int epoch = static_cast<int>( undoStack.size() ) - 1; epoch >= 0; --epoch ) {
@@ -376,12 +376,12 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					}
 
 					if ( chosenEpoch != currentEpoch ) {
-						while ( inLevelInterface->GetEntityManager().GetUndoEpoch() > chosenEpoch ) {
-							inLevelInterface->GetEntityManager().UndoAction( inLevelInterface->GetRegistry() );
+						while ( entityManager.GetUndoEpoch() > chosenEpoch ) {
+							entityManager.UndoAction( registry );
 						}
 
-						while ( inLevelInterface->GetEntityManager().GetUndoEpoch() < chosenEpoch ) {
-							inLevelInterface->GetEntityManager().RedoAction( inLevelInterface->GetRegistry() );
+						while ( entityManager.GetUndoEpoch() < chosenEpoch ) {
+							entityManager.RedoAction( registry );
 						}
 					}
 

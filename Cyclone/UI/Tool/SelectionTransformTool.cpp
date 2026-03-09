@@ -20,6 +20,7 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 
 	ImGuiIO &io = ImGui::GetIO();
 
+	auto &entityManager = inLevelInterface->GetEntityManager();
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
 

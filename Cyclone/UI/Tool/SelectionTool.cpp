@@ -18,7 +18,8 @@
 template<Cyclone::UI::EViewportType T>
 void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *inLevelInterface, double inWorldSpaceU, double inWorldSpaceV, double inHandleRadius, double inWorldLimit )
 {
-	if ( !inLevelInterface->GetEntityManager().CanAquireActionLock() ) return;
+	const auto &entityManager = inLevelInterface->GetEntityManager();
+	if ( !entityManager.CanAquireActionLock() ) return;
 
 	bool ctrlHeld = ImGui::IsKeyDown( ImGuiMod_Ctrl );
 	bool shiftHeld = ImGui::IsKeyDown( ImGuiMod_Shift );
@@ -52,7 +53,6 @@ void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *i
 		}
 	}
 
-	const auto &entityManager = inLevelInterface->GetEntityManager();
 	std::erase_if( selectionCandidates, [&cregistry, &entityManager]( entt::entity inEntity ) {
 		if ( !static_cast<bool>( cregistry.get<Cyclone::Core::Component::Selectable>( inEntity ) ) ) return true;
 		if ( !static_cast<bool>( cregistry.get<Cyclone::Core::Component::Visible>( inEntity ) ) ) return true;
