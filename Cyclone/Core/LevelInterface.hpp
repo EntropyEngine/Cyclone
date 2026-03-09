@@ -49,8 +49,8 @@ namespace Cyclone::Core
 		const Editor::PerspectiveContext & GetPerspectiveCtx() const	{ return mPerspectiveContext; }
 
 
-		Tool::SelectionToolContext & GetSelectionCtx()					{ return mSelectionTool; }
-		const Tool::SelectionToolContext & GetSelectionCtx() const		{ return mSelectionTool; }
+		Tool::SelectionToolContext & GetSelectionCtx()					{ return mEntityManager.GetSelectionCtx(); }
+		const Tool::SelectionToolContext & GetSelectionCtx() const		{ return mEntityManager.GetSelectionCtx(); }
 
 		Tool::SelectionTransformToolContext & GetSelectionTransformCtx() { return mSelectionTransformTool; }
 		const Tool::SelectionTransformToolContext & GetSelectionTransformCtx() const { return mSelectionTransformTool; }
@@ -65,7 +65,6 @@ namespace Cyclone::Core
 		Editor::OrthographicContext mOrthographicContext;
 		Editor::PerspectiveContext	mPerspectiveContext;
 
-		Tool::SelectionToolContext	mSelectionTool;
 		Tool::SelectionTransformToolContext mSelectionTransformTool;
 	};
 }

@@ -8,7 +8,7 @@
 Cyclone::Core::LevelInterface::LevelInterface()
 {
 	mLevel = std::make_unique<Level>();
-	mSelectionTool.ClearSelection();
+	GetSelectionCtx().ClearSelection();
 }
 
 void Cyclone::Core::LevelInterface::Initialize()
@@ -16,7 +16,7 @@ void Cyclone::Core::LevelInterface::Initialize()
 	mLevel->Initialize();
 	mEntityManager.Register();
 
-	mSelectionTool.ClearSelection();
+	GetSelectionCtx().ClearSelection();
 
 	mEntityManager.BeginAction();
 
@@ -25,7 +25,7 @@ void Cyclone::Core::LevelInterface::Initialize()
 	mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 2.0, 0.0 } );
 	auto j = mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 2.0, 0.0, 0.0 } );
 
-	mEntityManager.EndAction();
+	mEntityManager.EndAction( GetRegistry() );
 
 	mEntityManager.BeginAction();
 
@@ -34,12 +34,12 @@ void Cyclone::Core::LevelInterface::Initialize()
 	mEntityManager.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 2.0, 0.0 } );
 	auto i = mEntityManager.CreateEntity( "info_debug"_hs, GetRegistry(), { -2.0, 0.0, 0.0 } );
 
-	mEntityManager.EndAction();
+	mEntityManager.EndAction( GetRegistry() );
 
 	mEntityManager.BeginAction();
 	mEntityManager.DeleteEntity( i, GetRegistry() );
 	mEntityManager.DeleteEntity( j, GetRegistry() );
-	mEntityManager.EndAction();
+	mEntityManager.EndAction( GetRegistry() );
 
 	mEntityManager.BeginAction();
 	for ( int x = 0; x < 16; ++x ) {
@@ -47,7 +47,7 @@ void Cyclone::Core::LevelInterface::Initialize()
 			mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { double( x * 2 + 16 ), 0.0, double( y * 2 + 16 ) } );
 		}
 	}
-	mEntityManager.EndAction();
+	mEntityManager.EndAction( GetRegistry() );
 
 	//entt::registry save;
 	//Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::InfoDebug>::sSaveHistory( GetRegistry(), save, i );
@@ -83,7 +83,7 @@ void Cyclone::Core::LevelInterface::ReleaseResources()
 void Cyclone::Core::LevelInterface::OnUpdateEnd()
 {
 	if ( mEntityManager.CanAquireActionLock() ) {
-
+		/*
 		// NOT A REFERENCE
 		const auto previousSelection = mSelectionTool.GetSelectedEntities();
 
@@ -130,5 +130,6 @@ void Cyclone::Core::LevelInterface::OnUpdateEnd()
 				continue;
 			}
 		}
+		*/
 	}
 }

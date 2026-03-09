@@ -42,7 +42,7 @@ namespace
 			if ( inPredicate == type ) tag = static_cast<T>( inSet );
 			inEntityManager.UpdateEntity( entity, inRegistry );
 		}
-		inEntityManager.EndAction();
+		inEntityManager.EndAction( inRegistry );
 	}
 
 	void HandleEntityClick( Cyclone::Core::Tool::SelectionToolContext &inSelectionContext, ImGuiIO &inIo, entt::entity inEntity, bool inEntityIsSelected )
@@ -64,9 +64,8 @@ namespace
 	{
 		inEntityManager.BeginAction();
 		*reinterpret_cast<bool *>( &ioTag ) ^= true;
-		inSelectionContext.DeselectEntity( inEntity );
 		inEntityManager.UpdateEntity( inEntity, inRegistry );
-		inEntityManager.EndAction();
+		inEntityManager.EndAction( inRegistry );
 	}
 }
 
@@ -109,10 +108,10 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 						bool categorySelectable = entityManager.GetEntityCategoryIsSelectable( entityCategory );
 
 						ImGui::TableSetColumnIndex( 1 );
-						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cV", entityCategory ), categoryVisible ) ) entityManager.SetEntityCategoryIsVisible( entityCategory, categoryVisible ^= true );
+						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cV", entityCategory ), categoryVisible ) ) entityManager.SetEntityCategoryIsVisible( registry, entityCategory, categoryVisible ^= true );
 
 						ImGui::TableSetColumnIndex( 2 );
-						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cS", entityCategory ), categorySelectable ) ) entityManager.SetEntityCategoryIsSelectable( entityCategory, categorySelectable ^= true );
+						if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##cS", entityCategory ), categorySelectable ) ) entityManager.SetEntityCategoryIsSelectable( registry, entityCategory, categorySelectable ^= true );
 
 						ImGui::TableSetColumnIndex( 0 );
 						bool entityCategoryNodeOpen = ImGui::TreeNodeEx( entityManager.GetEntityCategoryName( entityCategory ), treeNodeFlags );
@@ -152,10 +151,10 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 								bool entityTypeSelectable = entityManager.GetEntityTypeIsSelectable( entityType );
 
 								ImGui::TableSetColumnIndex( 1 );
-								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tV", entityType ), entityTypeVisible ) ) entityManager.SetEntityTypeIsVisible( entityType, entityTypeVisible ^= true );
+								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tV", entityType ), entityTypeVisible ) ) entityManager.SetEntityTypeIsVisible( registry, entityType, entityTypeVisible ^= true );
 
 								ImGui::TableSetColumnIndex( 2 );
-								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tS", entityType ), entityTypeSelectable ) ) entityManager.SetEntityTypeIsSelectable( entityType, entityTypeSelectable ^= true );
+								if ( DrawTreeNodeCheckbox( style, Cyclone::Util::PrefixString( "##tS", entityType ), entityTypeSelectable ) ) entityManager.SetEntityTypeIsSelectable( registry, entityType, entityTypeSelectable ^= true );
 
 								ImGui::TableSetColumnIndex( 0 );
 								bool entityTypeNodeOpen = ImGui::TreeNodeEx( entityManager.GetEntityTypeName( entityType ), treeNodeFlags );

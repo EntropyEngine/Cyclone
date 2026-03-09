@@ -10,6 +10,9 @@
 #include "Cyclone/Core/Component/EntityCategory.hpp"
 #include "Cyclone/Core/Component/EpochNumber.hpp"
 
+// Cyclone tools
+#include "Cyclone/Core/Tool/SelectionToolContext.hpp"
+
 // Cyclone math
 #include "Cyclone/Math/Vector.hpp"
 
@@ -31,20 +34,18 @@ namespace Cyclone::Core
 		uint32_t				GetEntityTypeColor( Component::EntityType inType ) const				{ return mEntityTypeColorMap.FindOr( inType, Cyclone::Util::ColorU32( 0xFF, 0xFF, 0xFF ) ); }
 
 		bool					GetEntityTypeIsSelectable( Component::EntityType inType ) const			{ return mEntityTypeSelectable.FindOr( inType, false ); }
-		void					SetEntityTypeIsSelectable( Component::EntityType inType, bool inV );
-
 		bool					GetEntityTypeIsVisible( Component::EntityType inType ) const			{ return mEntityTypeVisible.FindOr( inType, false ); }
-		void					SetEntityTypeIsVisible( Component::EntityType inType, bool inV );
-
 		bool					GetEntityCategoryIsSelectable( Component::EntityCategory inType ) const	{ return mEntityCategorySelectable.FindOr( inType, false ); }
-		void					SetEntityCategoryIsSelectable( Component::EntityCategory inType, bool inV );
-
 		bool					GetEntityCategoryIsVisible( Component::EntityCategory inType ) const	{ return mEntityCategoryVisible.FindOr( inType, false ); }
-		void					SetEntityCategoryIsVisible( Component::EntityCategory inType, bool inV );
+
+		void					SetEntityTypeIsSelectable( entt::registry &inRegistry, Component::EntityType inType, bool inV );
+		void					SetEntityTypeIsVisible( entt::registry &inRegistry, Component::EntityType inType, bool inV );
+		void					SetEntityCategoryIsSelectable( entt::registry &inRegistry, Component::EntityCategory inType, bool inV );
+		void					SetEntityCategoryIsVisible( entt::registry &inRegistry, Component::EntityCategory inType, bool inV );
 
 		bool					CanAquireActionLock() const	{ return !mUndoStackLock; }
 		void					BeginAction();
-		void					EndAction();
+		void					EndAction( entt::registry &inRegistry );
 
 		void					UndoAction( entt::registry &inRegistry );
 		void					RedoAction( entt::registry &inRegistry );
@@ -56,6 +57,9 @@ namespace Cyclone::Core
 
 		size_t					GetUndoEpoch() const { return static_cast<size_t>( mUndoStackEpoch ); }
 		const auto &			GetUndoStack() const { return mUndoStack; }
+
+		Tool::SelectionToolContext & GetSelectionCtx()					{ return mSelectionTool; }
+		const Tool::SelectionToolContext & GetSelectionCtx() const		{ return mSelectionTool; }
 
 	protected:
 		template<typename T>
@@ -84,5 +88,7 @@ namespace Cyclone::Core
 		Component::EpochNumber				mUndoStackEpoch{ Component::EpochNumber::Sentinel };
 		std::mutex							mUndoStackMutex;
 		std::unique_lock<std::mutex>		mUndoStackLock;
+
+		Tool::SelectionToolContext			mSelectionTool;
 	};
 }

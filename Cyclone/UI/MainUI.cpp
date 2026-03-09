@@ -125,7 +125,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 			for ( entt::entity entity : inLevelInterface->GetSelectionCtx().GetSelectedEntities() ) {
 				entityManager.DeleteEntity( entity, inLevelInterface->GetRegistry() );
 			}
-			entityManager.EndAction();
+			entityManager.EndAction( inLevelInterface->GetRegistry() );
 		}
 
 		if ( ImGui::IsKeyChordPressed( ImGuiKey_H | ImGuiMod_Ctrl ) ) {
@@ -135,7 +135,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 				view.get<Cyclone::Core::Component::Visible>( entity ) = static_cast<Cyclone::Core::Component::Visible>( false );
 				entityManager.UpdateEntity( entity, inLevelInterface->GetRegistry() );
 			}
-			entityManager.EndAction();
+			entityManager.EndAction( inLevelInterface->GetRegistry() );
 		}
 	}
 

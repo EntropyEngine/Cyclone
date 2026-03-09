@@ -91,7 +91,7 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 			for ( const entt::entity entity : selectedEntities ) {
 				inLevelInterface->GetEntityManager().UpdateEntity( entity, registry );
 			}
-			inLevelInterface->GetEntityManager().EndAction();
+			inLevelInterface->GetEntityManager().EndAction( registry );
 
 			transformContext.Deactivate();
 		}

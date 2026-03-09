@@ -86,7 +86,7 @@ void Cyclone::Core::EntityManager::Register()
 	std::stable_sort( mEntitiesBrushable.begin(), mEntitiesBrushable.end(), []( const auto &inLhs, const auto &inRhs ) { return std::strcmp( inLhs.mValue, inRhs.mValue ) < 0; } );
 }
 
-void Cyclone::Core::EntityManager::SetEntityTypeIsSelectable( Component::EntityType inType, bool inV )
+void Cyclone::Core::EntityManager::SetEntityTypeIsSelectable( entt::registry &inRegistry, Component::EntityType inType, bool inV )
 {
 	auto currentValue = mEntityTypeSelectable.Find( inType );
 	if ( *currentValue == inV ) return;
@@ -97,10 +97,10 @@ void Cyclone::Core::EntityManager::SetEntityTypeIsSelectable( Component::EntityT
 	currentTop.ctx().emplace_as<HashPair<bool>>( "entity_type_selectable"_hs, static_cast<entt::id_type>( inType ), inV );
 	*currentValue = inV;
 
-	EndAction();
+	EndAction( inRegistry );
 }
 
-void Cyclone::Core::EntityManager::SetEntityTypeIsVisible( Component::EntityType inType, bool inV )
+void Cyclone::Core::EntityManager::SetEntityTypeIsVisible( entt::registry &inRegistry, Component::EntityType inType, bool inV )
 {
 	auto currentValue = mEntityTypeVisible.Find( inType );
 	if ( *currentValue == inV ) return;
@@ -111,10 +111,10 @@ void Cyclone::Core::EntityManager::SetEntityTypeIsVisible( Component::EntityType
 	currentTop.ctx().emplace_as<HashPair<bool>>( "entity_type_visible"_hs, static_cast<entt::id_type>( inType ), inV );
 	*currentValue = inV;
 
-	EndAction();
+	EndAction( inRegistry );
 }
 
-void Cyclone::Core::EntityManager::SetEntityCategoryIsSelectable( Component::EntityCategory inType, bool inV )
+void Cyclone::Core::EntityManager::SetEntityCategoryIsSelectable( entt::registry &inRegistry, Component::EntityCategory inType, bool inV )
 {
 	auto currentValue = mEntityCategorySelectable.Find( inType );
 	if ( *currentValue == inV ) return;
@@ -125,10 +125,10 @@ void Cyclone::Core::EntityManager::SetEntityCategoryIsSelectable( Component::Ent
 	currentTop.ctx().emplace_as<HashPair<bool>>( "entity_category_selectable"_hs, static_cast<entt::id_type>( inType ), inV );
 	*currentValue = inV;
 
-	EndAction();
+	EndAction( inRegistry );
 }
 
-void Cyclone::Core::EntityManager::SetEntityCategoryIsVisible( Component::EntityCategory inType, bool inV )
+void Cyclone::Core::EntityManager::SetEntityCategoryIsVisible( entt::registry &inRegistry, Component::EntityCategory inType, bool inV )
 {
 	auto currentValue = mEntityCategoryVisible.Find( inType );
 	if ( *currentValue == inV ) return;
@@ -139,7 +139,7 @@ void Cyclone::Core::EntityManager::SetEntityCategoryIsVisible( Component::Entity
 	currentTop.ctx().emplace_as<HashPair<bool>>( "entity_category_visible"_hs, static_cast<entt::id_type>( inType ), inV );
 	*currentValue = inV;
 
-	EndAction();
+	EndAction( inRegistry );
 }
 
 void Cyclone::Core::EntityManager::BeginAction()
@@ -154,12 +154,59 @@ void Cyclone::Core::EntityManager::BeginAction()
 	mUndoStack.emplace_back();
 }
 
-void Cyclone::Core::EntityManager::EndAction()
+void Cyclone::Core::EntityManager::EndAction( entt::registry &inRegistry )
 {
 	assert( mUndoStackLock && "Cannot end action with no stack lock held!" );
-	mUndoStackLock.unlock();
+
+	// NOT A REFERENCE
+	const auto previousSelection = mSelectionTool.GetSelectedEntities();
+
+	// Ensure selection is viable
+	auto view = inRegistry.view<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable>();
+	for ( const entt::entity entity : previousSelection ) {
+
+		if ( !view.contains( entity ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		const auto entityCategory = view.get<Component::EntityCategory>( entity );
+
+		if ( !GetEntityCategoryIsVisible( entityCategory ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !GetEntityCategoryIsSelectable( entityCategory ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		const auto entityType = view.get<Component::EntityType>( entity );
+
+		if ( !GetEntityTypeIsVisible( entityType ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !GetEntityTypeIsSelectable( entityType ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !static_cast<bool>( view.get<Component::Visible>( entity ) ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !static_cast<bool>( view.get<Component::Selectable>( entity ) ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+	}
 
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 );
+	mUndoStackLock.unlock();
 }
 
 void Cyclone::Core::EntityManager::UndoAction( entt::registry &inRegistry )
@@ -195,11 +242,57 @@ void Cyclone::Core::EntityManager::UndoAction( entt::registry &inRegistry )
 		assert( created == entity );
 	}
 
-	mUndoStackLock.unlock();
+	RestoreContextStatePostAction();
+
+	// NOT A REFERENCE
+	const auto previousSelection = mSelectionTool.GetSelectedEntities();
+
+	// Ensure selection is viable
+	auto view = inRegistry.view<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable>();
+	for ( const entt::entity entity : previousSelection ) {
+
+		if ( !view.contains( entity ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		const auto entityCategory = view.get<Component::EntityCategory>( entity );
+
+		if ( !GetEntityCategoryIsVisible( entityCategory ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !GetEntityCategoryIsSelectable( entityCategory ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		const auto entityType = view.get<Component::EntityType>( entity );
+
+		if ( !GetEntityTypeIsVisible( entityType ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !GetEntityTypeIsSelectable( entityType ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !static_cast<bool>( view.get<Component::Visible>( entity ) ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !static_cast<bool>( view.get<Component::Selectable>( entity ) ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+	}
 
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch - 1 );
-
-	RestoreContextStatePostAction();
+	mUndoStackLock.unlock();
 }
 
 void Cyclone::Core::EntityManager::RedoAction( entt::registry & inRegistry )
@@ -233,11 +326,58 @@ void Cyclone::Core::EntityManager::RedoAction( entt::registry & inRegistry )
 		assert( created == entity );
 	}
 
-	mUndoStackLock.unlock();
+	RestoreContextStatePostAction();
+
+	// NOT A REFERENCE
+	const auto previousSelection = mSelectionTool.GetSelectedEntities();
+
+	// Ensure selection is viable
+	auto view = inRegistry.view<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable>();
+	for ( const entt::entity entity : previousSelection ) {
+
+		if ( !view.contains( entity ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		const auto entityCategory = view.get<Component::EntityCategory>( entity );
+
+		if ( !GetEntityCategoryIsVisible( entityCategory ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !GetEntityCategoryIsSelectable( entityCategory ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		const auto entityType = view.get<Component::EntityType>( entity );
+
+		if ( !GetEntityTypeIsVisible( entityType ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !GetEntityTypeIsSelectable( entityType ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !static_cast<bool>( view.get<Component::Visible>( entity ) ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !static_cast<bool>( view.get<Component::Selectable>( entity ) ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+	}
+
 
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 );
-
-	RestoreContextStatePostAction();
+	mUndoStackLock.unlock();
 }
 
 entt::entity Cyclone::Core::EntityManager::CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
