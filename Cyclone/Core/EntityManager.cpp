@@ -158,65 +158,16 @@ void Cyclone::Core::EntityManager::EndAction( entt::registry &inRegistry )
 {
 	assert( mUndoStackLock && "Cannot end action with no stack lock held!" );
 
-	// NOT A REFERENCE
-	const auto previousSelection = mSelectionTool.GetSelectedEntities();
+	ValidateSelection( inRegistry );
 
-	// Ensure selection is viable
-	auto view = inRegistry.view<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable>();
-	for ( const entt::entity entity : previousSelection ) {
-
-		if ( !view.contains( entity ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		const auto entityCategory = view.get<Component::EntityCategory>( entity );
-
-		if ( !GetEntityCategoryIsVisible( entityCategory ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		if ( !GetEntityCategoryIsSelectable( entityCategory ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		const auto entityType = view.get<Component::EntityType>( entity );
-
-		if ( !GetEntityTypeIsVisible( entityType ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		if ( !GetEntityTypeIsSelectable( entityType ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		if ( !static_cast<bool>( view.get<Component::Visible>( entity ) ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		if ( !static_cast<bool>( view.get<Component::Selectable>( entity ) ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-	}
-
-	OutputDebugStringA( mSelectionTool.mDirty ? "Dirty\n" : "Not Dirty\n" );
 	mSelectionTool.mDirty = false;
 
-	/*if ( mSelectionTool.mDirty
-		|| mUndoStack[mUndoStackEpoch + 1].storage<entt::entity>().size()
-		|| mUndoStack[mUndoStackEpoch + 1].ctx().contains<HashPair<bool>>( "entity_type_selectable"_hs )
-		|| mUndoStack[mUndoStackEpoch + 1].ctx().contains<HashPair<bool>>( "entity_type_visible"_hs )
-		|| mUndoStack[mUndoStackEpoch + 1].ctx().contains<HashPair<bool>>( "entity_category_selectable"_hs )
-		|| mUndoStack[mUndoStackEpoch + 1].ctx().contains<HashPair<bool>>( "entity_category_visible"_hs )
-	)*/
-
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 );
+
+	entt::registry &currentTop = mUndoStack[mUndoStackEpoch];
+	currentTop.ctx().emplace_as<entt::entity>( "selected_entity"_hs, mSelectionTool.mSelectedEntity );
+	currentTop.ctx().emplace_as<std::set<entt::entity>>( "selected_entities"_hs, mSelectionTool.mSelectedEntities );
+
 	mUndoStackLock.unlock();
 }
 
@@ -256,53 +207,7 @@ void Cyclone::Core::EntityManager::UndoAction( entt::registry &inRegistry )
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch - 1 );
 	RestoreContextStatePostAction();
 
-	// NOT A REFERENCE
-	const auto previousSelection = mSelectionTool.GetSelectedEntities();
-
-	// Ensure selection is viable
-	auto view = inRegistry.view<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable>();
-	for ( const entt::entity entity : previousSelection ) {
-
-		if ( !view.contains( entity ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		const auto entityCategory = view.get<Component::EntityCategory>( entity );
-
-		if ( !GetEntityCategoryIsVisible( entityCategory ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		if ( !GetEntityCategoryIsSelectable( entityCategory ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		const auto entityType = view.get<Component::EntityType>( entity );
-
-		if ( !GetEntityTypeIsVisible( entityType ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		if ( !GetEntityTypeIsSelectable( entityType ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		if ( !static_cast<bool>( view.get<Component::Visible>( entity ) ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		if ( !static_cast<bool>( view.get<Component::Selectable>( entity ) ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-	}
-
+	ValidateSelection( inRegistry );
 	
 	mUndoStackLock.unlock();
 }
@@ -341,54 +246,7 @@ void Cyclone::Core::EntityManager::RedoAction( entt::registry & inRegistry )
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 );
 	RestoreContextStatePostAction();
 
-	// NOT A REFERENCE
-	const auto previousSelection = mSelectionTool.GetSelectedEntities();
-
-	// Ensure selection is viable
-	auto view = inRegistry.view<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable>();
-	for ( const entt::entity entity : previousSelection ) {
-
-		if ( !view.contains( entity ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		const auto entityCategory = view.get<Component::EntityCategory>( entity );
-
-		if ( !GetEntityCategoryIsVisible( entityCategory ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		if ( !GetEntityCategoryIsSelectable( entityCategory ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		const auto entityType = view.get<Component::EntityType>( entity );
-
-		if ( !GetEntityTypeIsVisible( entityType ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		if ( !GetEntityTypeIsSelectable( entityType ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		if ( !static_cast<bool>( view.get<Component::Visible>( entity ) ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-
-		if ( !static_cast<bool>( view.get<Component::Selectable>( entity ) ) ) {
-			mSelectionTool.DeselectEntity( entity );
-			continue;
-		}
-	}
-
-
+	ValidateSelection( inRegistry );
 	
 	mUndoStackLock.unlock();
 }
@@ -493,4 +351,57 @@ void Cyclone::Core::EntityManager::RestoreContextStatePostAction()
 
 	const auto entityCategoryVisibleCtx = newTop.ctx().find<HashPair<bool>>( "entity_category_visible"_hs );
 	if ( entityCategoryVisibleCtx ) *mEntityCategoryVisible.Find( entityCategoryVisibleCtx->mKey ) = entityCategoryVisibleCtx->mValue;
+
+	mSelectionTool.mSelectedEntity = *newTop.ctx().find<entt::entity>( "selected_entity"_hs );
+	mSelectionTool.mSelectedEntities = *newTop.ctx().find<std::set<entt::entity>>( "selected_entities"_hs );
+}
+
+void Cyclone::Core::EntityManager::ValidateSelection( entt::registry & inRegistry )
+{
+	// NOT A REFERENCE
+	const auto previousSelection = mSelectionTool.GetSelectedEntities();
+
+	// Ensure selection is viable
+	auto view = inRegistry.view<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable>();
+	for ( const entt::entity entity : previousSelection ) {
+
+		if ( !view.contains( entity ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		const auto entityCategory = view.get<Component::EntityCategory>( entity );
+
+		if ( !GetEntityCategoryIsVisible( entityCategory ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !GetEntityCategoryIsSelectable( entityCategory ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		const auto entityType = view.get<Component::EntityType>( entity );
+
+		if ( !GetEntityTypeIsVisible( entityType ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !GetEntityTypeIsSelectable( entityType ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !static_cast<bool>( view.get<Component::Visible>( entity ) ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+
+		if ( !static_cast<bool>( view.get<Component::Selectable>( entity ) ) ) {
+			mSelectionTool.DeselectEntity( entity );
+			continue;
+		}
+	}
 }

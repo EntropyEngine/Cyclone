@@ -68,6 +68,8 @@ namespace Cyclone::Core
 		void RestoreContextStatePreUndo(); ///< We need to do an extra step for undo actions which flips the context state
 		void RestoreContextStatePostAction();
 
+		void ValidateSelection( entt::registry &inRegistry );
+
 		Cyclone::Util::HashMap<uint32_t>	mEntityTypeColorMap;
 		Cyclone::Util::HashMap<const char *>mEntityTypeNameMap;
 		Cyclone::Util::HashMap<const char *>mEntityCategoryNameMap;
