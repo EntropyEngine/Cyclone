@@ -161,6 +161,7 @@
     <ClInclude Include="Core\Entity\BaseEntity.hpp" />
     <ClInclude Include="Core\Entity\InfoDebug.hpp" />
     <ClInclude Include="Core\Entity\PointDebug.hpp" />
+    <ClInclude Include="Core\HistoryAction.hpp" />
     <ClInclude Include="Core\LevelInterface.hpp" />
     <ClInclude Include="Core\Level.hpp" />
     <ClInclude Include="Core\Tool\SelectionToolContext.hpp" />
@@ -197,6 +198,7 @@
     <ClCompile Include="Core\EntityManager.cpp" />
     <ClCompile Include="Core\Entity\InfoDebug.cpp" />
     <ClCompile Include="Core\Entity\PointDebug.cpp" />
+    <ClCompile Include="Core\HistoryAction.cpp" />
     <ClCompile Include="Core\LevelInterface.cpp" />
     <ClCompile Include="Core\Level.cpp" />
     <ClCompile Include="Core\Tool\SelectionToolContext.cpp" />

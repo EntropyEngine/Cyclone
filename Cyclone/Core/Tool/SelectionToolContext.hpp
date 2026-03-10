@@ -28,9 +28,9 @@ namespace Cyclone::Core::Tool
 		void					ClearSelection();
 
 	protected:
-		entt::entity			mSelectedEntity = entt::null;
 		std::set<entt::entity>	mSelectedEntities;
 		std::set<entt::entity>	mPreviousCandidates;
+		entt::entity			mSelectedEntity = entt::null;
 		bool					mDirty = false;
 	};
 }
