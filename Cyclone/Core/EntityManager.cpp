@@ -205,6 +205,17 @@ void Cyclone::Core::EntityManager::EndAction( entt::registry &inRegistry )
 		}
 	}
 
+	OutputDebugStringA( mSelectionTool.mDirty ? "Dirty\n" : "Not Dirty\n" );
+	mSelectionTool.mDirty = false;
+
+	/*if ( mSelectionTool.mDirty
+		|| mUndoStack[mUndoStackEpoch + 1].storage<entt::entity>().size()
+		|| mUndoStack[mUndoStackEpoch + 1].ctx().contains<HashPair<bool>>( "entity_type_selectable"_hs )
+		|| mUndoStack[mUndoStackEpoch + 1].ctx().contains<HashPair<bool>>( "entity_type_visible"_hs )
+		|| mUndoStack[mUndoStackEpoch + 1].ctx().contains<HashPair<bool>>( "entity_category_selectable"_hs )
+		|| mUndoStack[mUndoStackEpoch + 1].ctx().contains<HashPair<bool>>( "entity_category_visible"_hs )
+	)*/
+
 	mUndoStackEpoch = static_cast<Component::EpochNumber>( mUndoStackEpoch + 1 );
 	mUndoStackLock.unlock();
 }

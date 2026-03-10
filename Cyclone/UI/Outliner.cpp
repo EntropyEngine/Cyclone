@@ -121,14 +121,18 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 							ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
 							if ( ImGui::BeginPopupContextItem() ) {
 								if ( ImGui::Selectable( "Add children to selection" ) ) {
+									entityManager.BeginAction();
 									for ( const auto [entity, category] : registry.view<const Cyclone::Core::Component::EntityCategory>().each() ) {
 										if ( entityCategory == category ) selectionContext.AddSelectedEntity( entity );
 									}
+									entityManager.EndAction( registry );
 								};
 								if ( ImGui::Selectable( "Remove children from selection" ) ) {
+									entityManager.BeginAction();
 									for ( const auto [entity, category] : registry.view<const Cyclone::Core::Component::EntityCategory>().each() ) {
 										if ( entityCategory == category ) selectionContext.DeselectEntity( entity );
 									}
+									entityManager.EndAction( registry );
 								};
 								ImGui::Separator();
 								if ( ImGui::Selectable( "Set all children Visible" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityManager, entityCategory, true );
@@ -164,14 +168,18 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 									ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
 									if ( ImGui::BeginPopupContextItem() ) {
 										if ( ImGui::Selectable( "Add children to selection" ) ) {
+											entityManager.BeginAction();
 											for ( const auto [entity, type] : registry.view<const Cyclone::Core::Component::EntityType>().each() ) {
 												if ( entityType == type ) selectionContext.AddSelectedEntity( entity );
 											}
+											entityManager.EndAction( registry );
 										};
 										if ( ImGui::Selectable( "Remove children from selection" ) ) {
+											entityManager.BeginAction();
 											for ( const auto [entity, type] : registry.view<const Cyclone::Core::Component::EntityType>().each() ) {
 												if ( entityType == type ) selectionContext.DeselectEntity( entity );
 											}
+											entityManager.EndAction( registry );
 										};
 										ImGui::Separator();
 										if ( ImGui::Selectable( "Set all children Visible" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( registry, entityManager, entityType, true );

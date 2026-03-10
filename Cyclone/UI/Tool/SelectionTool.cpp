@@ -18,7 +18,7 @@
 template<Cyclone::UI::EViewportType T>
 void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *inLevelInterface, double inWorldSpaceU, double inWorldSpaceV, double inHandleRadius, double inWorldLimit )
 {
-	const auto &entityManager = inLevelInterface->GetEntityManager();
+	auto &entityManager = inLevelInterface->GetEntityManager();
 	if ( !entityManager.CanAquireActionLock() ) return;
 
 	bool ctrlHeld = ImGui::IsKeyDown( ImGuiMod_Ctrl );
@@ -42,7 +42,8 @@ void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *i
 
 	Cyclone::Math::Vector4D entityExtent = Cyclone::Math::Vector4D::sReplicate( inHandleRadius );
 
-	const entt::registry &cregistry = inLevelInterface->GetRegistry();
+	entt::registry &registry = inLevelInterface->GetRegistry();
+	const entt::registry &cregistry = registry;
 	auto view = cregistry.view<Cyclone::Core::Component::Position>();
 	for ( const entt::entity entity : view ) {
 		const auto &position = view.get<Cyclone::Core::Component::Position>( entity ).mValue;
@@ -100,6 +101,11 @@ void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *i
 	}
 
 	selectionContext.mPreviousCandidates = selectionCandidates;
+
+	if ( selectionContext.mDirty ) {
+		entityManager.BeginAction();
+		entityManager.EndAction( registry );
+	}
 }
 
 

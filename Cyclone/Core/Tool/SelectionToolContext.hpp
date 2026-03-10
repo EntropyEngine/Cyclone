@@ -7,12 +7,17 @@ namespace Cyclone::UI::Tool {
 	class SelectionTool;
 }
 
+namespace Cyclone::Core {
+	class EntityManager;
+}
+
 namespace Cyclone::Core::Tool
 {
 	class SelectionToolContext : public Cyclone::Util::NonCopyable
 	{
 	public:
 		friend Cyclone::UI::Tool::SelectionTool;
+		friend Cyclone::Core::EntityManager;
 
 		entt::entity			GetSelectedEntity() const			{ return mSelectedEntity; }
 		const std::set<entt::entity> & GetSelectedEntities() const	{ return mSelectedEntities; }
@@ -26,5 +31,6 @@ namespace Cyclone::Core::Tool
 		entt::entity			mSelectedEntity = entt::null;
 		std::set<entt::entity>	mSelectedEntities;
 		std::set<entt::entity>	mPreviousCandidates;
+		bool					mDirty = false;
 	};
 }

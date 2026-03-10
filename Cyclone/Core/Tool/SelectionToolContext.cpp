@@ -6,12 +6,14 @@ void Cyclone::Core::Tool::SelectionToolContext::SetSelectedEntity( entt::entity 
 	mSelectedEntity = inEntity;
 	mSelectedEntities.clear();
 	mSelectedEntities.insert( inEntity );
+	mDirty = true;
 }
 
 void Cyclone::Core::Tool::SelectionToolContext::AddSelectedEntity( entt::entity inEntity )
 {
 	mSelectedEntity = inEntity;
 	mSelectedEntities.insert( inEntity );
+	mDirty = true;
 }
 
 void Cyclone::Core::Tool::SelectionToolContext::DeselectEntity( entt::entity inEntity )
@@ -30,11 +32,15 @@ void Cyclone::Core::Tool::SelectionToolContext::DeselectEntity( entt::entity inE
 				mSelectedEntity = *it;
 			}
 		}
+		mDirty = true;
 	}
 }
 
 void Cyclone::Core::Tool::SelectionToolContext::ClearSelection()
 {
-	mSelectedEntities.clear();
-	mSelectedEntity = entt::null;
+	if ( mSelectedEntities.size() ) {
+		mSelectedEntities.clear();
+		mSelectedEntity = entt::null;
+		mDirty = true;
+	}
 }
