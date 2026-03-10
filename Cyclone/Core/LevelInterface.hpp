@@ -12,9 +12,6 @@
 #include "Cyclone/Core/Tool/SelectionToolContext.hpp"
 #include "Cyclone/Core/Tool/SelectionTransformToolContext.hpp"
 
-// Cyclone Systems
-#include "Cyclone/Core/Systems/Rendering/RebasePositionSystem.hpp"
-
 namespace Cyclone::Core
 {
 	class LevelInterface : public Cyclone::Util::NonCopyable
@@ -69,8 +66,5 @@ namespace Cyclone::Core
 		Editor::PerspectiveContext	mPerspectiveContext;
 
 		Tool::SelectionTransformToolContext mSelectionTransformTool;
-
-		// Reactive Systems
-		std::unique_ptr<Systems::Rendering::RebasePositionSystem> mRebasePositionSystem;
 	};
 }

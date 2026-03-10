@@ -16,9 +16,6 @@ void Cyclone::Core::LevelInterface::Initialize()
 	mLevel->Initialize();
 	mEntityManager.Register();
 
-	// Initialize systems
-	mRebasePositionSystem = std::make_unique<Systems::Rendering::RebasePositionSystem>( GetRegistry() );
-
 	GetSelectionCtx().ClearSelection();
 
 	mEntityManager.BeginAction();
@@ -73,5 +70,5 @@ void Cyclone::Core::LevelInterface::ReleaseResources()
 
 void Cyclone::Core::LevelInterface::OnUpdateEnd()
 {
-	mRebasePositionSystem->OnUpdateEnd( this );
+	
 }

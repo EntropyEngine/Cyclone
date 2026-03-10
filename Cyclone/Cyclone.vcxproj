@@ -164,7 +164,6 @@
     <ClInclude Include="Core\HistoryAction.hpp" />
     <ClInclude Include="Core\LevelInterface.hpp" />
     <ClInclude Include="Core\Level.hpp" />
-    <ClInclude Include="Core\Systems\Rendering\RebasePositionSystem.hpp" />
     <ClInclude Include="Core\Tool\SelectionToolContext.hpp" />
     <ClInclude Include="Core\Tool\SelectionTransformToolContext.hpp" />
     <ClInclude Include="entt.hpp" />
@@ -202,7 +201,6 @@
     <ClCompile Include="Core\HistoryAction.cpp" />
     <ClCompile Include="Core\LevelInterface.cpp" />
     <ClCompile Include="Core\Level.cpp" />
-    <ClCompile Include="Core\Systems\Rendering\RebasePositionSystem.cpp" />
     <ClCompile Include="Core\Tool\SelectionToolContext.cpp" />
     <ClCompile Include="Core\Tool\SelectionTransformToolContext.cpp" />
     <ClCompile Include="ImGui\imgui.cpp">
