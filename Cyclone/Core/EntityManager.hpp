@@ -10,6 +10,9 @@
 #include "Cyclone/Core/Component/EntityCategory.hpp"
 #include "Cyclone/Core/Component/EpochNumber.hpp"
 
+// Cyclone core
+#include "Cyclone/Core/HistoryAction.hpp"
+
 // Cyclone tools
 #include "Cyclone/Core/Tool/SelectionToolContext.hpp"
 
@@ -86,7 +89,7 @@ namespace Cyclone::Core
 		entt::meta_ctx						mEntityMetaContext{};
 
 		
-		std::deque<entt::registry>			mUndoStack;
+		std::deque<HistoryAction>			mUndoStack;
 		Component::EpochNumber				mUndoStackEpoch{ Component::EpochNumber::Sentinel };
 		std::mutex							mUndoStackMutex;
 		std::unique_lock<std::mutex>		mUndoStackLock;

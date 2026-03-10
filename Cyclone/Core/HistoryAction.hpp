@@ -9,15 +9,15 @@
 
 namespace Cyclone::Core
 {
-	struct HistoryAction : public Cyclone::Util::NonCopyable
+	struct HistoryAction
 	{
 		entt::registry mRegistry;
 
-		std::optional<Cyclone::Util::HashPair<bool>> mEntityTypeSelectable;
-		std::optional<Cyclone::Util::HashPair<bool>> mEntityTypeVisible;
+		Cyclone::Util::OptionalHashPair<bool> mEntityTypeSelectable;
+		Cyclone::Util::OptionalHashPair<bool> mEntityTypeVisible;
 
-		std::optional<Cyclone::Util::HashPair<bool>> mEntityCategorySelectable;
-		std::optional<Cyclone::Util::HashPair<bool>> mEntityCategoryVisible;
+		Cyclone::Util::OptionalHashPair<bool> mEntityCategorySelectable;
+		Cyclone::Util::OptionalHashPair<bool> mEntityCategoryVisible;
 
 		std::set<entt::entity> mSelectedEntities;
 		entt::entity mSelectedEntity = entt::null;

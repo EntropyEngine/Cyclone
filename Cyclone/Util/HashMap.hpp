@@ -13,6 +13,19 @@ namespace Cyclone::Util
 	};
 
 	template<typename T>
+	struct OptionalHashPair
+	{
+		entt::hashed_string::hash_type	mKey;
+		bool							mHasValue = false;
+		T								mValue;
+
+		OptionalHashPair &operator =( const HashPair<T> &inPair ) { mKey = inPair.mKey; mValue = inPair.mValue; mHasValue = true; return *this; }
+		operator HashPair<T>() const { return HashPair<T>( mKey, mValue ); }
+
+		operator bool() const { return mHasValue; }
+	};
+
+	template<typename T>
 	class HashMap
 	{
 	public:

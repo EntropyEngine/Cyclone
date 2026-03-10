@@ -352,7 +352,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					for ( int epoch = static_cast<int>( undoStack.size() ) - 1; epoch >= 0; --epoch ) {
 						ImGui::PushID( epoch );
 
-						const entt::registry &epochRegistry = undoStack[epoch];
+						const entt::registry &epochRegistry = undoStack[epoch].mRegistry;
 
 						size_t nChanges = epochRegistry.view<entt::entity>().size();
 						size_t nUpdates = epochRegistry.view<Cyclone::Core::Component::EpochNumber>().size();
