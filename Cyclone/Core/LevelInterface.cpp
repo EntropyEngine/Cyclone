@@ -16,6 +16,9 @@ void Cyclone::Core::LevelInterface::Initialize()
 	mLevel->Initialize();
 	mEntityManager.Register();
 
+	// Initialize systems
+	mRebasePositionSystem = std::make_unique<Systems::Rendering::RebasePositionSystem>( GetRegistry() );
+
 	GetSelectionCtx().ClearSelection();
 
 	mEntityManager.BeginAction();
@@ -48,18 +51,6 @@ void Cyclone::Core::LevelInterface::Initialize()
 		}
 	}
 	mEntityManager.EndAction( GetRegistry() );
-
-	//entt::registry save;
-	//Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::InfoDebug>::sSaveHistory( GetRegistry(), save, i );
-	//
-	//GetRegistry().get<Component::Position>( i ).mValue += Cyclone::Math::Vector4D( 0, 1, 0 );
-	//
-	//Cyclone::Core::Entity::BaseEntity<Cyclone::Core::Entity::InfoDebug>::sRestoreHistory( GetRegistry(), save, i );
-
-	//__debugbreak();
-
-	//mEntityManager.UndoAction( GetRegistry() );
-
 }
 
 void Cyclone::Core::LevelInterface::SetDevice( ID3D11Device3 *inDevice )
@@ -82,54 +73,5 @@ void Cyclone::Core::LevelInterface::ReleaseResources()
 
 void Cyclone::Core::LevelInterface::OnUpdateEnd()
 {
-	if ( mEntityManager.CanAquireActionLock() ) {
-		/*
-		// NOT A REFERENCE
-		const auto previousSelection = mSelectionTool.GetSelectedEntities();
-
-		const entt::registry &cregistry = GetRegistry();
-		auto view = cregistry.view<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable>();
-		for ( const entt::entity entity : previousSelection ) {
-
-			if ( !view.contains( entity ) ) {
-				mSelectionTool.DeselectEntity( entity );
-				continue;
-			}
-
-			const auto entityCategory = view.get<Component::EntityCategory>( entity );
-
-			if ( !mEntityManager.GetEntityCategoryIsVisible( entityCategory ) ) {
-				mSelectionTool.DeselectEntity( entity );
-				continue;
-			}
-
-			if ( !mEntityManager.GetEntityCategoryIsSelectable( entityCategory ) ) {
-				mSelectionTool.DeselectEntity( entity );
-				continue;
-			}
-
-			const auto entityType = view.get<Component::EntityType>( entity );
-
-			if ( !mEntityManager.GetEntityTypeIsVisible( entityType ) ) {
-				mSelectionTool.DeselectEntity( entity );
-				continue;
-			}
-
-			if ( !mEntityManager.GetEntityTypeIsSelectable( entityType ) ) {
-				mSelectionTool.DeselectEntity( entity );
-				continue;
-			}
-
-			if ( !static_cast<bool>( view.get<Component::Visible>( entity ) ) ) {
-				mSelectionTool.DeselectEntity( entity );
-				continue;
-			}
-
-			if ( !static_cast<bool>( view.get<Component::Selectable>( entity ) ) ) {
-				mSelectionTool.DeselectEntity( entity );
-				continue;
-			}
-		}
-		*/
-	}
+	mRebasePositionSystem->OnUpdateEnd( this );
 }

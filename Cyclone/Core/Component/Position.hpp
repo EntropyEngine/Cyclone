@@ -8,4 +8,14 @@ namespace Cyclone::Core::Component
 	{
 		Cyclone::Math::Vector4D mValue;
 	};
+
+	struct alignas( 16 ) RebasedPositionPerspective
+	{
+		DirectX::XMVECTOR mValue;
+	};
+
+	struct alignas( 16 ) RebasedPositionOrthographic
+	{
+		DirectX::XMVECTOR mValue;
+	};
 }
