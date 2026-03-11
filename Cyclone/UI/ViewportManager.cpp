@@ -76,36 +76,69 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	if ( ImGui::BeginChild( "PerspectiveView", { ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y / 2 }, ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY, viewportFlags ) ) {
 		perspectiveViewSize = ImGui::GetWindowSize();
 		mViewportPerspective->Update( inDeltaTime, inLevelInterface );
-		DrawViewportOverlay( "Perspective" );
+		
 	}
 	ImGui::EndChild();
 
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "TopView", ImVec2( ImGui::GetContentRegionAvail().x, perspectiveViewSize.y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
 		mViewportTop->Update( inDeltaTime, inLevelInterface );
-		DrawViewportOverlay( "Top (X/Z)" );
 	}
 	ImGui::EndChild();
 
 	if ( ImGui::BeginChild( "FrontView", ImVec2( perspectiveViewSize.x, ImGui::GetContentRegionAvail().y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
 		mViewportFront->Update( inDeltaTime, inLevelInterface );
-		DrawViewportOverlay( "Front (X/Y)" );
 	}
 	ImGui::EndChild();
 
 	ImGui::SameLine();
 	if ( ImGui::BeginChild( "SideView", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders, viewportFlags ) ) {
 		mViewportSide->Update( inDeltaTime, inLevelInterface );
-		DrawViewportOverlay( "Side (Y/Z)" );
 	}
 	ImGui::EndChild();
-
-	ImGui::PopStyleVar( 1 );
 
 	const auto &gridContext = inLevelInterface->GetGridCtx();
 	auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
 
 	orthographicContext.mCenter2D = Vector4D::sClamp( orthographicContext.mCenter2D, Vector4D::sReplicate( -gridContext.mWorldLimit ), Vector4D::sReplicate( gridContext.mWorldLimit ) );
+
+	ImGui::PopStyleVar( 1 );
+}
+
+void Cyclone::UI::ViewportManager::Draw( Cyclone::Core::LevelInterface *inLevelInterface )
+{
+	ImVec2 perspectiveViewSize = ImVec2( mViewportPerspective->GetWidth(), mViewportPerspective->GetHeight() );
+	ImVec2 topViewSize = ImVec2( mViewportTop->GetWidth(), mViewportTop->GetHeight() );
+	ImVec2 frontViewSize = ImVec2( mViewportFront->GetWidth(), mViewportFront->GetHeight() );
+	ImVec2 sideViewSize = ImVec2( mViewportSide->GetWidth(), mViewportSide->GetHeight() );
+
+	ImGui::SetNextWindowSizeConstraints( perspectiveViewSize, perspectiveViewSize );
+	if ( ImGui::BeginChild( "PerspectiveView", perspectiveViewSize ) ) {
+		mViewportPerspective->Draw( inLevelInterface );
+		DrawViewportOverlay( "Perspective" );
+	}
+	ImGui::EndChild();
+
+	ImGui::SetNextWindowSizeConstraints( topViewSize, topViewSize );
+	if ( ImGui::BeginChild( "TopView", topViewSize ) ) {
+		mViewportTop->Draw( inLevelInterface );
+		DrawViewportOverlay( "Top (X/Z)" );
+	}
+	ImGui::EndChild();
+
+	ImGui::SetNextWindowSizeConstraints( frontViewSize, frontViewSize );
+	if ( ImGui::BeginChild( "FrontView", frontViewSize ) ) {
+		mViewportFront->Draw( inLevelInterface );
+		DrawViewportOverlay( "Front (X/Y)" );
+	}
+	ImGui::EndChild();
+
+	ImGui::SetNextWindowSizeConstraints( sideViewSize, sideViewSize );
+	if ( ImGui::BeginChild( "SideView", sideViewSize ) ) {
+		mViewportSide->Draw( inLevelInterface );
+		DrawViewportOverlay( "Side (Y/Z)" );
+	}
+	ImGui::EndChild();
 }
 
 void Cyclone::UI::ViewportManager::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )

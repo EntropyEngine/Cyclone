@@ -31,6 +31,7 @@ namespace Cyclone::UI
 		void SetDevice( ID3D11Device3 *inDevice );
 
 		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
+		void Draw( Cyclone::Core::LevelInterface *inLevelInterface );
 		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface );
 
 		bool IsVerticalSyncEnabled() const noexcept { return mVerticalSyncEnabled; }
@@ -41,5 +42,7 @@ namespace Cyclone::UI
 		std::unique_ptr<Cyclone::UI::ViewportManager> mViewportManager;
 		std::unique_ptr<Cyclone::UI::Outliner> mOutliner;
 		std::unique_ptr<Cyclone::UI::Toolbar> mToolbar;
+
+
 	};
 }
