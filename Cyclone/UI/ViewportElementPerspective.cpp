@@ -86,11 +86,6 @@ void Cyclone::UI::ViewportElementPerspective::Update( float inDeltaTime, Cyclone
 	}
 }
 
-void Cyclone::UI::ViewportElementPerspective::Draw( Cyclone::Core::LevelInterface *inLevelInterface )
-{
-
-}
-
 void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	const auto &gridContext = inLevelInterface->GetGridCtx();

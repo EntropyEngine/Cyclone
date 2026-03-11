@@ -28,7 +28,6 @@ namespace Cyclone::UI
 
 		void MenuBarUpdate();
 		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
-		void Draw( Cyclone::Core::LevelInterface *inLevelInterface );
 		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface );
 
 	protected:

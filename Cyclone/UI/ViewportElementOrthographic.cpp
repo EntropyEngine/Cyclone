@@ -152,18 +152,12 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 		DrawCross( drawList, gridPos, 2.0f, IM_COL32( 255, 255, 255, 255 ) );
 	}
 
+	// Draw entites and get selection bounding box
 	ImVec2 selectedBoxMin, selectedBoxMax;
 	DrawEntities( inLevelInterface, drawList, viewOrigin, viewSize, selectedBoxMin, selectedBoxMax );
 
 	// Perform selection transform
-	Tool::SelectionTransformTool().OnUpdate<T>( inLevelInterface );
-}
-
-template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::Draw( Cyclone::Core::LevelInterface *inLevelInterface )
-{
-
-	Tool::SelectionTransformTool().OnDraw<T>( inLevelInterface );
+	Tool::SelectionTransformTool().OnUpdate<T>( inLevelInterface, drawList, viewOrigin, selectedBoxMin, selectedBoxMax );
 }
 
 template<Cyclone::UI::EViewportType T>
@@ -393,21 +387,6 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 	}
 
 	drawList->ChannelsMerge();
-
-	//if ( !selectedEntities.empty() ) {
-	//
-	//	drawList->AddRect( outSelectedBoxMin, outSelectedBoxMax, IM_COL32( 255, 0, 0, 255 ), 0, 0, 2 );
-	//
-	//	for ( float x = outSelectedBoxMin.x; x < outSelectedBoxMax.x - 8; x += 16 ) {
-	//		drawList->AddLine( { x, outSelectedBoxMin.y }, { x + 8, outSelectedBoxMin.y }, IM_COL32( 255, 255, 0, 255 ), 2 );
-	//		drawList->AddLine( { x - 1, outSelectedBoxMax.y - 1 }, { x + 7, outSelectedBoxMax.y - 1 }, IM_COL32( 255, 255, 0, 255 ), 2 );
-	//	}
-	//
-	//	for ( float y = outSelectedBoxMin.y; y < outSelectedBoxMax.y - 8; y += 16 ) {
-	//		drawList->AddLine( { outSelectedBoxMin.x, y }, { outSelectedBoxMin.x, y + 8 }, IM_COL32( 255, 255, 0, 255 ), 2 );
-	//		drawList->AddLine( { outSelectedBoxMax.x - 1, y - 1 }, { outSelectedBoxMax.x - 1, y + 7 }, IM_COL32( 255, 255, 0, 255 ), 2 );
-	//	}
-	//}
 }
 
 template class Cyclone::UI::ViewportElementOrthographic<Cyclone::UI::EViewportType::TopXZ>;

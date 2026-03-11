@@ -19,7 +19,6 @@ namespace Cyclone::UI
 		ViewportElementPerspective( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor ) : ViewportElement( inBackBufferFormat, inDepthBufferFormat, inClearColor ) {}
 
 		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
-		void Draw( Cyclone::Core::LevelInterface *inLevelInterface );
 		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface );
 	};
 }
