@@ -60,47 +60,51 @@ void Cyclone::UI::ViewportManager::MenuBarUpdate()
 void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	ImGuiWindowFlags viewportFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking;
-
-	ImVec2 perspectiveViewSize;
-
+	ImVec2 viewSizePerspective, viewSizeTop, viewSizeFront, viewSizeSide;
 	ImVec2 viewSize = ImGui::GetWindowSize();
 
-	if ( mShouldAutosize || ImGui::IsKeyChordPressed( ImGuiKey_A | ImGuiMod_Ctrl ) ) {
-		mShouldAutosize = false;
-		ImGui::SetNextWindowSize( { ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y / 2 } );
+	// Instantiate all windows and grab their positional data
+	{
+		if ( mShouldAutosize ) {
+			mShouldAutosize = false;
+			ImGui::SetNextWindowSize( { ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y / 2 } );
+		}
+
+		ImGui::PushStyleVar( ImGuiStyleVar_WindowMinSize, { kMinViewportSize, kMinViewportSize } );
+
+		ImGui::SetNextWindowSizeConstraints( { kMinViewportSize, kMinViewportSize }, { viewSize.x - kMinViewportSize, viewSize.y - kMinViewportSize } );
+		if ( ImGui::BeginChild( "PerspectiveView", { ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y / 2 }, ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY, viewportFlags ) ) {
+			viewSizePerspective = ImGui::GetWindowSize();
+			mViewportPerspective->Update( inDeltaTime, inLevelInterface );
+			DrawViewportOverlay( "Perspective" );
+		}
+		ImGui::EndChild();
+
+		ImGui::SameLine();
+		if ( ImGui::BeginChild( "TopView", { ImGui::GetContentRegionAvail().x, viewSizePerspective.y }, ImGuiChildFlags_Borders, viewportFlags ) ) {
+			viewSizeTop = ImGui::GetWindowSize();
+			mViewportTop->Update( inDeltaTime, inLevelInterface );
+			DrawViewportOverlay( "Top (X/Z)" );
+		}
+		ImGui::EndChild();
+
+		if ( ImGui::BeginChild( "FrontView", { viewSizePerspective.x, ImGui::GetContentRegionAvail().y }, ImGuiChildFlags_Borders, viewportFlags ) ) {
+			viewSizeFront = ImGui::GetWindowSize();
+			mViewportFront->Update( inDeltaTime, inLevelInterface );
+			DrawViewportOverlay( "Front (X/Y)" );
+		}
+		ImGui::EndChild();
+
+		ImGui::SameLine();
+		if ( ImGui::BeginChild( "SideView", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders, viewportFlags ) ) {
+			viewSizeSide = ImGui::GetWindowSize();
+			mViewportSide->Update( inDeltaTime, inLevelInterface );
+			DrawViewportOverlay( "Side (Y/Z)" );
+		}
+		ImGui::EndChild();
+
+		ImGui::PopStyleVar( 1 );
 	}
-
-	ImGui::PushStyleVar( ImGuiStyleVar_WindowMinSize, { kMinViewportSize, kMinViewportSize } );
-
-	ImGui::SetNextWindowSizeConstraints( { kMinViewportSize, kMinViewportSize }, { viewSize.x - kMinViewportSize, viewSize.y - kMinViewportSize } );
-	if ( ImGui::BeginChild( "PerspectiveView", { ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y / 2 }, ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY, viewportFlags ) ) {
-		perspectiveViewSize = ImGui::GetWindowSize();
-		mViewportPerspective->Update( inDeltaTime, inLevelInterface );
-		DrawViewportOverlay( "Perspective" );
-	}
-	ImGui::EndChild();
-
-	ImGui::SameLine();
-	if ( ImGui::BeginChild( "TopView", ImVec2( ImGui::GetContentRegionAvail().x, perspectiveViewSize.y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		mViewportTop->Update( inDeltaTime, inLevelInterface );
-		DrawViewportOverlay( "Top (X/Z)" );
-	}
-	ImGui::EndChild();
-
-	if ( ImGui::BeginChild( "FrontView", ImVec2( perspectiveViewSize.x, ImGui::GetContentRegionAvail().y ), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		mViewportFront->Update( inDeltaTime, inLevelInterface );
-		DrawViewportOverlay( "Front (X/Y)" );
-	}
-	ImGui::EndChild();
-
-	ImGui::SameLine();
-	if ( ImGui::BeginChild( "SideView", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders, viewportFlags ) ) {
-		mViewportSide->Update( inDeltaTime, inLevelInterface );
-		DrawViewportOverlay( "Side (Y/Z)" );
-	}
-	ImGui::EndChild();
-
-	ImGui::PopStyleVar( 1 );
 
 	const auto &gridContext = inLevelInterface->GetGridCtx();
 	auto &orthographicContext = inLevelInterface->GetOrthographicCtx();

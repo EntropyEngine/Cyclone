@@ -30,12 +30,14 @@ namespace Cyclone::UI
 		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface );
 
+		void ResizeViewports() { mShouldAutosize = true; }
+
 	protected:
 		std::unique_ptr<ViewportElementPerspective> mViewportPerspective;
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::TopXZ>> mViewportTop;
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::FrontXY>> mViewportFront;
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::SideYZ>> mViewportSide;
 
-		bool   mShouldAutosize = true;
+		bool mShouldAutosize = true;
 	};
 }

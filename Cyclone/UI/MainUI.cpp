@@ -117,25 +117,29 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	ImGui::PopStyleVar( 3 );
 
 	if ( auto &entityManager = inLevelInterface->GetEntityManager(); entityManager.CanAquireActionLock() ) {
-		if( ImGui::IsKeyChordPressed( ImGuiKey_Z | ImGuiMod_Ctrl ) ) entityManager.UndoAction( inLevelInterface->GetRegistry() );
-		if( ImGui::IsKeyChordPressed( ImGuiKey_Y | ImGuiMod_Ctrl ) ) entityManager.RedoAction( inLevelInterface->GetRegistry() );
+		auto &registry = inLevelInterface->GetRegistry();
+		auto &selectionContext = inLevelInterface->GetSelectionCtx();
 
-		if ( ImGui::IsKeyChordPressed( ImGuiKey_Delete ) ) {
+		if ( ImGui::IsKeyChordPressed( ImGuiKey_Z | ImGuiMod_Ctrl ) ) entityManager.UndoAction( registry );
+		if ( ImGui::IsKeyChordPressed( ImGuiKey_Y | ImGuiMod_Ctrl ) ) entityManager.RedoAction( registry );
+
+		if ( ImGui::IsKeyChordPressed( ImGuiKey_A | ImGuiMod_Ctrl ) ) mViewportManager->ResizeViewports();
+
+		if ( ImGui::IsKeyChordPressed( ImGuiKey_Delete ) && !selectionContext.GetSelectedEntities().empty() ) {
 			entityManager.BeginAction();
-			for ( entt::entity entity : inLevelInterface->GetSelectionCtx().GetSelectedEntities() ) {
-				entityManager.DeleteEntity( entity, inLevelInterface->GetRegistry() );
+			for ( entt::entity entity : selectionContext.GetSelectedEntities() ) {
+				entityManager.DeleteEntity( entity, registry );
 			}
-			entityManager.EndAction( inLevelInterface->GetRegistry() );
+			entityManager.EndAction( registry );
 		}
 
-		if ( ImGui::IsKeyChordPressed( ImGuiKey_H | ImGuiMod_Ctrl ) ) {
+		if ( ImGui::IsKeyChordPressed( ImGuiKey_H | ImGuiMod_Ctrl ) && !selectionContext.GetSelectedEntities().empty() ) {
 			entityManager.BeginAction();
-			auto view = inLevelInterface->GetRegistry().view<Cyclone::Core::Component::Visible>();
-			for ( entt::entity entity : inLevelInterface->GetSelectionCtx().GetSelectedEntities() ) {
-				view.get<Cyclone::Core::Component::Visible>( entity ) = static_cast<Cyclone::Core::Component::Visible>( false );
-				entityManager.UpdateEntity( entity, inLevelInterface->GetRegistry() );
+			for ( entt::entity entity : selectionContext.GetSelectedEntities() ) {
+				registry.get<Cyclone::Core::Component::Visible>( entity ) = static_cast<Cyclone::Core::Component::Visible>( false );
+				entityManager.UpdateEntity( entity, registry );
 			}
-			entityManager.EndAction( inLevelInterface->GetRegistry() );
+			entityManager.EndAction( registry );
 		}
 	}
 
