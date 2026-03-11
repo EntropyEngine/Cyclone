@@ -75,35 +75,58 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 		ImGui::SetNextWindowSizeConstraints( { kMinViewportSize, kMinViewportSize }, { viewSize.x - kMinViewportSize, viewSize.y - kMinViewportSize } );
 		if ( ImGui::BeginChild( "PerspectiveView", { ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y / 2 }, ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY, viewportFlags ) ) {
 			viewSizePerspective = ImGui::GetWindowSize();
-			mViewportPerspective->Update( inDeltaTime, inLevelInterface );
-			DrawViewportOverlay( "Perspective" );
 		}
 		ImGui::EndChild();
 
 		ImGui::SameLine();
 		if ( ImGui::BeginChild( "TopView", { ImGui::GetContentRegionAvail().x, viewSizePerspective.y }, ImGuiChildFlags_Borders, viewportFlags ) ) {
 			viewSizeTop = ImGui::GetWindowSize();
-			mViewportTop->Update( inDeltaTime, inLevelInterface );
-			DrawViewportOverlay( "Top (X/Z)" );
 		}
 		ImGui::EndChild();
 
 		if ( ImGui::BeginChild( "FrontView", { viewSizePerspective.x, ImGui::GetContentRegionAvail().y }, ImGuiChildFlags_Borders, viewportFlags ) ) {
 			viewSizeFront = ImGui::GetWindowSize();
-			mViewportFront->Update( inDeltaTime, inLevelInterface );
-			DrawViewportOverlay( "Front (X/Y)" );
 		}
 		ImGui::EndChild();
 
 		ImGui::SameLine();
 		if ( ImGui::BeginChild( "SideView", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders, viewportFlags ) ) {
 			viewSizeSide = ImGui::GetWindowSize();
-			mViewportSide->Update( inDeltaTime, inLevelInterface );
-			DrawViewportOverlay( "Side (Y/Z)" );
 		}
 		ImGui::EndChild();
 
 		ImGui::PopStyleVar( 1 );
+	}
+
+	// Perform actual updates
+	{
+		ImGui::SetNextWindowSizeConstraints( viewSizePerspective, viewSizePerspective );
+		if ( ImGui::BeginChild( "PerspectiveView", viewSizePerspective ) ) {
+			mViewportPerspective->Update( inDeltaTime, inLevelInterface );
+			DrawViewportOverlay( "Perspective" );
+		}
+		ImGui::EndChild();
+
+		ImGui::SetNextWindowSizeConstraints( viewSizeTop, viewSizeTop );
+		if ( ImGui::BeginChild( "TopView", viewSizeTop ) ) {
+			mViewportTop->Update( inDeltaTime, inLevelInterface );
+			DrawViewportOverlay( "Top (X/Z)" );
+		}
+		ImGui::EndChild();
+
+		ImGui::SetNextWindowSizeConstraints( viewSizeFront, viewSizeFront );
+		if ( ImGui::BeginChild( "FrontView", viewSizeFront ) ) {
+			mViewportFront->Update( inDeltaTime, inLevelInterface );
+			DrawViewportOverlay( "Front (X/Y)" );
+		}
+		ImGui::EndChild();
+
+		ImGui::SetNextWindowSizeConstraints( viewSizeSide, viewSizeSide );
+		if ( ImGui::BeginChild( "SideView", viewSizeSide ) ) {
+			mViewportSide->Update( inDeltaTime, inLevelInterface );
+			DrawViewportOverlay( "Side (Y/Z)" );
+		}
+		ImGui::EndChild();
 	}
 
 	const auto &gridContext = inLevelInterface->GetGridCtx();
