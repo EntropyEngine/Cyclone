@@ -12,6 +12,9 @@
 #include "Cyclone/Core/Tool/SelectionToolContext.hpp"
 #include "Cyclone/Core/Tool/SelectionTransformToolContext.hpp"
 
+// Cyclone rendering
+#include "Cyclone/Rendering/Primitives.hpp"
+
 namespace Cyclone::Core
 {
 	class LevelInterface : public Cyclone::Util::NonCopyable
@@ -55,6 +58,9 @@ namespace Cyclone::Core
 		Tool::SelectionTransformToolContext & GetSelectionTransformCtx() { return mSelectionTransformTool; }
 		const Tool::SelectionTransformToolContext & GetSelectionTransformCtx() const { return mSelectionTransformTool; }
 
+		Cyclone::Rendering::Primitives * GetPrimitives()				{ return mPrimitives.get(); }
+		const Cyclone::Rendering::Primitives * GetPrimitives() const	{ return mPrimitives.get(); }
+
 	protected:
 		Microsoft::WRL::ComPtr<ID3D11Device3> mDevice;
 
@@ -66,5 +72,7 @@ namespace Cyclone::Core
 		Editor::PerspectiveContext	mPerspectiveContext;
 
 		Tool::SelectionTransformToolContext mSelectionTransformTool;
+
+		std::unique_ptr<Cyclone::Rendering::Primitives> mPrimitives;
 	};
 }

@@ -173,6 +173,8 @@
     <ClInclude Include="Math\Vector.hpp" />
     <ClInclude Include="MSAAHelper.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Rendering\Primitives.hpp" />
+    <ClInclude Include="Rendering\Shader\WireframeBoxShader.hpp" />
     <ClInclude Include="RenderTexture.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
@@ -246,6 +248,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Rendering\Primitives.cpp" />
+    <ClCompile Include="Rendering\Shader\WireframeBoxShader.cpp" />
     <ClCompile Include="RenderTexture.cpp" />
     <ClCompile Include="UI\MainUI.cpp" />
     <ClCompile Include="UI\Outliner.cpp" />

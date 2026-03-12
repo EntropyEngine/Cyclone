@@ -9,6 +9,8 @@ Cyclone::Core::LevelInterface::LevelInterface()
 {
 	mLevel = std::make_unique<Level>();
 	GetSelectionCtx().ClearSelection();
+
+	mPrimitives = std::make_unique<Cyclone::Rendering::Primitives>();
 }
 
 void Cyclone::Core::LevelInterface::Initialize()
@@ -57,10 +59,14 @@ void Cyclone::Core::LevelInterface::SetDevice( ID3D11Device3 *inDevice )
 	}
 
 	mDevice = inDevice;
+
+	mPrimitives->Initialize( inDevice );
 }
 
 void Cyclone::Core::LevelInterface::ReleaseResources()
 {
+	mPrimitives->Reset();
+
 	// Iterate over all components which hold DX resources and release them
 	// TODO
 

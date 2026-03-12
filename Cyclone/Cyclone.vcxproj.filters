@@ -47,6 +47,15 @@
     <Filter Include="Assets">
       <UniqueIdentifier>{3949a00f-b3b0-4503-9564-8b63bd789d80}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{563f3407-b601-4027-bbab-b9130188f5c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering">
+      <UniqueIdentifier>{2d464d51-7991-4720-a059-7385d4f99e63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\Shader">
+      <UniqueIdentifier>{7d5be832-f6a7-46a0-a586-9dc875f75ee3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -182,6 +191,13 @@
     <ClInclude Include="Util\HashMap.hpp">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="Core\HistoryAction.hpp" />
+    <ClInclude Include="Rendering\Shader\WireframeBoxShader.hpp">
+      <Filter>Rendering\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\Primitives.hpp">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -265,6 +281,13 @@
     </ClCompile>
     <ClCompile Include="Core\EntityManager.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\HistoryAction.cpp" />
+    <ClCompile Include="Rendering\Shader\WireframeBoxShader.cpp">
+      <Filter>Rendering\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\Primitives.cpp">
+      <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
