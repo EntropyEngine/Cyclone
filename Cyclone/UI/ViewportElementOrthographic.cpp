@@ -252,7 +252,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 				entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
 			}
 			else {
-				entityColorU32 = inLevelInterface->GetEntityManager().GetEntityTypeColor( entityType );
+				entityColorU32 = entityManager.GetEntityTypeColor( entityType );
 			}
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
@@ -317,7 +317,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity ).mValue;
 
 
-		auto entityColor = inLevelInterface->GetEntityManager().GetEntityTypeColor( entityType );
+		uint32_t entityColor;
 
 		bool entityInSelection = selectedEntities.contains( entity );
 		bool entityIsSelected = selectedEntity == entity;
@@ -332,6 +332,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 		}
 		else {
 			drawList->ChannelsSetCurrent( 0 );
+			entityColor = entityManager.GetEntityTypeColor( entityType );
 		}
 
 		Vector4D rebasedEntityPosition = ( orthographicContext.mCenter2D - position );
@@ -368,7 +369,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 		}
 
 		if ( kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y && inBounds ) {
-			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, inLevelInterface->GetEntityManager().GetEntityTypeName( entityType ) );
+			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, entityManager.GetEntityTypeName( entityType ) );
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, Cyclone::Util::PrefixString( "id=", entity ) );
 		}
 
