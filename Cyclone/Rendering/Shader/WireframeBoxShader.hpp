@@ -3,9 +3,6 @@
 // Cyclone Rendering
 #include "Cyclone/Rendering/Primitives.hpp"
 
-// Cyclone Components
-#include "Cyclone/Core/Component/RenderingBoundingBox.hpp"
-
 // DX Includes
 #include <VertexTypes.h>
 #include <BufferHelpers.h>
@@ -31,7 +28,7 @@ namespace Cyclone::Rendering::Shader
 		void DrawInstance( ID3D11DeviceContext *inContext );
 
 		void XM_CALLCONV SetViewProj( ID3D11DeviceContext *inContext, DirectX::FXMMATRIX inView, DirectX::FXMMATRIX inProj );
-		void XM_CALLCONV SetInstance( ID3D11DeviceContext *inContext, const Cyclone::Core::Component::RenderingBoundingBox &inInstance );
+		void XM_CALLCONV SetInstance( ID3D11DeviceContext *inContext, DirectX::FXMVECTOR inCenter, DirectX::FXMVECTOR inExtent, DirectX::FXMVECTOR inColor );
 
 	protected:
 		ComPtr<ID3D11VertexShader>	mVertexShader;
@@ -43,6 +40,13 @@ namespace Cyclone::Rendering::Shader
 			DirectX::XMMATRIX gViewProj;
 		};
 
+		struct InstanceBuffer
+		{
+			DirectX::XMMATRIX gWorld;
+			DirectX::XMVECTOR gColor;
+		};
+
 		DirectX::ConstantBuffer<ViewProjBuffer> mViewProjBuffer;
+		DirectX::ConstantBuffer<InstanceBuffer> mInstanceBuffer;
 	};
 }

@@ -130,67 +130,8 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 
 	const auto &gridContext = inLevelInterface->GetGridCtx();
 	auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
-	auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
 
 	orthographicContext.mCenter2D = Vector4D::sClamp( orthographicContext.mCenter2D, Vector4D::sReplicate( -gridContext.mWorldLimit ), Vector4D::sReplicate( gridContext.mWorldLimit ) );
-
-	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
-	const auto &entityManager = inLevelInterface->GetEntityManager();
-	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
-	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
-
-	ID3D11Device *device = inLevelInterface->GetDevice();
-	Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext;
-	device->GetImmediateContext( deviceContext.GetAddressOf() );
-	ID3D11DeviceContext *pContext = deviceContext.Get();
-
-	entt::registry &registry = inLevelInterface->GetRegistry();
-
-	auto view1 = registry.view<Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>( entt::exclude<Cyclone::Core::Component::RenderingBoundingBoxPerspective, Cyclone::Core::Component::RenderingBoundingBoxPerspective> );
-	for ( const entt::entity entity : view1 ) {
-		registry.emplace<Cyclone::Core::Component::RenderingBoundingBoxOrthographic>( entity, device );
-		registry.emplace<Cyclone::Core::Component::RenderingBoundingBoxPerspective>( entity, device );
-	}
-
-	auto view = registry.group<>( entt::get<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::RenderingBoundingBoxOrthographic, Cyclone::Core::Component::RenderingBoundingBoxPerspective> );
-	for ( const entt::entity entity : view ) {
-		bool entityInSelection = selectedEntities.contains( entity );
-		bool entityIsSelected = selectedEntity == entity;
-
-		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-		const auto &position = view.get<Cyclone::Core::Component::Position>( entity ).mValue;
-		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity ).mValue;
-
-		uint32_t entityColorU32;
-		if ( entityIsSelected ) {
-			entityColorU32 = Cyclone::Util::ColorU32( 255, 255, 0, 255 );
-		}
-		else if ( entityInSelection ) {
-			entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
-		}
-		else {
-			entityColorU32 = entityManager.GetEntityTypeColor( entityType );
-		}
-
-		DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
-		
-		{
-			Vector4D rebasedEntityPosition = ( position - orthographicContext.mCenter2D );
-			Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
-
-			auto &boxOrthographic = view.get<Cyclone::Core::Component::RenderingBoundingBoxOrthographic>( entity );
-			boxOrthographic.Update( pContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
-		}
-
-		{
-			Vector4D rebasedEntityPosition = ( position - perspectiveContext.mCenter3D );
-			Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
-
-			auto &boxPerspective = view.get<Cyclone::Core::Component::RenderingBoundingBoxPerspective>( entity );
-			boxPerspective.Update( pContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
-		}
-
-	}
 }
 
 void Cyclone::UI::ViewportManager::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )

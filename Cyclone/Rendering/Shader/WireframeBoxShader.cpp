@@ -9,6 +9,7 @@
 void Cyclone::Rendering::Shader::WireframeBoxShader::SetDevice( ID3D11Device *inDevice )
 {
 	mViewProjBuffer.Create( inDevice );
+	mInstanceBuffer.Create( inDevice );
 
 	const auto vsData = DX::ReadData( L"WireFrameBox_VS.cso" );
 	DX::ThrowIfFailed( inDevice->CreateVertexShader(
@@ -69,8 +70,18 @@ void XM_CALLCONV Cyclone::Rendering::Shader::WireframeBoxShader::SetViewProj( ID
 	inContext->VSSetConstantBuffers( 0, 1, &buffer );
 }
 
-void XM_CALLCONV Cyclone::Rendering::Shader::WireframeBoxShader::SetInstance( ID3D11DeviceContext *inContext, const Cyclone::Core::Component::RenderingBoundingBox &inInstance )
-{	
-	auto buffer = inInstance.mBuffer.GetBuffer();
+void XM_CALLCONV Cyclone::Rendering::Shader::WireframeBoxShader::SetInstance( ID3D11DeviceContext *inContext, DirectX::FXMVECTOR inCenter, DirectX::FXMVECTOR inExtent, DirectX::FXMVECTOR inColor )
+{
+	InstanceBuffer instance{
+		DirectX::XMMatrixMultiplyTranspose(
+			DirectX::XMMatrixScalingFromVector( inExtent ),
+			DirectX::XMMatrixTranslationFromVector( inCenter )
+		),
+		inColor
+	};
+	mInstanceBuffer.SetData( inContext, instance );
+	
+	auto buffer = mInstanceBuffer.GetBuffer();
 	inContext->VSSetConstantBuffers( 1, 1, &buffer );
+	inContext->PSSetConstantBuffers( 1, 1, &buffer );
 }
