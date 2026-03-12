@@ -17,7 +17,7 @@ struct VSInput
 struct VSOutput
 {
     float4 PositionPS : SV_Position;
-    float3 PositionWS : TEXCOORD0;
+    float4 Color : COLOR;
 };
 
 VSOutput main( VSInput input )
@@ -27,7 +27,7 @@ VSOutput main( VSInput input )
     
     VSOutput output;
     output.PositionPS = PositionPS;
-    output.PositionWS = PositionWS.xyz;
+    output.Color = gColor;
     
     return output;
 }
