@@ -14,7 +14,6 @@
 #include "Cyclone/Core/Component/Selectable.hpp"
 
 // ImGui includes
-#include <imgui.h>
 #include <imgui_internal.h>
 
 // STL
@@ -60,7 +59,7 @@ namespace
 		}
 	}
 
-	void UpdateBoolPerEntity( entt::registry &inRegistry, Cyclone::Core::EntityManager &inEntityManager, Cyclone::Core::Tool::SelectionToolContext &inSelectionContext, entt::entity inEntity, auto &ioTag )
+	void UpdateBoolPerEntity( entt::registry &inRegistry, Cyclone::Core::EntityManager &inEntityManager, entt::entity inEntity, auto &ioTag )
 	{
 		inEntityManager.BeginAction();
 		*reinterpret_cast<bool *>( &ioTag ) ^= true;
@@ -237,12 +236,12 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 											ImGui::TableSetColumnIndex( 1 );
 											if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
-												UpdateBoolPerEntity( registry, entityManager, selectionContext, entity, entityVisible );
+												UpdateBoolPerEntity( registry, entityManager, entity, entityVisible );
 											}
 
 											ImGui::TableSetColumnIndex( 2 );
 											if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
-												UpdateBoolPerEntity( registry, entityManager, selectionContext, entity, entitySelectable );
+												UpdateBoolPerEntity( registry, entityManager, entity, entitySelectable );
 											}
 
 											ImGui::TreePop();
@@ -312,12 +311,12 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 
 						ImGui::TableSetColumnIndex( 2 );
 						if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
-							UpdateBoolPerEntity( registry, entityManager, selectionContext, entity, entityVisible );
+							UpdateBoolPerEntity( registry, entityManager, entity, entityVisible );
 						}
 
 						ImGui::TableSetColumnIndex( 3 );
 						if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
-							UpdateBoolPerEntity( registry, entityManager, selectionContext, entity, entitySelectable );
+							UpdateBoolPerEntity( registry, entityManager, entity, entitySelectable );
 						}
 
 						ImGui::PopID();

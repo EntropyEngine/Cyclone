@@ -14,7 +14,6 @@
 #include "Cyclone/Util/Render.hpp"
 
 // ImGui Includes
-#include <imgui.h>
 #include <imgui_internal.h>
 
 using Cyclone::Math::Vector4D;

@@ -6,9 +6,6 @@
 // Cyclone utils
 #include "Cyclone/Util/NonCopyable.hpp"
 
-struct ImDrawList;
-struct ImVec2;
-
 namespace Cyclone::Core {
 	class LevelInterface;
 }

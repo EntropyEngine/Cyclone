@@ -5,7 +5,6 @@
 #include "Cyclone/Core/LevelInterface.hpp"
 
 // ImGui includes
-#include <imgui.h>
 #include <imgui_internal.h>
 
 void Cyclone::UI::Toolbar::Update( Cyclone::Core::LevelInterface *inLevelInterface )

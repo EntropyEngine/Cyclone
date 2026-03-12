@@ -41,4 +41,6 @@ namespace DX
 #include <entt.hpp>
 using namespace entt::literals;
 
+#include <imgui.h>
+
 #endif //PCH_H

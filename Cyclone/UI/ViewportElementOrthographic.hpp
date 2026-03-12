@@ -7,9 +7,6 @@
 // Cyclone Math
 #include "Cyclone/Math/Vector.hpp"
 
-struct ImVec2;
-struct ImDrawList;
-
 namespace Cyclone::Core {
 	class LevelInterface;
 }

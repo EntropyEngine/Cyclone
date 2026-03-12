@@ -12,7 +12,6 @@
 #include "Cyclone/Math/Vector.hpp"
 
 // ImGui Includes
-#include <imgui.h>
 #include <imgui_internal.h>
 
 template<Cyclone::UI::EViewportType T>

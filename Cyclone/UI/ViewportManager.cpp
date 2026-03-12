@@ -13,7 +13,6 @@
 #include <format>
 
 // ImGui Includes
-#include <imgui.h>
 #include <imgui_internal.h>
 
 // DX Includes

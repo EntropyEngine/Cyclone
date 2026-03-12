@@ -12,7 +12,6 @@
 #include "Cyclone/UI/Toolbar.hpp"
 
 // ImGui includes
-#include <imgui.h>
 #include <imgui_internal.h>
 
 // STL

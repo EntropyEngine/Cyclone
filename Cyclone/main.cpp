@@ -6,8 +6,6 @@
 #include "main.h"
 #include "Cyclone/Application.hpp"
 
-#include <imgui.h>
-
 #ifdef _DEBUG
 #include <dxgidebug.h>
 #endif
