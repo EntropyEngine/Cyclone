@@ -54,7 +54,7 @@ void Cyclone::Rendering::Primitives::CreateBox( ID3D11Device *inDevice )
 	};
 
 	{
-		using WireframeLines = PrimitiveTypeTraits<EPrimitiveType::WireframeLines>;
+		using WireframeLines = PrimitiveTypeTraits<EPrimitiveType::WireframeLines, EPrimitiveShape::Box>;
 
 		WireframeLines::VertexType verts[8];
 		for ( size_t i = 0; i < 8; ++i ) {

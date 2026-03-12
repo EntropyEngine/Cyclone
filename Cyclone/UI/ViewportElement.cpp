@@ -11,6 +11,8 @@ Cyclone::UI::ViewportElement::ViewportElement( DXGI_FORMAT inBackBufferFormat, D
 	mTargetRT = std::make_unique<DX::RenderTexture>( inBackBufferFormat );
 	mClearColor = inClearColor;
 
+	mWireframeBoxShader = std::make_unique<Cyclone::Rendering::Shader::WireframeBoxShader>();
+
 	mWidth = 0;
 	mHeight = 0;
 }
@@ -21,10 +23,12 @@ Cyclone::UI::ViewportElement::~ViewportElement()
 	mTargetRT->ReleaseDevice();
 }
 
-void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 * inDevice )
+void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 *inDevice )
 {
 	mTargetMSAA->SetDevice( inDevice );
 	mTargetRT->SetDevice( inDevice );
+
+	mWireframeBoxShader->SetDevice( inDevice );
 
 	mCommonStates = std::make_unique<DirectX::CommonStates>( inDevice );
 

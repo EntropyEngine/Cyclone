@@ -13,6 +13,10 @@
 #include <Effects.h>
 #include <CommonStates.h>
 
+// Rendering includes
+#include "Cyclone/Rendering/Shader/WireframeBoxShader.hpp"
+
+
 namespace Cyclone::UI
 {
 	class ViewportElement : public Cyclone::Util::NonCopyable
@@ -31,17 +35,19 @@ namespace Cyclone::UI
 		size_t GetHeight() const { return mHeight; }
 
 	protected:
-		std::unique_ptr<DX::MSAAHelper> mTargetMSAA;
-		std::unique_ptr<DX::RenderTexture> mTargetRT;
+		std::unique_ptr<DX::MSAAHelper>				mTargetMSAA;
+		std::unique_ptr<DX::RenderTexture>			mTargetRT;
+
+		std::unique_ptr<Cyclone::Rendering::Shader::WireframeBoxShader> mWireframeBoxShader;
 
 		std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> mWireframeGridBatch;
-		std::unique_ptr<DirectX::BasicEffect>	  mWireframeGridEffect;
-		Microsoft::WRL::ComPtr<ID3D11InputLayout> mWireframeGridInputLayout;
-		std::unique_ptr<DirectX::CommonStates>	  mCommonStates;
+		std::unique_ptr<DirectX::BasicEffect>		mWireframeGridEffect;
+		Microsoft::WRL::ComPtr<ID3D11InputLayout>	mWireframeGridInputLayout;
+		std::unique_ptr<DirectX::CommonStates>		mCommonStates;
 
-		size_t mWidth;
-		size_t mHeight;
+		size_t										mWidth;
+		size_t										mHeight;
 
-		DirectX::XMVECTORF32 mClearColor;
+		DirectX::XMVECTORF32						mClearColor;
 	};
 }

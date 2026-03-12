@@ -97,7 +97,10 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 	inDeviceContext->RSSetState( mCommonStates->CullNone() );
 	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
 
-	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix( perspectiveContext.mCameraPitch, perspectiveContext.mCameraYaw ), GetProjMatrix( mWidth, mHeight, kHorizontalFOV, gridContext.mWorldLimit ) );
+	DirectX::XMMATRIX viewMatrix = GetViewMatrix( perspectiveContext.mCameraPitch, perspectiveContext.mCameraYaw );
+	DirectX::XMMATRIX projMatrix = GetProjMatrix( mWidth, mHeight, kHorizontalFOV, gridContext.mWorldLimit );
+
+	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), viewMatrix, projMatrix );
 	mWireframeGridEffect->Apply( inDeviceContext );
 
 	mWireframeGridBatch->Begin();
@@ -122,11 +125,14 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 	// Switch to depth buffer
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
 
-	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
-	const auto &entityManager = inLevelInterface->GetEntityManager();
-
-	mWireframeGridBatch->Begin();
 	{
+		mWireframeBoxShader->Apply( inDeviceContext );
+		mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
+		mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
+
+		const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+		const auto &entityManager = inLevelInterface->GetEntityManager();
+
 		// Iterate over all entities
 		const entt::registry &cregistry = inLevelInterface->GetRegistry();
 		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
@@ -162,10 +168,10 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 			Vector4D rebasedEntityPosition = ( position - perspectiveContext.mCenter3D );
 			Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
-			Cyclone::Util::RenderWireframeBoundingBox( mWireframeGridBatch.get(), rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+			mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+			mWireframeBoxShader->DrawInstance( inDeviceContext );
 		}
 	}
-	mWireframeGridBatch->End();
 
 	Resolve( inDeviceContext );
 }

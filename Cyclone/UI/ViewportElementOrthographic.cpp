@@ -162,12 +162,14 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 template<Cyclone::UI::EViewportType T>
 void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {
-
 	constexpr size_t AxisU = ViewportElementOrthographic::AxisU;
 	constexpr size_t AxisV = ViewportElementOrthographic::AxisV;
 
 	const auto &gridContext = inLevelInterface->GetGridCtx();
 	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
+
+	DirectX::XMMATRIX viewMatrix = GetViewMatrix<T>( gridContext.mWorldLimit );
+	DirectX::XMMATRIX projMatrix = GetProjMatrix( mWidth, mHeight, orthographicContext.mZoomScale2D, gridContext.mWorldLimit );
 
 	Clear( inDeviceContext );
 
@@ -176,7 +178,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 	inDeviceContext->RSSetState( mCommonStates->CullNone() );
 	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
 
-	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), GetViewMatrix<T>( gridContext.mWorldLimit ), GetProjMatrix( mWidth, mHeight, orthographicContext.mZoomScale2D, gridContext.mWorldLimit ) );
+	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), viewMatrix, projMatrix );
 	mWireframeGridEffect->Apply( inDeviceContext );
 
 	mWireframeGridBatch->Begin();
@@ -217,8 +219,11 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 	// Switch to depth buffer
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
 
-	mWireframeGridBatch->Begin();
 	{
+		mWireframeBoxShader->Apply( inDeviceContext );
+		mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
+		mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
+
 		const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 		const auto &entityManager = inLevelInterface->GetEntityManager();
 
@@ -260,10 +265,10 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 			Vector4D rebasedEntityPosition = ( position - orthographicContext.mCenter2D );
 			Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
-			Cyclone::Util::RenderWireframeBoundingBox( mWireframeGridBatch.get(), rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+			mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+			mWireframeBoxShader->DrawInstance( inDeviceContext );
 		}
 	}
-	mWireframeGridBatch->End();
 
 	Resolve( inDeviceContext );
 }

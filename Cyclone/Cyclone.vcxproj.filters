@@ -198,6 +198,9 @@
     <ClInclude Include="Rendering\Primitives.hpp">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="ReadData.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -348,5 +351,13 @@
     <CopyFileToFolders Include="Assets\unispace.regular.otf">
       <Filter>Assets</Filter>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\WireframeBox_VS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\WireframeBox_PS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

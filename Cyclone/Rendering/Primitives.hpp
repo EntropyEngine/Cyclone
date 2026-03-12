@@ -18,16 +18,17 @@ namespace Cyclone::Rendering
 		_Count,
 	};
 
-	template<EPrimitiveType T>
+	template<EPrimitiveType T, EPrimitiveShape U>
 	struct PrimitiveTypeTraits;
 
 	template<>
-	struct PrimitiveTypeTraits<EPrimitiveType::WireframeLines>
+	struct PrimitiveTypeTraits<EPrimitiveType::WireframeLines, EPrimitiveShape::Box>
 	{
 		using VertexType = DirectX::VertexPosition;
-		static constexpr UINT kVertexStride = sizeof( VertexType );
-		static constexpr DXGI_FORMAT kIndexFormat = DXGI_FORMAT_R16_UINT;
-		static constexpr D3D_PRIMITIVE_TOPOLOGY kTopology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
+		static constexpr UINT					kVertexStride = sizeof( VertexType );
+		static constexpr UINT					kIndexCount = 24;
+		static constexpr DXGI_FORMAT			kIndexFormat = DXGI_FORMAT_R16_UINT;
+		static constexpr D3D_PRIMITIVE_TOPOLOGY	kTopology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
 	};
 
 	class Primitives
