@@ -22,7 +22,7 @@ namespace Cyclone::UI
 	class ViewportElement : public Cyclone::Util::NonCopyable
 	{
 	public:
-		ViewportElement( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor );
+		ViewportElement( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor, bool inAntialiasing );
 		virtual ~ViewportElement();
 
 		void SetDevice( ID3D11Device3 *inDevice );
@@ -33,6 +33,8 @@ namespace Cyclone::UI
 
 		size_t GetWidth() const  { return mWidth; }
 		size_t GetHeight() const { return mHeight; }
+
+		void ToggleAntialiasing( bool inEnabled );
 
 	protected:
 		std::unique_ptr<DX::MSAAHelper>				mTargetMSAA;

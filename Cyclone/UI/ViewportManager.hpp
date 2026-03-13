@@ -31,6 +31,7 @@ namespace Cyclone::UI
 		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface );
 
 		void ResizeViewports() { mShouldAutosize = true; }
+		void ToggleAntialiasing( bool inEnabled );
 
 	protected:
 		std::unique_ptr<ViewportElementPerspective> mViewportPerspective;
@@ -39,5 +40,6 @@ namespace Cyclone::UI
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::SideYZ>> mViewportSide;
 
 		bool mShouldAutosize = true;
+		bool mAntialiasingEnabled = false;
 	};
 }

@@ -5,9 +5,9 @@
 // DX Includes
 #include <DirectXHelpers.h>
 
-Cyclone::UI::ViewportElement::ViewportElement( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor )
+Cyclone::UI::ViewportElement::ViewportElement( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor, bool inAntialiasing )
 {
-	mTargetMSAA = std::make_unique<DX::MSAAHelper>( inBackBufferFormat, inDepthBufferFormat, 1 );
+	mTargetMSAA = std::make_unique<DX::MSAAHelper>( inBackBufferFormat, inDepthBufferFormat, inAntialiasing ? 4 : 1 );
 	mTargetRT = std::make_unique<DX::RenderTexture>( inBackBufferFormat );
 	mClearColor = inClearColor;
 
@@ -75,4 +75,9 @@ void Cyclone::UI::ViewportElement::Clear( ID3D11DeviceContext3 * inDeviceContext
 void Cyclone::UI::ViewportElement::Resolve( ID3D11DeviceContext3 * inDeviceContext )
 {
 	mTargetMSAA->Resolve( inDeviceContext, mTargetRT->GetRenderTarget() );
+}
+
+void Cyclone::UI::ViewportElement::ToggleAntialiasing( bool inEnabled )
+{
+	mTargetMSAA->SetSampleCount( inEnabled ? 4 : 1 );
 }

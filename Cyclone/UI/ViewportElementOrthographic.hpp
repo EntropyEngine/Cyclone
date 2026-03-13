@@ -25,7 +25,7 @@ namespace Cyclone::UI
 		static constexpr float kMinGridSize = 5.0f;
 
 	public:
-		ViewportElementOrthographic( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor ) : ViewportElement( inBackBufferFormat, inDepthBufferFormat, inClearColor ) {}
+		ViewportElementOrthographic( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor, bool inAntialiasing ) : ViewportElement( inBackBufferFormat, inDepthBufferFormat, inClearColor, inAntialiasing ) {}
 
 		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface );

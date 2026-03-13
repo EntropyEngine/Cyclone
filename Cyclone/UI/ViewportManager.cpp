@@ -39,10 +39,10 @@ namespace
 
 Cyclone::UI::ViewportManager::ViewportManager()
 {
-	mViewportPerspective = std::make_unique<ViewportElementPerspective>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
-	mViewportTop = std::make_unique<ViewportElementOrthographic<EViewportType::TopXZ>>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
-	mViewportFront = std::make_unique<ViewportElementOrthographic<EViewportType::FrontXY>>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
-	mViewportSide = std::make_unique<ViewportElementOrthographic<EViewportType::SideYZ>>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black );
+	mViewportPerspective = std::make_unique<ViewportElementPerspective>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black, mAntialiasingEnabled );
+	mViewportTop = std::make_unique<ViewportElementOrthographic<EViewportType::TopXZ>>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black, mAntialiasingEnabled );
+	mViewportFront = std::make_unique<ViewportElementOrthographic<EViewportType::FrontXY>>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black, mAntialiasingEnabled );
+	mViewportSide = std::make_unique<ViewportElementOrthographic<EViewportType::SideYZ>>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black, mAntialiasingEnabled );
 }
 
 void Cyclone::UI::ViewportManager::SetDevice( ID3D11Device3 *inDevice )
@@ -55,6 +55,8 @@ void Cyclone::UI::ViewportManager::SetDevice( ID3D11Device3 *inDevice )
 
 void Cyclone::UI::ViewportManager::MenuBarUpdate()
 {
+	if ( ImGui::MenuItem( "Enable Antialiasing", nullptr, &mAntialiasingEnabled ) ) ToggleAntialiasing( mAntialiasingEnabled );
+	ImGui::Separator();
 	if ( ImGui::MenuItem( "Autosize Viewports", "Ctrl+A") ) mShouldAutosize = true;
 }
 
@@ -159,4 +161,14 @@ void Cyclone::UI::ViewportManager::Render( ID3D11DeviceContext3 *inDeviceContext
 	mViewportTop->Render( inDeviceContext, inLevelInterface );
 	mViewportFront->Render( inDeviceContext, inLevelInterface );
 	mViewportSide->Render( inDeviceContext, inLevelInterface );
+}
+
+void Cyclone::UI::ViewportManager::ToggleAntialiasing( bool inEnabled )
+{
+	mAntialiasingEnabled = inEnabled;
+
+	mViewportPerspective->ToggleAntialiasing( inEnabled );
+	mViewportTop->ToggleAntialiasing( inEnabled );
+	mViewportFront->ToggleAntialiasing( inEnabled );
+	mViewportSide->ToggleAntialiasing( inEnabled );
 }
