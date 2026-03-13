@@ -145,7 +145,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	inLevelInterface->OnUpdateEnd();
 }
 
-void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	if ( ImGui::GetFrameCount() <= 1 ) return;
 

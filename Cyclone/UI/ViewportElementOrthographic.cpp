@@ -160,7 +160,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	constexpr size_t AxisU = ViewportElementOrthographic::AxisU;
 	constexpr size_t AxisV = ViewportElementOrthographic::AxisV;
@@ -231,8 +231,9 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 		const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
 
 		// Iterate over all entities
-		const entt::registry &cregistry = inLevelInterface->GetRegistry();
-		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, ViewportTypeTraits<T>::DrawTag>();
+		entt::registry &registry = inLevelInterface->GetRegistry();
+		auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, ViewportTypeTraits<T>::DrawTag>();
+		view.use<Cyclone::Core::Component::Position>();
 		for ( const entt::entity entity : view ) {
 			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
 			const auto &position = view.get<Cyclone::Core::Component::Position>( entity ).mValue;
@@ -299,20 +300,12 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::L
 
 	// Iterate over all entities
 	entt::registry &registry = inLevelInterface->GetRegistry();
-	auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
+	auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, entt::tag<"is_visible"_hs>>();
+	view.use<Cyclone::Core::Component::Position>();
 	for ( const entt::entity entity : view ) {
-
-		const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
-		if ( !entityManager.GetEntityCategoryIsVisible( entityCategory ) ) continue;
-
 		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-		if ( !entityManager.GetEntityTypeIsVisible( entityType ) ) continue;
-
-		if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
-
 		const auto &position = view.get<Cyclone::Core::Component::Position>( entity ).mValue;
 		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity ).mValue;
-
 
 		uint32_t entityColor;
 

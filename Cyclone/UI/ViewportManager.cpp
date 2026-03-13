@@ -8,6 +8,8 @@
 #include "Cyclone/Core/Component/EntityType.hpp"
 #include "Cyclone/Core/Component/Position.hpp"
 #include "Cyclone/Core/Component/BoundingBox.hpp"
+#include "Cyclone/Core/Component/Visible.hpp"
+#include "Cyclone/Core/Component/Selectable.hpp"
 
 // STL Includes
 #include <format>
@@ -62,7 +64,22 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	ImVec2 viewSizePerspective, viewSizeTop, viewSizeFront, viewSizeSide;
 	ImVec2 viewSize = ImGui::GetWindowSize();
 
-	inLevelInterface->GetRegistry().clear<entt::tag<"draw_perspective"_hs>, entt::tag<"draw_top"_hs>, entt::tag<"draw_front"_hs>, entt::tag<"draw_side"_hs>>();
+	const auto &entityManager = inLevelInterface->GetEntityManager();
+	entt::registry &registry = inLevelInterface->GetRegistry();
+
+	registry.clear<entt::tag<"is_visible"_hs>, entt::tag<"draw_perspective"_hs>, entt::tag<"draw_top"_hs>, entt::tag<"draw_front"_hs>, entt::tag<"draw_side"_hs>>();
+	auto view = registry.group<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
+	for ( const entt::entity entity : view ) {
+		const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
+		if ( !entityManager.GetEntityCategoryIsVisible( entityCategory ) ) continue;
+
+		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+		if ( !entityManager.GetEntityTypeIsVisible( entityType ) ) continue;
+
+		if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
+
+		registry.emplace<entt::tag<"is_visible"_hs>>( entity );
+	}
 
 	// Instantiate all windows and grab their positional data
 	{
@@ -136,7 +153,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	orthographicContext.mCenter2D = Vector4D::sClamp( orthographicContext.mCenter2D, Vector4D::sReplicate( -gridContext.mWorldLimit ), Vector4D::sReplicate( gridContext.mWorldLimit ) );
 }
 
-void Cyclone::UI::ViewportManager::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::ViewportManager::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	mViewportPerspective->Render( inDeviceContext, inLevelInterface );
 	mViewportTop->Render( inDeviceContext, inLevelInterface );

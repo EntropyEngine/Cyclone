@@ -414,7 +414,7 @@ void Cyclone::UI::Outliner::RebuildTree( const Cyclone::Core::LevelInterface *in
 	}
 
 	const entt::registry &cregistry = inLevelInterface->GetRegistry();
-	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory>();
+	auto view = cregistry.group_if_exists<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
 	for ( const entt::entity entity : view ) {
 		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
 		const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
@@ -434,7 +434,7 @@ void Cyclone::UI::Outliner::RebuildTree( const Cyclone::Core::LevelInterface *in
 
 	for ( auto &[entityCategory, typeMap] : mOutlinerTree ) {
 		for ( auto &[entityType, entityList] : typeMap ) {
-			std::stable_sort( std::execution::par_unseq, entityList.begin(), entityList.end() );
+			std::sort( std::execution::par_unseq, entityList.begin(), entityList.end() );
 		}
 	}
 }
