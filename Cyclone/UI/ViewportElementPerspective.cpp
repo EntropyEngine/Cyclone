@@ -94,7 +94,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 	inDeviceContext->OMSetBlendState( mCommonStates->Opaque(), nullptr, 0xFFFFFFFF );
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
-	inDeviceContext->RSSetState( mCommonStates->CullNone() );
+	inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mCommonStates->Wireframe() : mWireframeRSS.Get() );
 	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
 
 	DirectX::XMMATRIX viewMatrix = GetViewMatrix( perspectiveContext.mCameraPitch, perspectiveContext.mCameraYaw );

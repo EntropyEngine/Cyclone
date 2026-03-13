@@ -7,7 +7,7 @@
 
 Cyclone::UI::ViewportElement::ViewportElement( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor )
 {
-	mTargetMSAA = std::make_unique<DX::MSAAHelper>( inBackBufferFormat, inDepthBufferFormat, 4 );
+	mTargetMSAA = std::make_unique<DX::MSAAHelper>( inBackBufferFormat, inDepthBufferFormat, 1 );
 	mTargetRT = std::make_unique<DX::RenderTexture>( inBackBufferFormat );
 	mClearColor = inClearColor;
 
@@ -29,6 +29,12 @@ void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 *inDevice )
 	mTargetRT->SetDevice( inDevice );
 
 	mWireframeBoxShader->SetDevice( inDevice );
+
+	CD3D11_RASTERIZER_DESC rssDesc( D3D11_DEFAULT );
+	rssDesc.FillMode = D3D11_FILL_WIREFRAME;
+	rssDesc.CullMode = D3D11_CULL_NONE;
+	rssDesc.FrontCounterClockwise = TRUE;
+	DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mWireframeRSS.ReleaseAndGetAddressOf() ) );
 
 	mCommonStates = std::make_unique<DirectX::CommonStates>( inDevice );
 

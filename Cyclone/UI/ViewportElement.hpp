@@ -39,6 +39,7 @@ namespace Cyclone::UI
 		std::unique_ptr<DX::RenderTexture>			mTargetRT;
 
 		std::unique_ptr<Cyclone::Rendering::Shader::WireframeBoxShader> mWireframeBoxShader;
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState> mWireframeRSS;
 
 		std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> mWireframeGridBatch;
 		std::unique_ptr<DirectX::BasicEffect>		mWireframeGridEffect;

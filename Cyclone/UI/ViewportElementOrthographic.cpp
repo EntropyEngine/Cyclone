@@ -175,7 +175,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 	inDeviceContext->OMSetBlendState( mCommonStates->Opaque(), nullptr, 0xFFFFFFFF );
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
-	inDeviceContext->RSSetState( mCommonStates->CullNone() );
+	inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mCommonStates->Wireframe() : mWireframeRSS.Get() );
 	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
 
 	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), viewMatrix, projMatrix );
@@ -354,11 +354,11 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::L
 		bool inBounds = posInBounds || boxInBounds;
 
 		// Only draw X if smaller than bounding box
-		if ( inCanvasIsHovered && kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y && inBounds ) {
+		if ( inBounds && inCanvasIsHovered && kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y ) {
 			DrawCross( drawList, localPos, kPositionHandleSize, entityColor );
 		}
 
-		if ( entityInSelection && kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y && inBounds ) {
+		if ( inBounds && entityInSelection && kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y ) {
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, entityManager.GetEntityTypeName( entityType ) );
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, Cyclone::Util::PrefixString( "id=", entity ) );
 		}
