@@ -266,8 +266,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 			Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
 			mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
-			mWireframeBoxShader->DrawInstance( inDeviceContext );
 		}
+		mWireframeBoxShader->DrawInstances( inDeviceContext );
 	}
 
 	Resolve( inDeviceContext );

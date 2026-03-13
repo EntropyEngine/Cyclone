@@ -18,6 +18,8 @@ namespace Cyclone::Rendering::Shader
 		static constexpr auto kPrimitiveShape = EPrimitiveShape::Box;
 		using PrimitiveTraits = PrimitiveTypeTraits<kPrimitiveType, kPrimitiveShape>;
 
+		static constexpr UINT kBatchSize = 1024;
+
 		WireframeBoxShader() = default;
 
 		void SetDevice( ID3D11Device *inDevice );
@@ -25,7 +27,7 @@ namespace Cyclone::Rendering::Shader
 		void Apply( ID3D11DeviceContext *inContext );
 
 		void SetMesh( ID3D11DeviceContext *inContext, const Primitives *inPrimitives );
-		void DrawInstance( ID3D11DeviceContext *inContext );
+		void DrawInstances( ID3D11DeviceContext *inContext );
 
 		void XM_CALLCONV SetViewProj( ID3D11DeviceContext *inContext, DirectX::FXMMATRIX inView, DirectX::FXMMATRIX inProj );
 		void XM_CALLCONV SetInstance( ID3D11DeviceContext *inContext, DirectX::FXMVECTOR inCenter, DirectX::FXMVECTOR inExtent, DirectX::FXMVECTOR inColor );
@@ -39,14 +41,18 @@ namespace Cyclone::Rendering::Shader
 		{
 			DirectX::XMMATRIX gViewProj;
 		};
+		DirectX::ConstantBuffer<ViewProjBuffer> mViewProjBuffer;
 
 		struct InstanceBuffer
 		{
-			DirectX::XMMATRIX gWorld;
+			DirectX::XMVECTOR gCenter;
+			DirectX::XMVECTOR gExtent;
 			DirectX::XMVECTOR gColor;
 		};
+		ComPtr<ID3D11Buffer> mInstanceBuffer;
+		std::unique_ptr<InstanceBuffer[]> mInstanceData;
+		UINT mInstanceCount;
 
-		DirectX::ConstantBuffer<ViewProjBuffer> mViewProjBuffer;
-		DirectX::ConstantBuffer<InstanceBuffer> mInstanceBuffer;
+		static const D3D11_INPUT_ELEMENT_DESC sInputElements[4];
 	};
 }

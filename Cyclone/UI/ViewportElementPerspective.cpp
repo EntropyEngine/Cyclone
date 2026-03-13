@@ -169,8 +169,8 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 			Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
 			mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
-			mWireframeBoxShader->DrawInstance( inDeviceContext );
 		}
+		mWireframeBoxShader->DrawInstances( inDeviceContext );
 	}
 
 	Resolve( inDeviceContext );

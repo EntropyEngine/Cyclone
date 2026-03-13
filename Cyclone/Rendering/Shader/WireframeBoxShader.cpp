@@ -5,11 +5,27 @@
 
 // DX Includes
 #include <ReadData.h>
+#include <DirectXHelpers.h>
+
+const D3D11_INPUT_ELEMENT_DESC Cyclone::Rendering::Shader::WireframeBoxShader::sInputElements[4] = {
+	{ "SV_Position",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA,	0 },
+	{ "InstCenter",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+	{ "InstExtent",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+	{ "InstColor",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+};
 
 void Cyclone::Rendering::Shader::WireframeBoxShader::SetDevice( ID3D11Device *inDevice )
 {
 	mViewProjBuffer.Create( inDevice );
-	mInstanceBuffer.Create( inDevice );
+
+	CD3D11_BUFFER_DESC instanceDesc(
+		kBatchSize * sizeof( InstanceBuffer ),
+		D3D11_BIND_VERTEX_BUFFER,
+		D3D11_USAGE_DYNAMIC,
+		D3D11_CPU_ACCESS_WRITE
+	);
+	DX::ThrowIfFailed( inDevice->CreateBuffer( &instanceDesc, nullptr, mInstanceBuffer.ReleaseAndGetAddressOf() ) );
+	mInstanceData = std::make_unique<InstanceBuffer[]>( kBatchSize );
 
 	const auto vsData = DX::ReadData( L"WireFrameBox_VS.cso" );
 	DX::ThrowIfFailed( inDevice->CreateVertexShader(
@@ -28,8 +44,8 @@ void Cyclone::Rendering::Shader::WireframeBoxShader::SetDevice( ID3D11Device *in
 	) );
 
 	DX::ThrowIfFailed( inDevice->CreateInputLayout(
-		PrimitiveTraits::VertexType::InputElements,
-		PrimitiveTraits::VertexType::InputElementCount,
+		sInputElements,
+		std::size( sInputElements ),
 		vsData.data(),
 		vsData.size(),
 		mInputLayout.ReleaseAndGetAddressOf()
@@ -42,6 +58,8 @@ void Cyclone::Rendering::Shader::WireframeBoxShader::Apply( ID3D11DeviceContext 
 	inContext->IASetInputLayout( mInputLayout.Get() );
 	inContext->VSSetShader( mVertexShader.Get(), nullptr, 0 );
 	inContext->PSSetShader( mPixelShader.Get(), nullptr, 0 );
+
+	mInstanceCount = 0;
 }
 
 void Cyclone::Rendering::Shader::WireframeBoxShader::SetMesh( ID3D11DeviceContext *inContext, const Primitives *inPrimitives )
@@ -53,13 +71,22 @@ void Cyclone::Rendering::Shader::WireframeBoxShader::SetMesh( ID3D11DeviceContex
 	const UINT vertexStride = PrimitiveTraits::kVertexStride;
 	const UINT vertexOffset = 0;
 
+	const UINT instanceStride = sizeof( InstanceBuffer );
+	const UINT instanceOffset = 0;
+
 	inContext->IASetVertexBuffers( 0, 1, &vertexBuffer, &vertexStride, &vertexOffset );
+	inContext->IASetVertexBuffers( 1, 1, mInstanceBuffer.GetAddressOf(), &instanceStride, &instanceOffset );
 	inContext->IASetIndexBuffer( indexBuffer, PrimitiveTraits::kIndexFormat, 0 );
 }
 
-void Cyclone::Rendering::Shader::WireframeBoxShader::DrawInstance( ID3D11DeviceContext *inContext )
+void Cyclone::Rendering::Shader::WireframeBoxShader::DrawInstances( ID3D11DeviceContext *inContext )
 {
-	inContext->DrawIndexed( PrimitiveTraits::kIndexCount, 0, 0 );
+	{
+		DirectX::MapGuard map( inContext, mInstanceBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0 );
+		memcpy( map.pData, mInstanceData.get(), mInstanceCount * sizeof( InstanceBuffer ) );
+	}
+	inContext->DrawIndexedInstanced( PrimitiveTraits::kIndexCount, mInstanceCount, 0, 0, 0 );
+	mInstanceCount = 0;
 }
 
 void XM_CALLCONV Cyclone::Rendering::Shader::WireframeBoxShader::SetViewProj( ID3D11DeviceContext *inContext, DirectX::FXMMATRIX inView, DirectX::FXMMATRIX inProj )
@@ -72,16 +99,6 @@ void XM_CALLCONV Cyclone::Rendering::Shader::WireframeBoxShader::SetViewProj( ID
 
 void XM_CALLCONV Cyclone::Rendering::Shader::WireframeBoxShader::SetInstance( ID3D11DeviceContext *inContext, DirectX::FXMVECTOR inCenter, DirectX::FXMVECTOR inExtent, DirectX::FXMVECTOR inColor )
 {
-	InstanceBuffer instance{
-		DirectX::XMMatrixMultiplyTranspose(
-			DirectX::XMMatrixScalingFromVector( inExtent ),
-			DirectX::XMMatrixTranslationFromVector( inCenter )
-		),
-		inColor
-	};
-	mInstanceBuffer.SetData( inContext, instance );
-	
-	auto buffer = mInstanceBuffer.GetBuffer();
-	inContext->VSSetConstantBuffers( 1, 1, &buffer );
-	inContext->PSSetConstantBuffers( 1, 1, &buffer );
+	mInstanceData[mInstanceCount++] = { inCenter, inExtent, inColor };
+	if ( mInstanceCount >= kBatchSize ) DrawInstances( inContext );
 }
