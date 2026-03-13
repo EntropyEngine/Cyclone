@@ -232,17 +232,9 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 		// Iterate over all entities
 		const entt::registry &cregistry = inLevelInterface->GetRegistry();
-		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
+		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, ViewportTypeTraits<T>::DrawTag>();
 		for ( const entt::entity entity : view ) {
-
-			const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
-			if ( !entityManager.GetEntityCategoryIsVisible( entityCategory ) ) continue;
-
 			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-			if ( !entityManager.GetEntityTypeIsVisible( entityType ) ) continue;
-
-			if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
-
 			const auto &position = view.get<Cyclone::Core::Component::Position>( entity ).mValue;
 			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity ).mValue;
 
@@ -274,7 +266,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::Core::LevelInterface *inLevelInterface, ImDrawList *drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax ) const
+void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::LevelInterface *inLevelInterface, ImDrawList *drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax ) const
 {
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
@@ -306,8 +298,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
 
 	// Iterate over all entities
-	const entt::registry &cregistry = inLevelInterface->GetRegistry();
-	auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
+	entt::registry &registry = inLevelInterface->GetRegistry();
+	auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, Cyclone::Core::Component::Visible>();
 	for ( const entt::entity entity : view ) {
 
 		const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
@@ -388,6 +380,10 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( const Cyclone::C
 
 			outSelectedBoxMax.x = std::max( outSelectedBoxMax.x, localBoxMax.x );
 			outSelectedBoxMax.y = std::max( outSelectedBoxMax.y, localBoxMax.y );
+		}
+
+		if ( inBounds ) {
+			registry.emplace<ViewportTypeTraits<T>::DrawTag>( entity );
 		}
 	}
 

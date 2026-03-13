@@ -32,7 +32,7 @@ namespace Cyclone::UI
 
 	protected:
 		/// @note mutates global ImGui state
-		void DrawEntities( const Cyclone::Core::LevelInterface *inLevelInterface, ImDrawList* drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax ) const;
+		void DrawEntities( Cyclone::Core::LevelInterface *inLevelInterface, ImDrawList* drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax ) const;
 
 	private:
 		void XM_CALLCONV GetMinMaxUV( Cyclone::Math::Vector4D inCenter2D, double inWorldLimit, double inZoomScale2D, double &outMinU, double &outMaxU, double &outMinV, double &outMaxV ) const

@@ -62,6 +62,8 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	ImVec2 viewSizePerspective, viewSizeTop, viewSizeFront, viewSizeSide;
 	ImVec2 viewSize = ImGui::GetWindowSize();
 
+	inLevelInterface->GetRegistry().clear<entt::tag<"draw_perspective"_hs>, entt::tag<"draw_top"_hs>, entt::tag<"draw_front"_hs>, entt::tag<"draw_side"_hs>>();
+
 	// Instantiate all windows and grab their positional data
 	{
 		if ( mShouldAutosize ) {
