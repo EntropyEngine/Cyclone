@@ -18,7 +18,7 @@ namespace Cyclone::Rendering::Shader
 		static constexpr auto kPrimitiveShape = EPrimitiveShape::Box;
 		using PrimitiveTraits = PrimitiveTypeTraits<kPrimitiveType, kPrimitiveShape>;
 
-		static constexpr UINT kBatchSize = 1024;
+		static constexpr UINT kBatchSize = 256;
 
 		WireframeBoxShader() = default;
 

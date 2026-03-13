@@ -153,7 +153,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 
 	// Draw entites and get selection bounding box
 	ImVec2 selectedBoxMin, selectedBoxMax;
-	DrawEntities( inLevelInterface, drawList, viewOrigin, viewSize, selectedBoxMin, selectedBoxMax );
+	DrawEntities( inLevelInterface, drawList, viewOrigin, viewSize, selectedBoxMin, selectedBoxMax, isCanvasHovered );
 
 	// Perform selection transform
 	Tool::SelectionTransformTool().OnUpdate<T>( inLevelInterface, drawList, viewOrigin, selectedBoxMin, selectedBoxMax );
@@ -267,7 +267,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::LevelInterface *inLevelInterface, ImDrawList *drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax ) const
+void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::LevelInterface *inLevelInterface, ImDrawList *drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax, bool inCanvasIsHovered ) const
 {
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
@@ -354,11 +354,11 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::L
 		bool inBounds = posInBounds || boxInBounds;
 
 		// Only draw X if smaller than bounding box
-		if ( kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y && inBounds ) {
+		if ( inCanvasIsHovered && kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y && inBounds ) {
 			DrawCross( drawList, localPos, kPositionHandleSize, entityColor );
 		}
 
-		if ( kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y && inBounds ) {
+		if ( entityInSelection && kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y && inBounds ) {
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, entityManager.GetEntityTypeName( entityType ) );
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, Cyclone::Util::PrefixString( "id=", entity ) );
 		}
