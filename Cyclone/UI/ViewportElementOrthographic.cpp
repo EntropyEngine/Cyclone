@@ -54,8 +54,22 @@ namespace
 
 	void DrawCross( ImDrawList *inDrawList, const ImVec2 &inOrigin, float inWidth, ImU32 inColor )
 	{
-		inDrawList->AddLine( { inOrigin.x - inWidth, inOrigin.y - inWidth }, { inOrigin.x + inWidth, inOrigin.y + inWidth }, inColor );
-		inDrawList->AddLine( { inOrigin.x + inWidth, inOrigin.y - inWidth }, { inOrigin.x - inWidth, inOrigin.y + inWidth }, inColor );
+		float a, b, c, d;
+		a = int( inOrigin.x - inWidth + 1 );
+		b = int( inOrigin.y - inWidth + 1 );
+		c = int( inOrigin.x + inWidth );
+		d = int( inOrigin.y + inWidth );
+
+		inDrawList->PathLineTo( { a, b } );
+		inDrawList->PathLineTo( { c, d } );
+		inDrawList->PathStroke( inColor );
+
+		inDrawList->PathLineTo( { a, d } );
+		inDrawList->PathLineTo( { c, b } );
+		inDrawList->PathStroke( inColor );
+
+		//inDrawList->AddLine( { inOrigin.x - inWidth, inOrigin.y - inWidth }, { inOrigin.x + inWidth, inOrigin.y + inWidth }, inColor );
+		//inDrawList->AddLine( { inOrigin.x + inWidth, inOrigin.y - inWidth }, { inOrigin.x - inWidth, inOrigin.y + inWidth }, inColor );
 	}
 }
 
@@ -72,7 +86,9 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
 
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
-	drawList->Flags |= ImDrawListFlags_AntiAliasedLines;
+	if ( mTargetMSAA->GetSampleCount() <= 1 ) {
+		drawList->Flags &= ~( ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedLinesUseTex | ImDrawListFlags_AntiAliasedFill );
+	}
 
 	ImGui::SetCursorPos( { 0, 0 } );
 	ImGui::Image( GetOrResizeSRV( static_cast<size_t>( viewSize.x ), static_cast<size_t>( viewSize.y ) ), viewSize );
