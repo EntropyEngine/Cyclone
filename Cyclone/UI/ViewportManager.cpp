@@ -39,10 +39,14 @@ namespace
 
 Cyclone::UI::ViewportManager::ViewportManager()
 {
-	mViewportPerspective = std::make_unique<ViewportElementPerspective>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black, mAntialiasingEnabled );
-	mViewportTop = std::make_unique<ViewportElementOrthographic<EViewportType::TopXZ>>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black, mAntialiasingEnabled );
-	mViewportFront = std::make_unique<ViewportElementOrthographic<EViewportType::FrontXY>>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black, mAntialiasingEnabled );
-	mViewportSide = std::make_unique<ViewportElementOrthographic<EViewportType::SideYZ>>( DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_D32_FLOAT, DirectX::Colors::Black, mAntialiasingEnabled );
+	const DXGI_FORMAT rtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	const DXGI_FORMAT dsvFormat = DXGI_FORMAT_D32_FLOAT;
+	const DirectX::XMVECTORF32 clearColor = DirectX::Colors::Black;
+
+	mViewportPerspective = std::make_unique<ViewportElementPerspective>( rtvFormat, dsvFormat, clearColor, mAntialiasingEnabled );
+	mViewportTop = std::make_unique<ViewportElementOrthographic<EViewportType::TopXZ>>( rtvFormat, dsvFormat, clearColor, mAntialiasingEnabled );
+	mViewportFront = std::make_unique<ViewportElementOrthographic<EViewportType::FrontXY>>( rtvFormat, dsvFormat, clearColor, mAntialiasingEnabled );
+	mViewportSide = std::make_unique<ViewportElementOrthographic<EViewportType::SideYZ>>( rtvFormat, dsvFormat, clearColor, mAntialiasingEnabled );
 }
 
 void Cyclone::UI::ViewportManager::SetDevice( ID3D11Device3 *inDevice )
@@ -57,7 +61,7 @@ void Cyclone::UI::ViewportManager::MenuBarUpdate()
 {
 	if ( ImGui::MenuItem( "Enable Antialiasing", nullptr, &mAntialiasingEnabled ) ) ToggleAntialiasing( mAntialiasingEnabled );
 	ImGui::Separator();
-	if ( ImGui::MenuItem( "Autosize Viewports", "Ctrl+A") ) mShouldAutosize = true;
+	if ( ImGui::MenuItem( "Autosize Viewports", "Ctrl+A" ) ) mShouldAutosize = true;
 }
 
 void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
