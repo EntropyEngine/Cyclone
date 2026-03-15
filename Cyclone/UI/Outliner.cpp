@@ -355,38 +355,46 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					const size_t currentEpoch = entityManager.GetUndoEpoch();
 					size_t chosenEpoch = currentEpoch;
 
-					for ( int epoch = static_cast<int>( undoStack.size() ) - 1; epoch >= 0; --epoch ) {
-						ImGui::PushID( epoch );
+					ImGuiListClipper clipper;
+					clipper.Begin( static_cast<int>( undoStack.size() ) );
 
-						const entt::registry &epochRegistry = undoStack[epoch].mRegistry;
+					while ( clipper.Step() ) {
+						for ( int rowN = clipper.DisplayStart; rowN < clipper.DisplayEnd; ++rowN ) {
+						//for ( int epoch = static_cast<int>( undoStack.size() ) - 1; epoch >= 0; --epoch ) {
+							int epoch = undoStack.size() - 1 - rowN;
 
-						size_t nChanges = epochRegistry.view<entt::entity>().size();
-						size_t nUpdates = epochRegistry.view<Cyclone::Core::Component::EpochNumber>().size();
+							ImGui::PushID( epoch );
 
-						bool isCurrent = epoch == currentEpoch;
-						bool disabled = epoch > currentEpoch;
+							const entt::registry &epochRegistry = undoStack[epoch].mRegistry;
 
-						if ( disabled ) ImGui::PushStyleColor( ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled] );
+							size_t nChanges = epochRegistry.view<entt::entity>().size();
+							size_t nUpdates = epochRegistry.view<Cyclone::Core::Component::EpochNumber>().size();
 
-						ImGui::TableNextRow();
+							bool isCurrent = epoch == currentEpoch;
+							bool disabled = epoch > currentEpoch;
 
-						ImGui::TableSetColumnIndex( 0 );
-						if ( ImGui::Selectable( Cyclone::Util::PrefixString( "", epoch ), isCurrent, ImGuiSelectableFlags_SpanAllColumns ) ) {
-							chosenEpoch = epoch;
-						};
+							if ( disabled ) ImGui::PushStyleColor( ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled] );
 
-						ImGui::TableSetColumnIndex( 1 );
-						ImGui::Text( Cyclone::Util::PrefixString( "", nChanges ) );
+							ImGui::TableNextRow();
 
-						ImGui::TableSetColumnIndex( 2 );
-						ImGui::Text( Cyclone::Util::PrefixString( "", nChanges - nUpdates ) );
+							ImGui::TableSetColumnIndex( 0 );
+							if ( ImGui::Selectable( Cyclone::Util::PrefixString( "", epoch ), isCurrent, ImGuiSelectableFlags_SpanAllColumns ) ) {
+								chosenEpoch = epoch;
+							};
 
-						ImGui::TableSetColumnIndex( 3 );
-						ImGui::Text( Cyclone::Util::PrefixString( "", nUpdates ) );
+							ImGui::TableSetColumnIndex( 1 );
+							ImGui::Text( Cyclone::Util::PrefixString( "", nChanges ) );
 
-						if ( disabled ) ImGui::PopStyleColor( 1 );
+							ImGui::TableSetColumnIndex( 2 );
+							ImGui::Text( Cyclone::Util::PrefixString( "", nChanges - nUpdates ) );
 
-						ImGui::PopID();
+							ImGui::TableSetColumnIndex( 3 );
+							ImGui::Text( Cyclone::Util::PrefixString( "", nUpdates ) );
+
+							if ( disabled ) ImGui::PopStyleColor( 1 );
+
+							ImGui::PopID();
+						}
 					}
 
 					if ( chosenEpoch != currentEpoch ) {
