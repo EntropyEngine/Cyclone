@@ -61,6 +61,7 @@ namespace Cyclone
 
 		Microsoft::WRL::ComPtr<IDXGISwapChain1>         mSwapChain;
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  mRenderTargetView;
+		bool											mAllowTearing;
 
 		std::unique_ptr<Cyclone::UI::MainUI>			mMainUI;
 		std::unique_ptr<Cyclone::Core::LevelInterface>	mLevelInterface;

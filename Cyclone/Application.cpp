@@ -143,8 +143,9 @@ void Cyclone::Application::Clear()
 void Cyclone::Application::Present()
 {
 	UINT syncInterval = mMainUI->IsVerticalSyncEnabled() ? 1 : 0;
+	UINT syncFlags = mMainUI->IsVerticalSyncEnabled() || !mAllowTearing ? 0 : DXGI_PRESENT_ALLOW_TEARING;
 
-	HRESULT hr = mSwapChain->Present( syncInterval, 0 );
+	HRESULT hr = mSwapChain->Present( syncInterval, syncFlags );
 
 	// If the device was reset we must completely reinitialize the renderer.
 	if ( hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET )
@@ -241,7 +242,7 @@ void Cyclone::Application::CreateResources()
 	// If the swap chain already exists, resize it, otherwise create one.
 	if ( mSwapChain )
 	{
-		HRESULT hr = mSwapChain->ResizeBuffers( backBufferCount, backBufferWidth, backBufferHeight, backBufferFormat, 0 );
+		HRESULT hr = mSwapChain->ResizeBuffers( backBufferCount, backBufferWidth, backBufferHeight, backBufferFormat, mAllowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u );
 
 		if ( hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET )
 		{
@@ -271,6 +272,24 @@ void Cyclone::Application::CreateResources()
 		Microsoft::WRL::ComPtr<IDXGIFactory2> dxgiFactory;
 		DX::ThrowIfFailed( dxgiAdapter->GetParent( IID_PPV_ARGS( dxgiFactory.GetAddressOf() ) ) );
 
+		{
+			BOOL allowTearing = FALSE;
+
+			Microsoft::WRL::ComPtr<IDXGIFactory5> dxgiFactory5;
+			HRESULT hr = dxgiFactory.As( &dxgiFactory5 );
+
+			if ( SUCCEEDED( hr ) ) {
+				hr = dxgiFactory5->CheckFeatureSupport( DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof( allowTearing ) );
+			}
+
+			if ( FAILED( hr ) || !allowTearing ) {
+				mAllowTearing = false;
+			}
+			else {
+				mAllowTearing = true;
+			}
+		}
+
 		// Create a descriptor for the swap chain.
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 		swapChainDesc.Width = backBufferWidth;
@@ -281,6 +300,7 @@ void Cyclone::Application::CreateResources()
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swapChainDesc.BufferCount = backBufferCount;
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		swapChainDesc.Flags = mAllowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u;
 
 		DXGI_SWAP_CHAIN_FULLSCREEN_DESC fsSwapChainDesc = {};
 		fsSwapChainDesc.Windowed = TRUE;
