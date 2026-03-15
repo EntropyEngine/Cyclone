@@ -38,8 +38,10 @@ namespace
 	{
 		inEntityManager.BeginAction();
 		for ( auto [entity, type, tag] : inRegistry.view<const P, T>().each() ) {
-			if ( inPredicate == type ) tag = static_cast<T>( inSet );
-			inEntityManager.UpdateEntity( entity, inRegistry );
+			if ( inPredicate == type ) {
+				tag = static_cast<T>( inSet );
+				inEntityManager.UpdateEntity( entity, inRegistry );
+			}
 		}
 		inEntityManager.EndAction( inRegistry );
 	}
