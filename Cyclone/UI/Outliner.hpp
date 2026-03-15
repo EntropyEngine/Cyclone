@@ -31,5 +31,7 @@ namespace Cyclone::UI
 		float mRemainingHeight = 0.0f;
 
 		void RebuildTree( const Cyclone::Core::LevelInterface *inLevelInterface );
+
+		void OutlinerTreeUpdate( Cyclone::Core::LevelInterface *inLevelInterface );
 	};
 }
