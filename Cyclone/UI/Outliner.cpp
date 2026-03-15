@@ -283,43 +283,50 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 					std::copy( selectionContext.GetSelectedEntities().begin(), selectionContext.GetSelectedEntities().end(), previousSelection.begin() );
 					//const auto previousSelection = selectionContext.GetSelectedEntities();
 
-					for ( entt::entity entity : previousSelection ) {
-						ImGui::PushID( static_cast<int>( entity ) );
+					ImGuiListClipper clipper;
+					clipper.Begin( static_cast<int>( previousSelection.size() ) );
 
-						bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
+					while ( clipper.Step() ) {
+						for ( int rowN = clipper.DisplayStart; rowN < clipper.DisplayEnd; ++rowN ) {
+							entt::entity entity = previousSelection[rowN];
 
-						ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
-						if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
+							ImGui::PushID( static_cast<int>( entity ) );
 
-						ImGui::TableNextRow();
-						ImGui::TableSetColumnIndex( 0 );
+							bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
 
-						const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-						ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
-						ImGui::SetNextItemAllowOverlap();
-						if ( ImGui::Selectable( entityManager.GetEntityTypeName( entityType ), true, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
-							HandleEntityClick( selectionContext, io, entity, entityIsSelected );
+							ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
+							if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
+
+							ImGui::TableNextRow();
+							ImGui::TableSetColumnIndex( 0 );
+
+							const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+							ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
+							ImGui::SetNextItemAllowOverlap();
+							if ( ImGui::Selectable( entityManager.GetEntityTypeName( entityType ), true, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
+								HandleEntityClick( selectionContext, io, entity, entityIsSelected );
+							}
+							ImGui::PopStyleVar( 1 );
+
+							ImGui::TableSetColumnIndex( 1 );
+							ImGui::AlignTextToFramePadding();
+							ImGui::Text( Cyclone::Util::PrefixString( "", entity ) );
+
+							auto &entityVisible = view.get<Cyclone::Core::Component::Visible>( entity );
+							auto &entitySelectable = view.get<Cyclone::Core::Component::Selectable>( entity );
+
+							ImGui::TableSetColumnIndex( 2 );
+							if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
+								UpdateBoolPerEntity( registry, entityManager, entity, entityVisible );
+							}
+
+							ImGui::TableSetColumnIndex( 3 );
+							if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
+								UpdateBoolPerEntity( registry, entityManager, entity, entitySelectable );
+							}
+
+							ImGui::PopID();
 						}
-						ImGui::PopStyleVar( 1 );
-
-						ImGui::TableSetColumnIndex( 1 );
-						ImGui::AlignTextToFramePadding();
-						ImGui::Text( Cyclone::Util::PrefixString( "", entity ) );
-
-						auto &entityVisible = view.get<Cyclone::Core::Component::Visible>( entity );
-						auto &entitySelectable = view.get<Cyclone::Core::Component::Selectable>( entity );
-
-						ImGui::TableSetColumnIndex( 2 );
-						if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
-							UpdateBoolPerEntity( registry, entityManager, entity, entityVisible );
-						}
-
-						ImGui::TableSetColumnIndex( 3 );
-						if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
-							UpdateBoolPerEntity( registry, entityManager, entity, entitySelectable );
-						}
-
-						ImGui::PopID();
 					}
 
 					ImGui::PopStyleVar( 1 );
