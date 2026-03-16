@@ -126,153 +126,11 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 		}
 
 		if ( ImGui::CollapsingHeader( "Selection", ImGuiTreeNodeFlags_DefaultOpen ) ) {
-			auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
-			ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 32.0f }, { ImGui::GetContentRegionAvail().x, mSelectionHeight + mRemainingHeight } );
-			if ( ImGui::BeginChild( "SelectionChild", { 0.0f, 256.0f }, cSectionChildFlags, cSectionWindowFlags ) ) {
-				if ( ImGui::BeginTable( "SelectionTable", 4, cTableFlags, { 0.0f, -1.0f } ) ) {
-					ImGui::TableSetupColumn( "Type" );
-					ImGui::TableSetupColumn( "Name" );
-					ImGui::TableSetupColumn( "V", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() );
-					ImGui::TableSetupColumn( "S", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() );
-					ImGui::TableSetupScrollFreeze( 0, 1 );
-					ImGui::TableHeadersRow();
-
-					ImGui::PushStyleVar( ImGuiStyleVar_CellPadding, { 0.0f, 0.0f } );
-
-					// Explicitly create copy rather than ref
-					std::vector<entt::entity> previousSelection( selectionContext.GetSelectedEntities().size() );
-					std::copy( selectionContext.GetSelectedEntities().begin(), selectionContext.GetSelectedEntities().end(), previousSelection.begin() );
-					//const auto previousSelection = selectionContext.GetSelectedEntities();
-
-					ImGuiListClipper clipper;
-					clipper.Begin( static_cast<int>( previousSelection.size() ) );
-
-					while ( clipper.Step() ) {
-						for ( int rowN = clipper.DisplayStart; rowN < clipper.DisplayEnd; ++rowN ) {
-							entt::entity entity = previousSelection[rowN];
-
-							ImGui::PushID( static_cast<int>( entity ) );
-
-							bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
-
-							ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
-							if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
-
-							ImGui::TableNextRow();
-							ImGui::TableSetColumnIndex( 0 );
-
-							const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-							ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
-							ImGui::SetNextItemAllowOverlap();
-							if ( ImGui::Selectable( entityManager.GetEntityTypeName( entityType ), true, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
-								HandleEntityClick( registry, entityManager, selectionContext, io, entity, entityIsSelected );
-							}
-							ImGui::PopStyleVar( 1 );
-
-							ImGui::TableSetColumnIndex( 1 );
-							ImGui::AlignTextToFramePadding();
-							ImGui::Text( Cyclone::Util::PrefixString( "", entity ) );
-
-							auto &entityVisible = view.get<Cyclone::Core::Component::Visible>( entity );
-							auto &entitySelectable = view.get<Cyclone::Core::Component::Selectable>( entity );
-
-							ImGui::TableSetColumnIndex( 2 );
-							if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
-								UpdateBoolPerEntity( registry, entityManager, entity, entityVisible );
-							}
-
-							ImGui::TableSetColumnIndex( 3 );
-							if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
-								UpdateBoolPerEntity( registry, entityManager, entity, entitySelectable );
-							}
-
-							ImGui::PopID();
-						}
-					}
-
-					ImGui::PopStyleVar( 1 );
-
-					ImGui::EndTable();
-				}
-			}
-			ImGui::EndChild();
-			mSelectionHeight = ImGui::GetItemRectSize().y;
+			SelectionListUpdate( inLevelInterface );
 		}
 
 		if ( ImGui::CollapsingHeader( "Undo History", ImGuiTreeNodeFlags_DefaultOpen ) ) {
-			auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
-			ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 32.0f }, { ImGui::GetContentRegionAvail().x, mUndoHistoryHeight + mRemainingHeight } );
-			if ( ImGui::BeginChild( "UndoHistoryChild", { 0.0f, 256.0f }, cSectionChildFlags, cSectionWindowFlags ) ) {
-				if ( ImGui::BeginTable( "UndoHistoryTable", 4, cTableFlags, { 0.0f, -1.0f } ) ) {
-
-					ImGui::TableSetupColumn( "Epoch" );
-					ImGui::TableSetupColumn( "Total" );
-					ImGui::TableSetupColumn( "Created" );
-					ImGui::TableSetupColumn( "Updated" );
-					ImGui::TableSetupScrollFreeze( 0, 1 );
-					ImGui::TableHeadersRow();
-
-					const auto &undoStack = entityManager.GetUndoStack();
-					const size_t currentEpoch = entityManager.GetUndoEpoch();
-					size_t chosenEpoch = currentEpoch;
-
-					ImGuiListClipper clipper;
-					clipper.Begin( static_cast<int>( undoStack.size() ) );
-
-					while ( clipper.Step() ) {
-						for ( int rowN = clipper.DisplayStart; rowN < clipper.DisplayEnd; ++rowN ) {
-						//for ( int epoch = static_cast<int>( undoStack.size() ) - 1; epoch >= 0; --epoch ) {
-							int epoch = undoStack.size() - 1 - rowN;
-
-							ImGui::PushID( epoch );
-
-							const entt::registry &epochRegistry = undoStack[epoch].mRegistry;
-
-							size_t nChanges = epochRegistry.view<entt::entity>().size();
-							size_t nUpdates = epochRegistry.view<Cyclone::Core::Component::EpochNumber>().size();
-
-							bool isCurrent = epoch == currentEpoch;
-							bool disabled = epoch > currentEpoch;
-
-							if ( disabled ) ImGui::PushStyleColor( ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled] );
-
-							ImGui::TableNextRow();
-
-							ImGui::TableSetColumnIndex( 0 );
-							if ( ImGui::Selectable( Cyclone::Util::PrefixString( "", epoch ), isCurrent, ImGuiSelectableFlags_SpanAllColumns ) ) {
-								chosenEpoch = epoch;
-							};
-
-							ImGui::TableSetColumnIndex( 1 );
-							ImGui::Text( Cyclone::Util::PrefixString( "", nChanges ) );
-
-							ImGui::TableSetColumnIndex( 2 );
-							ImGui::Text( Cyclone::Util::PrefixString( "", nChanges - nUpdates ) );
-
-							ImGui::TableSetColumnIndex( 3 );
-							ImGui::Text( Cyclone::Util::PrefixString( "", nUpdates ) );
-
-							if ( disabled ) ImGui::PopStyleColor( 1 );
-
-							ImGui::PopID();
-						}
-					}
-
-					if ( chosenEpoch != currentEpoch ) {
-						while ( entityManager.GetUndoEpoch() > chosenEpoch ) {
-							entityManager.UndoAction( registry );
-						}
-
-						while ( entityManager.GetUndoEpoch() < chosenEpoch ) {
-							entityManager.RedoAction( registry );
-						}
-					}
-
-					ImGui::EndTable();
-				}
-			}
-			ImGui::EndChild();
-			mUndoHistoryHeight = ImGui::GetItemRectSize().y;
+			UndoHistoryUpdate( inLevelInterface );
 		}
 	}
 	ImGui::EndDisabled();
@@ -445,4 +303,165 @@ void Cyclone::UI::Outliner::OutlinerTreeUpdate( Cyclone::Core::LevelInterface *i
 	}
 	ImGui::EndChild();
 	mOutlinerHeight = ImGui::GetItemRectSize().y;
+}
+
+void Cyclone::UI::Outliner::SelectionListUpdate( Cyclone::Core::LevelInterface *inLevelInterface )
+{
+	auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	auto &entityManager = inLevelInterface->GetEntityManager();
+	entt::registry &registry = inLevelInterface->GetRegistry();
+
+	ImGuiIO &io = ImGui::GetIO();
+	ImGuiStyle &style = ImGui::GetStyle();
+
+	auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
+	ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 32.0f }, { ImGui::GetContentRegionAvail().x, mSelectionHeight + mRemainingHeight } );
+	if ( ImGui::BeginChild( "SelectionChild", { 0.0f, 256.0f }, cSectionChildFlags, cSectionWindowFlags ) ) {
+		if ( ImGui::BeginTable( "SelectionTable", 4, cTableFlags, { 0.0f, -1.0f } ) ) {
+			ImGui::TableSetupColumn( "Type" );
+			ImGui::TableSetupColumn( "Name" );
+			ImGui::TableSetupColumn( "V", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() );
+			ImGui::TableSetupColumn( "S", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() );
+			ImGui::TableSetupScrollFreeze( 0, 1 );
+			ImGui::TableHeadersRow();
+
+			ImGui::PushStyleVar( ImGuiStyleVar_CellPadding, { 0.0f, 0.0f } );
+
+			// Explicitly create copy rather than ref
+			std::vector<entt::entity> previousSelection( selectionContext.GetSelectedEntities().size() );
+			std::copy( selectionContext.GetSelectedEntities().begin(), selectionContext.GetSelectedEntities().end(), previousSelection.begin() );
+
+			ImGuiListClipper clipper;
+			clipper.Begin( static_cast<int>( previousSelection.size() ) );
+
+			while ( clipper.Step() ) {
+				for ( int rowN = clipper.DisplayStart; rowN < clipper.DisplayEnd; ++rowN ) {
+					entt::entity entity = previousSelection[rowN];
+
+					ImGui::PushID( static_cast<int>( entity ) );
+
+					bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
+
+					ImGuiSelectableFlags selectionFlags = ImGuiSelectableFlags_SpanAllColumns;
+					if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
+
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex( 0 );
+
+					const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+					ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
+					ImGui::SetNextItemAllowOverlap();
+					if ( ImGui::Selectable( entityManager.GetEntityTypeName( entityType ), true, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
+						HandleEntityClick( registry, entityManager, selectionContext, io, entity, entityIsSelected );
+					}
+					ImGui::PopStyleVar( 1 );
+
+					ImGui::TableSetColumnIndex( 1 );
+					ImGui::AlignTextToFramePadding();
+					ImGui::Text( Cyclone::Util::PrefixString( "", entity ) );
+
+					auto &entityVisible = view.get<Cyclone::Core::Component::Visible>( entity );
+					auto &entitySelectable = view.get<Cyclone::Core::Component::Selectable>( entity );
+
+					ImGui::TableSetColumnIndex( 2 );
+					if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) UpdateBoolPerEntity( registry, entityManager, entity, entityVisible );
+
+					ImGui::TableSetColumnIndex( 3 );
+					if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) UpdateBoolPerEntity( registry, entityManager, entity, entitySelectable );
+
+					ImGui::PopID();
+				}
+			}
+
+			ImGui::PopStyleVar( 1 );
+
+			ImGui::EndTable();
+		}
+	}
+	ImGui::EndChild();
+	mSelectionHeight = ImGui::GetItemRectSize().y;
+}
+
+void Cyclone::UI::Outliner::UndoHistoryUpdate( Cyclone::Core::LevelInterface *inLevelInterface )
+{
+	auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	auto &entityManager = inLevelInterface->GetEntityManager();
+	entt::registry &registry = inLevelInterface->GetRegistry();
+
+	ImGuiIO &io = ImGui::GetIO();
+	ImGuiStyle &style = ImGui::GetStyle();
+
+	auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
+	ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 32.0f }, { ImGui::GetContentRegionAvail().x, mUndoHistoryHeight + mRemainingHeight } );
+	if ( ImGui::BeginChild( "UndoHistoryChild", { 0.0f, 256.0f }, cSectionChildFlags, cSectionWindowFlags ) ) {
+		if ( ImGui::BeginTable( "UndoHistoryTable", 4, cTableFlags, { 0.0f, -1.0f } ) ) {
+
+			ImGui::TableSetupColumn( "Epoch" );
+			ImGui::TableSetupColumn( "Total" );
+			ImGui::TableSetupColumn( "Created" );
+			ImGui::TableSetupColumn( "Updated" );
+			ImGui::TableSetupScrollFreeze( 0, 1 );
+			ImGui::TableHeadersRow();
+
+			const auto &undoStack = entityManager.GetUndoStack();
+			const size_t currentEpoch = entityManager.GetUndoEpoch();
+			size_t chosenEpoch = currentEpoch;
+
+			ImGuiListClipper clipper;
+			clipper.Begin( static_cast<int>( undoStack.size() ) );
+
+			while ( clipper.Step() ) {
+				for ( int rowN = clipper.DisplayStart; rowN < clipper.DisplayEnd; ++rowN ) {
+					//for ( int epoch = static_cast<int>( undoStack.size() ) - 1; epoch >= 0; --epoch ) {
+					int epoch = undoStack.size() - 1 - rowN;
+
+					ImGui::PushID( epoch );
+
+					const entt::registry &epochRegistry = undoStack[epoch].mRegistry;
+
+					size_t nChanges = epochRegistry.view<entt::entity>().size();
+					size_t nUpdates = epochRegistry.view<Cyclone::Core::Component::EpochNumber>().size();
+
+					bool isCurrent = epoch == currentEpoch;
+					bool disabled = epoch > currentEpoch;
+
+					if ( disabled ) ImGui::PushStyleColor( ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled] );
+
+					ImGui::TableNextRow();
+
+					ImGui::TableSetColumnIndex( 0 );
+					if ( ImGui::Selectable( Cyclone::Util::PrefixString( "", epoch ), isCurrent, ImGuiSelectableFlags_SpanAllColumns ) ) {
+						chosenEpoch = epoch;
+					};
+
+					ImGui::TableSetColumnIndex( 1 );
+					ImGui::Text( Cyclone::Util::PrefixString( "", nChanges ) );
+
+					ImGui::TableSetColumnIndex( 2 );
+					ImGui::Text( Cyclone::Util::PrefixString( "", nChanges - nUpdates ) );
+
+					ImGui::TableSetColumnIndex( 3 );
+					ImGui::Text( Cyclone::Util::PrefixString( "", nUpdates ) );
+
+					if ( disabled ) ImGui::PopStyleColor( 1 );
+
+					ImGui::PopID();
+				}
+			}
+
+			if ( chosenEpoch != currentEpoch ) {
+				while ( entityManager.GetUndoEpoch() > chosenEpoch ) {
+					entityManager.UndoAction( registry );
+				}
+
+				while ( entityManager.GetUndoEpoch() < chosenEpoch ) {
+					entityManager.RedoAction( registry );
+				}
+			}
+
+			ImGui::EndTable();
+		}
+	}
+	ImGui::EndChild();
+	mUndoHistoryHeight = ImGui::GetItemRectSize().y;
 }

@@ -33,5 +33,7 @@ namespace Cyclone::UI
 		void RebuildTree( const Cyclone::Core::LevelInterface *inLevelInterface );
 
 		void OutlinerTreeUpdate( Cyclone::Core::LevelInterface *inLevelInterface );
+		void SelectionListUpdate( Cyclone::Core::LevelInterface *inLevelInterface );
+		void UndoHistoryUpdate( Cyclone::Core::LevelInterface *inLevelInterface );
 	};
 }
