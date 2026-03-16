@@ -147,6 +147,7 @@ void Cyclone::Core::EntityManager::EndAction( entt::registry &inRegistry )
 	assert( mUndoStackLock && "Cannot end action with no stack lock held!" );
 
 	ValidateSelection( inRegistry );
+	UpdateVisibilityTags( inRegistry );
 
 	mSelectionTool.mDirty = false;
 
@@ -195,6 +196,7 @@ void Cyclone::Core::EntityManager::UndoAction( entt::registry &inRegistry )
 	RestoreContextStatePostAction();
 
 	ValidateSelection( inRegistry );
+	UpdateVisibilityTags( inRegistry );
 	
 	mUndoStackLock.unlock();
 }
@@ -234,6 +236,7 @@ void Cyclone::Core::EntityManager::RedoAction( entt::registry & inRegistry )
 	RestoreContextStatePostAction();
 
 	ValidateSelection( inRegistry );
+	UpdateVisibilityTags( inRegistry );
 	
 	mUndoStackLock.unlock();
 }
@@ -376,5 +379,22 @@ void Cyclone::Core::EntityManager::ValidateSelection( entt::registry & inRegistr
 			mSelectionTool.DeselectEntity( entity );
 			continue;
 		}
+	}
+}
+
+void Cyclone::Core::EntityManager::UpdateVisibilityTags( entt::registry &inRegistry )
+{
+	inRegistry.clear<entt::tag<"is_visible"_hs>>();
+	auto view = inRegistry.group<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable>();
+	for ( const entt::entity entity : view ) {
+		const auto &entityCategory = view.get<Component::EntityCategory>( entity );
+		if ( !GetEntityCategoryIsVisible( entityCategory ) ) continue;
+
+		const auto &entityType = view.get<Component::EntityType>( entity );
+		if ( !GetEntityTypeIsVisible( entityType ) ) continue;
+
+		if ( !static_cast<bool>( view.get<Component::Visible>( entity ) ) ) continue;
+
+		inRegistry.emplace<entt::tag<"is_visible"_hs>>( entity );
 	}
 }

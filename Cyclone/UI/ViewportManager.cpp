@@ -75,22 +75,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	ImVec2 viewSizePerspective, viewSizeTop, viewSizeFront, viewSizeSide;
 	ImVec2 viewSize = ImGui::GetWindowSize();
 
-	const auto &entityManager = inLevelInterface->GetEntityManager();
 	entt::registry &registry = inLevelInterface->GetRegistry();
-
-	registry.clear<entt::tag<"is_visible"_hs>, entt::tag<"draw_perspective"_hs>, entt::tag<"draw_top"_hs>, entt::tag<"draw_front"_hs>, entt::tag<"draw_side"_hs>>();
-	auto view = registry.group<EntityType, EntityCategory, Visible, Selectable>();
-	for ( const entt::entity entity : view ) {
-		const auto &entityCategory = view.get<EntityCategory>( entity );
-		if ( !entityManager.GetEntityCategoryIsVisible( entityCategory ) ) continue;
-
-		const auto &entityType = view.get<EntityType>( entity );
-		if ( !entityManager.GetEntityTypeIsVisible( entityType ) ) continue;
-
-		if ( !static_cast<bool>( view.get<Visible>( entity ) ) ) continue;
-
-		registry.emplace<entt::tag<"is_visible"_hs>>( entity );
-	}
 
 	// Instantiate all windows and grab their positional data
 	{
@@ -129,6 +114,9 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 
 	// Perform actual updates
 	{
+		// Clear all visibility tags first
+		registry.clear<entt::tag<"draw_perspective"_hs>, entt::tag<"draw_top"_hs>, entt::tag<"draw_front"_hs>, entt::tag<"draw_side"_hs>>();
+
 		ImGui::SetNextWindowSizeConstraints( viewSizePerspective, viewSizePerspective );
 		if ( ImGui::BeginChild( "PerspectiveView", viewSizePerspective ) ) {
 			mViewportPerspective->Update( inDeltaTime, inLevelInterface );

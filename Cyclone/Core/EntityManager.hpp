@@ -72,6 +72,7 @@ namespace Cyclone::Core
 		void RestoreContextStatePostAction();
 
 		void ValidateSelection( entt::registry &inRegistry );
+		void UpdateVisibilityTags( entt::registry &inRegistry );
 
 		Cyclone::Util::HashMap<uint32_t>	mEntityTypeColorMap;
 		Cyclone::Util::HashMap<const char *>mEntityTypeNameMap;
