@@ -26,6 +26,10 @@
 
 using Cyclone::Math::Vector4D;
 
+using Cyclone::Core::Component::EntityType;
+using Cyclone::Core::Component::Position;
+using Cyclone::Core::Component::BoundingBox;
+
 namespace
 {
 	template<Cyclone::UI::EViewportType T>
@@ -248,12 +252,12 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 		// Iterate over all entities
 		entt::registry &registry = inLevelInterface->GetRegistry();
-		auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, ViewportTypeTraits<T>::DrawTag>();
-		view.use<Cyclone::Core::Component::Position>();
+		auto view = registry.view<EntityType, Position, BoundingBox, ViewportTypeTraits<T>::DrawTag>();
+		view.use<Position>();
 		for ( const entt::entity entity : view ) {
-			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-			const auto &position = view.get<Cyclone::Core::Component::Position>( entity ).mValue;
-			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity ).mValue;
+			const auto &entityType = view.get<EntityType>( entity );
+			const auto &position = view.get<Position>( entity ).mValue;
+			const auto &boundingBox = view.get<BoundingBox>( entity ).mValue;
 
 			bool entityInSelection = selectedEntities.contains( entity );
 			bool entityIsSelected = selectedEntity == entity;
@@ -316,12 +320,12 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::L
 
 	// Iterate over all entities
 	entt::registry &registry = inLevelInterface->GetRegistry();
-	auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, entt::tag<"is_visible"_hs>>();
-	view.use<Cyclone::Core::Component::Position>();
+	auto view = registry.view<EntityType, Position, BoundingBox, entt::tag<"is_visible"_hs>>();
+	view.use<Position>();
 	for ( const entt::entity entity : view ) {
-		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-		const auto &position = view.get<Cyclone::Core::Component::Position>( entity ).mValue;
-		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity ).mValue;
+		const auto &entityType = view.get<EntityType>( entity );
+		const auto &position = view.get<Position>( entity ).mValue;
+		const auto &boundingBox = view.get<BoundingBox>( entity ).mValue;
 
 		uint32_t entityColor;
 

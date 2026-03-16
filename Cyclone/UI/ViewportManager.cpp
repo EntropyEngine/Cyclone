@@ -22,6 +22,11 @@
 
 using Cyclone::Math::Vector4D;
 
+using Cyclone::Core::Component::EntityType;
+using Cyclone::Core::Component::EntityCategory;
+using Cyclone::Core::Component::Visible;
+using Cyclone::Core::Component::Selectable;
+
 namespace
 {
 	void DrawViewportOverlay( const char *inText, float inPadding = 4 )
@@ -74,15 +79,15 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	entt::registry &registry = inLevelInterface->GetRegistry();
 
 	registry.clear<entt::tag<"is_visible"_hs>, entt::tag<"draw_perspective"_hs>, entt::tag<"draw_top"_hs>, entt::tag<"draw_front"_hs>, entt::tag<"draw_side"_hs>>();
-	auto view = registry.group<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
+	auto view = registry.group<EntityType, EntityCategory, Visible, Selectable>();
 	for ( const entt::entity entity : view ) {
-		const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
+		const auto &entityCategory = view.get<EntityCategory>( entity );
 		if ( !entityManager.GetEntityCategoryIsVisible( entityCategory ) ) continue;
 
-		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+		const auto &entityType = view.get<EntityType>( entity );
 		if ( !entityManager.GetEntityTypeIsVisible( entityType ) ) continue;
 
-		if ( !static_cast<bool>( view.get<Cyclone::Core::Component::Visible>( entity ) ) ) continue;
+		if ( !static_cast<bool>( view.get<Visible>( entity ) ) ) continue;
 
 		registry.emplace<entt::tag<"is_visible"_hs>>( entity );
 	}

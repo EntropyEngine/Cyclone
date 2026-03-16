@@ -20,6 +20,12 @@
 #include <format>
 #include <execution>
 
+using Cyclone::Core::Component::EntityType;
+using Cyclone::Core::Component::EntityCategory;
+using Cyclone::Core::Component::Visible;
+using Cyclone::Core::Component::Selectable;
+using Cyclone::Core::Component::EpochNumber;
+
 namespace
 {
 	bool DrawTreeNodeCheckbox( ImGuiStyle &inStyle, const char *inLabel, bool inActive )
@@ -92,11 +98,11 @@ namespace
 				inEntityManager.EndAction( inRegistry );
 			};
 			ImGui::Separator();
-			if ( ImGui::Selectable( "Set all children Visible" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( inRegistry, inEntityManager, inType, true );
-			if ( ImGui::Selectable( "Set all children Hidden" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Visible>( inRegistry, inEntityManager, inType, false );
+			if ( ImGui::Selectable( "Set all children Visible" ) ) UpdateBoolPerPredicate<Visible>( inRegistry, inEntityManager, inType, true );
+			if ( ImGui::Selectable( "Set all children Hidden" ) ) UpdateBoolPerPredicate<Visible>( inRegistry, inEntityManager, inType, false );
 			ImGui::Separator();
-			if ( ImGui::Selectable( "Set all children Selectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( inRegistry, inEntityManager, inType, true );
-			if ( ImGui::Selectable( "Set all children Unselectable" ) ) UpdateBoolPerPredicate<Cyclone::Core::Component::Selectable>( inRegistry, inEntityManager, inType, false );
+			if ( ImGui::Selectable( "Set all children Selectable" ) ) UpdateBoolPerPredicate<Selectable>( inRegistry, inEntityManager, inType, true );
+			if ( ImGui::Selectable( "Set all children Unselectable" ) ) UpdateBoolPerPredicate<Selectable>( inRegistry, inEntityManager, inType, false );
 			ImGui::EndPopup();
 		}
 		ImGui::PopStyleVar( 2 );
@@ -141,10 +147,10 @@ void Cyclone::UI::Outliner::RebuildTree( const Cyclone::Core::LevelInterface *in
 	}
 
 	const entt::registry &cregistry = inLevelInterface->GetRegistry();
-	auto view = cregistry.group_if_exists<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::EntityCategory, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
+	auto view = cregistry.group_if_exists<EntityType, EntityCategory, Visible, Selectable>();
 	for ( const entt::entity entity : view ) {
-		const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-		const auto &entityCategory = view.get<Cyclone::Core::Component::EntityCategory>( entity );
+		const auto &entityType = view.get<EntityType>( entity );
+		const auto &entityCategory = view.get<EntityCategory>( entity );
 
 		auto itCategory = mOutlinerTree.find( entityCategory );
 		if ( itCategory == mOutlinerTree.end() ) {
@@ -247,8 +253,8 @@ void Cyclone::UI::Outliner::OutlinerTreeUpdate( Cyclone::Core::LevelInterface *i
 									bool entityInSelection = selectionContext.GetSelectedEntities().contains( entity );
 									bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
 
-									auto &entityVisible = registry.get<Cyclone::Core::Component::Visible>( entity );
-									auto &entitySelectable = registry.get<Cyclone::Core::Component::Selectable>( entity );
+									auto &entityVisible = registry.get<Visible>( entity );
+									auto &entitySelectable = registry.get<Selectable>( entity );
 
 									bool rowVisible = static_cast<bool>( entityVisible ) && categoryVisible && entityTypeVisible;
 									bool rowSelectable = static_cast<bool>( entitySelectable ) && categorySelectable && entityTypeSelectable;
@@ -307,7 +313,7 @@ void Cyclone::UI::Outliner::SelectionListUpdate( Cyclone::Core::LevelInterface *
 	ImGuiIO &io = ImGui::GetIO();
 	ImGuiStyle &style = ImGui::GetStyle();
 
-	auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
+	auto view = registry.view<EntityType, Visible, Selectable>();
 	ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 32.0f }, { ImGui::GetContentRegionAvail().x, mSelectionHeight + mRemainingHeight } );
 	if ( ImGui::BeginChild( "SelectionChild", { 0.0f, 256.0f }, cSectionChildFlags, cSectionWindowFlags ) ) {
 		if ( ImGui::BeginTable( "SelectionTable", 4, cTableFlags, { 0.0f, -1.0f } ) ) {
@@ -341,7 +347,7 @@ void Cyclone::UI::Outliner::SelectionListUpdate( Cyclone::Core::LevelInterface *
 					ImGui::TableNextRow();
 					ImGui::TableSetColumnIndex( 0 );
 
-					const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
+					const auto &entityType = view.get<EntityType>( entity );
 					ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
 					ImGui::SetNextItemAllowOverlap();
 					if ( ImGui::Selectable( entityManager.GetEntityTypeName( entityType ), true, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
@@ -353,8 +359,8 @@ void Cyclone::UI::Outliner::SelectionListUpdate( Cyclone::Core::LevelInterface *
 					ImGui::AlignTextToFramePadding();
 					ImGui::Text( Cyclone::Util::PrefixString( "", entity ) );
 
-					auto &entityVisible = view.get<Cyclone::Core::Component::Visible>( entity );
-					auto &entitySelectable = view.get<Cyclone::Core::Component::Selectable>( entity );
+					auto &entityVisible = view.get<Visible>( entity );
+					auto &entitySelectable = view.get<Selectable>( entity );
 
 					ImGui::TableSetColumnIndex( 2 );
 					if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) UpdateBoolPerEntity( registry, entityManager, entity, entityVisible );
@@ -382,7 +388,7 @@ void Cyclone::UI::Outliner::UndoHistoryUpdate( Cyclone::Core::LevelInterface *in
 
 	ImGuiStyle &style = ImGui::GetStyle();
 
-	auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
+	auto view = registry.view<EntityType, Visible, Selectable>();
 	ImGui::SetNextWindowSizeConstraints( { ImGui::GetContentRegionAvail().x, 32.0f }, { ImGui::GetContentRegionAvail().x, mUndoHistoryHeight + mRemainingHeight } );
 	if ( ImGui::BeginChild( "UndoHistoryChild", { 0.0f, 256.0f }, cSectionChildFlags, cSectionWindowFlags ) ) {
 		if ( ImGui::BeginTable( "UndoHistoryTable", 4, cTableFlags, { 0.0f, -1.0f } ) ) {
@@ -411,7 +417,7 @@ void Cyclone::UI::Outliner::UndoHistoryUpdate( Cyclone::Core::LevelInterface *in
 					const entt::registry &epochRegistry = undoStack[epoch].mRegistry;
 
 					size_t nChanges = epochRegistry.view<entt::entity>().size();
-					size_t nUpdates = epochRegistry.view<Cyclone::Core::Component::EpochNumber>().size();
+					size_t nUpdates = epochRegistry.view<EpochNumber>().size();
 
 					bool isCurrent = epoch == currentEpoch;
 					bool disabled = epoch > currentEpoch;

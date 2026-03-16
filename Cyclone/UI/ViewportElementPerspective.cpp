@@ -18,6 +18,10 @@
 
 using Cyclone::Math::Vector4D;
 
+using Cyclone::Core::Component::EntityType;
+using Cyclone::Core::Component::Position;
+using Cyclone::Core::Component::BoundingBox;
+
 namespace
 {
 	DirectX::XMMATRIX XM_CALLCONV GetViewMatrix( float inPitch, float inYaw )
@@ -135,12 +139,12 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 		// Iterate over all entities
 		const entt::registry &cregistry = inLevelInterface->GetRegistry();
-		auto view = cregistry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, entt::tag<"is_visible"_hs>>();
-		view.use<Cyclone::Core::Component::Position>();
+		auto view = cregistry.view<EntityType, Position, BoundingBox, entt::tag<"is_visible"_hs>>();
+		view.use<Position>();
 		for ( const entt::entity entity : view ) {
-			const auto &entityType = view.get<Cyclone::Core::Component::EntityType>( entity );
-			const auto &position = view.get<Cyclone::Core::Component::Position>( entity ).mValue;
-			const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity ).mValue;
+			const auto &entityType = view.get<EntityType>( entity );
+			const auto &position = view.get<Position>( entity ).mValue;
+			const auto &boundingBox = view.get<BoundingBox>( entity ).mValue;
 
 			bool entityInSelection = selectionContext.GetSelectedEntities().contains( entity );
 			bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
