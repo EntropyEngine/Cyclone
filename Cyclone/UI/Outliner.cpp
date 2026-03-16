@@ -399,9 +399,12 @@ void Cyclone::UI::Outliner::OutlinerTreeUpdate( Cyclone::Core::LevelInterface *i
 									auto &entityVisible = registry.get<Cyclone::Core::Component::Visible>( entity );
 									auto &entitySelectable = registry.get<Cyclone::Core::Component::Selectable>( entity );
 
+									bool rowVisible = static_cast<bool>( entityVisible ) && categoryVisible && entityTypeVisible;
+									bool rowSelectable = static_cast<bool>( entitySelectable ) && categorySelectable && entityTypeSelectable;
+
 									if ( entityIsSelected ) selectionFlags |= ImGuiSelectableFlags_Highlight;
-									if ( !static_cast<bool>( entityVisible ) || !categoryVisible || !entityTypeVisible ) selectionFlags |= ImGuiSelectableFlags_Disabled;
-									if ( !static_cast<bool>( entitySelectable ) || !categorySelectable || !entityTypeSelectable ) selectionFlags |= ImGuiSelectableFlags_Disabled;
+									if ( !rowVisible ) selectionFlags |= ImGuiSelectableFlags_Disabled;
+									if ( !rowSelectable ) selectionFlags |= ImGuiSelectableFlags_Disabled;
 
 									if ( !( selectionFlags & ImGuiSelectableFlags_Disabled ) ) treeLeafFlags |= ImGuiTreeNodeFlags_Bullet;
 
@@ -419,14 +422,10 @@ void Cyclone::UI::Outliner::OutlinerTreeUpdate( Cyclone::Core::LevelInterface *i
 									ImGui::PopStyleVar( 1 );
 
 									ImGui::TableSetColumnIndex( 1 );
-									if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) {
-										UpdateBoolPerEntity( registry, entityManager, entity, entityVisible );
-									}
+									if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) UpdateBoolPerEntity( registry, entityManager, entity, entityVisible );
 
 									ImGui::TableSetColumnIndex( 2 );
-									if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) {
-										UpdateBoolPerEntity( registry, entityManager, entity, entitySelectable );
-									}
+									if ( DrawTreeNodeCheckbox( style, "##S", static_cast<bool>( entitySelectable ) ) ) UpdateBoolPerEntity( registry, entityManager, entity, entitySelectable );
 
 									ImGui::TreePop();
 									ImGui::PopID();
