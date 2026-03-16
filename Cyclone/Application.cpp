@@ -9,6 +9,7 @@
 // ImGui includes
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
+#include <imgui_internal.h>
 
 Cyclone::Application::Application() noexcept :
 	mWindow( nullptr ),
@@ -102,6 +103,13 @@ void Cyclone::Application::GetDefaultSize( int &outWidth, int &outHeight ) const
 
 void Cyclone::Application::Update( float inDeltaTime )
 {
+	if ( ImGui::GetFrameCount() % 120 == 0 ) {
+		ImGui_ImplDX11_InvalidateDeviceObjects();
+		for ( ImGuiWindow* window : ImGui::GetCurrentContext()->Windows ) {
+			ImGui::GcCompactTransientWindowBuffers( window );
+		}
+		ImGui::GetCurrentContext()->GcCompactAll = true;
+	}
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
