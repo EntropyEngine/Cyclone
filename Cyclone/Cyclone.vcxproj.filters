@@ -191,7 +191,6 @@
     <ClInclude Include="Util\HashMap.hpp">
       <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="Core\HistoryAction.hpp" />
     <ClInclude Include="Rendering\Shader\WireframeBoxShader.hpp">
       <Filter>Rendering\Shader</Filter>
     </ClInclude>
@@ -200,6 +199,9 @@
     </ClInclude>
     <ClInclude Include="ReadData.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\HistoryAction.hpp">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -285,12 +287,14 @@
     <ClCompile Include="Core\EntityManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Core\HistoryAction.cpp" />
     <ClCompile Include="Rendering\Shader\WireframeBoxShader.cpp">
       <Filter>Rendering\Shader</Filter>
     </ClCompile>
     <ClCompile Include="Rendering\Primitives.cpp">
       <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\HistoryAction.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
