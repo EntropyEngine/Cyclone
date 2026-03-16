@@ -46,8 +46,9 @@ namespace
 		inEntityManager.EndAction( inRegistry );
 	}
 
-	void HandleEntityClick( Cyclone::Core::Tool::SelectionToolContext &inSelectionContext, ImGuiIO &inIo, entt::entity inEntity, bool inEntityIsSelected )
+	void HandleEntityClick( entt::registry &inRegistry, Cyclone::Core::EntityManager &inEntityManager, Cyclone::Core::Tool::SelectionToolContext &inSelectionContext, ImGuiIO &inIo, entt::entity inEntity, bool inEntityIsSelected )
 	{
+		inEntityManager.BeginAction();
 		if ( inIo.KeyCtrl ) {
 			if ( inEntityIsSelected ) {
 				inSelectionContext.DeselectEntity( inEntity );
@@ -59,6 +60,7 @@ namespace
 		else {
 			inSelectionContext.SetSelectedEntity( inEntity );
 		}
+		inEntityManager.EndAction( inRegistry );
 	}
 
 	void UpdateBoolPerEntity( entt::registry &inRegistry, Cyclone::Core::EntityManager &inEntityManager, entt::entity inEntity, auto &ioTag )
@@ -163,7 +165,7 @@ void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterf
 							ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
 							ImGui::SetNextItemAllowOverlap();
 							if ( ImGui::Selectable( entityManager.GetEntityTypeName( entityType ), true, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
-								HandleEntityClick( selectionContext, io, entity, entityIsSelected );
+								HandleEntityClick( registry, entityManager, selectionContext, io, entity, entityIsSelected );
 							}
 							ImGui::PopStyleVar( 1 );
 
@@ -412,7 +414,7 @@ void Cyclone::UI::Outliner::OutlinerTreeUpdate( Cyclone::Core::LevelInterface *i
 									ImGui::SetNextItemAllowOverlap();
 									ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.0f, 0.5f } );
 									if ( ImGui::Selectable( entityIdString.Value(), entityInSelection, selectionFlags, { 0, style.FramePadding.y * 2 + ImGui::GetTextLineHeight() } ) ) {
-										HandleEntityClick( selectionContext, io, entity, entityIsSelected );
+										HandleEntityClick( registry, entityManager, selectionContext, io, entity, entityIsSelected );
 									}
 									ImGui::PopStyleVar( 1 );
 
