@@ -105,10 +105,11 @@ void Cyclone::Application::Update( float inDeltaTime )
 {
 	if ( ImGui::GetFrameCount() % 120 == 0 ) {
 		ImGui_ImplDX11_InvalidateDeviceObjects();
-		for ( ImGuiWindow* window : ImGui::GetCurrentContext()->Windows ) {
+		ImGuiContext *g = ImGui::GetCurrentContext();
+		for ( ImGuiWindow* window : g->Windows ) {
 			ImGui::GcCompactTransientWindowBuffers( window );
 		}
-		ImGui::GetCurrentContext()->GcCompactAll = true;
+		g->GcCompactAll = true;
 	}
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
