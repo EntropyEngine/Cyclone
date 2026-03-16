@@ -42,7 +42,7 @@ namespace Cyclone::Core::Entity
 		{
 			// If inEntity doesn't exist inside inHistoryRegistry, create a new entity with the specified ID number
 			if ( !inHistoryRegistry.valid( inEntity ) ) {
-				auto retEntity = inHistoryRegistry.create( inEntity );
+				[[maybe_unused]] entt::entity retEntity = inHistoryRegistry.create( inEntity );
 				assert( retEntity == inEntity );
 			}
 			
@@ -52,11 +52,6 @@ namespace Cyclone::Core::Entity
 
 		static void sRestoreHistory( entt::registry &inRegistry, const entt::registry &inHistoryRegistry, entt::entity inEntity )
 		{
-			//if ( !inRegistry.valid( inEntity ) ) {
-			//	auto retEntity = inRegistry.create( inEntity );
-			//	assert( retEntity == inEntity );
-			//}
-
 			// Copy back from inRegistryHistory -> inRegistry
 			Cyclone::Util::ApplyOverTypeList<T::history_components>( CopyComponentFunctor{}, inHistoryRegistry, inRegistry, inEntity );
 		}

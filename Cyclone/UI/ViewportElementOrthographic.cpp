@@ -55,10 +55,10 @@ namespace
 	void DrawCross( ImDrawList *inDrawList, const ImVec2 &inOrigin, float inWidth, ImU32 inColor )
 	{
 		float a, b, c, d;
-		a = int( inOrigin.x - inWidth + 1 );
-		b = int( inOrigin.y - inWidth + 1 );
-		c = int( inOrigin.x + inWidth );
-		d = int( inOrigin.y + inWidth );
+		a = std::truncf( inOrigin.x - inWidth + 1 );
+		b = std::truncf( inOrigin.y - inWidth + 1 );
+		c = std::truncf( inOrigin.x + inWidth );
+		d = std::truncf( inOrigin.y + inWidth );
 
 		inDrawList->PathLineTo( { a, b } );
 		inDrawList->PathLineTo( { c, d } );

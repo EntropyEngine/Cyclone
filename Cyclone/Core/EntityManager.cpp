@@ -187,8 +187,7 @@ void Cyclone::Core::EntityManager::UndoAction( entt::registry &inRegistry )
 	const auto &currentTopViewDelete = currentTop.view<Component::EntityType>( entt::exclude<Component::EpochNumber> );
 	for ( const entt::entity entity : currentTopViewDelete ) {
 		inRegistry.destroy( entity );
-
-		entt::entity created = inRegistry.create( entity );
+		[[maybe_unused]] entt::entity created = inRegistry.create( entity );
 		assert( created == entity );
 	}
 
@@ -227,7 +226,7 @@ void Cyclone::Core::EntityManager::RedoAction( entt::registry & inRegistry )
 	for ( const entt::entity entity : nextTopDeletedView ) {
 		// Ensure entity stays orphaned, not deleted
 		inRegistry.destroy( entity );
-		entt::entity created = inRegistry.create( entity );
+		[[maybe_unused]] entt::entity created = inRegistry.create( entity );
 		assert( created == entity );
 	}
 
@@ -294,7 +293,7 @@ void Cyclone::Core::EntityManager::DeleteEntity( entt::entity inEntity, entt::re
 
 	// Create in undo stack if non existent
 	if ( !currentTop.valid( inEntity ) ) {
-		auto retEntity = currentTop.create( inEntity );
+		[[maybe_unused]] entt::entity retEntity = currentTop.create( inEntity );
 		assert( retEntity == inEntity );
 	}
 
@@ -303,7 +302,7 @@ void Cyclone::Core::EntityManager::DeleteEntity( entt::entity inEntity, entt::re
 
 	// Ensure entity stays orphaned, not deleted
 	inRegistry.destroy( inEntity );
-	entt::entity created = inRegistry.create( inEntity );
+	[[maybe_unused]] entt::entity created = inRegistry.create( inEntity );
 	assert( created == inEntity );
 }
 

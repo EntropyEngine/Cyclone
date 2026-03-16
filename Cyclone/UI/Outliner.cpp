@@ -110,14 +110,7 @@ namespace
 
 void Cyclone::UI::Outliner::Update( Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	ImGuiIO &io = ImGui::GetIO();
-	ImGuiStyle &style = ImGui::GetStyle();
-
-	auto &selectionContext = inLevelInterface->GetSelectionCtx();
 	auto &entityManager = inLevelInterface->GetEntityManager();
-	entt::registry &registry = inLevelInterface->GetRegistry();
-
-	float origHeight = ImGui::GetContentRegionAvail().y;
 
 	ImGui::BeginDisabled( !entityManager.CanAquireActionLock() );
 	{
@@ -384,11 +377,9 @@ void Cyclone::UI::Outliner::SelectionListUpdate( Cyclone::Core::LevelInterface *
 
 void Cyclone::UI::Outliner::UndoHistoryUpdate( Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	auto &selectionContext = inLevelInterface->GetSelectionCtx();
 	auto &entityManager = inLevelInterface->GetEntityManager();
 	entt::registry &registry = inLevelInterface->GetRegistry();
 
-	ImGuiIO &io = ImGui::GetIO();
 	ImGuiStyle &style = ImGui::GetStyle();
 
 	auto view = registry.view<Cyclone::Core::Component::EntityType, Cyclone::Core::Component::Visible, Cyclone::Core::Component::Selectable>();
@@ -413,7 +404,7 @@ void Cyclone::UI::Outliner::UndoHistoryUpdate( Cyclone::Core::LevelInterface *in
 			while ( clipper.Step() ) {
 				for ( int rowN = clipper.DisplayStart; rowN < clipper.DisplayEnd; ++rowN ) {
 					//for ( int epoch = static_cast<int>( undoStack.size() ) - 1; epoch >= 0; --epoch ) {
-					int epoch = undoStack.size() - 1 - rowN;
+					int epoch = static_cast<int>( undoStack.size() ) - 1 - rowN;
 
 					ImGui::PushID( epoch );
 
