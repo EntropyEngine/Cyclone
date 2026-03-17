@@ -39,7 +39,9 @@ void Cyclone::UI::MainUI::SetDevice( ID3D11Device3 *inDevice )
 void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	static bool showDemoMenu = false;
+	static bool showMetricsMenu = false;
 	if ( showDemoMenu ) ImGui::ShowDemoWindow();
+	if ( showMetricsMenu ) ImGui::ShowMetricsWindow();
 
 	//ImGui::SetKeyOwner( ImGuiMod_Alt, 0, ImGuiInputFlags_None );
 
@@ -56,6 +58,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 
 		if ( ImGui::BeginMenu( "Debug" ) ) {
 			ImGui::MenuItem( "Show Demo Menu", nullptr, &showDemoMenu );
+			ImGui::MenuItem( "Show Metrics Menu", nullptr, &showMetricsMenu );
 
 			ImGui::EndMenu();
 		}
