@@ -106,6 +106,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	const bool isCanvasActive = ImGui::IsItemActive();
 	const bool isLeftClickShort = ImGui::IsMouseReleased( 0 ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
 
+	bool drawCrosses = ImGui::GetCurrentContext()->ActiveIdWindow == ImGui::GetCurrentWindow() || ( ImGui::GetCurrentContext()->ActiveIdWindow == nullptr && isCanvasHovered );
+
 	if ( isCanvasHovered || isCanvasActive ) ImGui::SetItemKeyOwner( ImGuiMod_Alt );
 
 	ImVec2 viewportAbsMousePos( io.MousePos.x - viewOrigin.x, io.MousePos.y - viewOrigin.y );
@@ -173,7 +175,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 
 	// Draw entites and get selection bounding box
 	ImVec2 selectedBoxMin, selectedBoxMax;
-	DrawEntities( inLevelInterface, drawList, viewOrigin, viewSize, selectedBoxMin, selectedBoxMax, isCanvasHovered );
+	DrawEntities( inLevelInterface, drawList, viewOrigin, viewSize, selectedBoxMin, selectedBoxMax, drawCrosses );
 
 	// Perform selection transform
 	Tool::SelectionTransformTool().OnUpdate<T>( inLevelInterface, drawList, viewOrigin, selectedBoxMin, selectedBoxMax );
