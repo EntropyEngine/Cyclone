@@ -39,8 +39,7 @@ namespace
 
 void Cyclone::UI::ViewportElementPerspective::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	ImVec2 viewSize = ImGui::GetWindowSize();
-	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
+	ImVec2 &viewSize = mViewportData.mViewSize;
 
 	auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
 

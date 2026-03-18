@@ -86,10 +86,10 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	const auto &gridContext = inLevelInterface->GetGridCtx();
 	auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
 
-	ImVec2 viewSize = ImGui::GetWindowSize();
-	ImVec2 viewOrigin = ImGui::GetCursorScreenPos();
+	ImVec2 &viewSize = mViewportData.mViewSize;
+	ImVec2 &viewOrigin = mViewportData.mViewOrigin;
 
-	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	ImDrawList* drawList = mViewportData.mDrawList;
 	if ( mTargetMSAA->GetSampleCount() <= 1 ) {
 		drawList->Flags &= ~( ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedLinesUseTex | ImDrawListFlags_AntiAliasedFill );
 	}
