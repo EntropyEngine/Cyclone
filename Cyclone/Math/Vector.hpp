@@ -3,6 +3,7 @@
 #include <float.h>
 #include <limits.h>
 #include <immintrin.h>
+#include <numeric>
 
 namespace Cyclone::Math
 {
@@ -17,6 +18,8 @@ namespace Cyclone::Math
 		Vector4D( double inX, double inY, double inZ ) : Vector4D( inX, inY, inZ, 0.0 ) {};
 
 		static Vector4D XM_CALLCONV sZero() { return _mm256_setzero_pd(); }
+		static Vector4D XM_CALLCONV sPosInf() { return _mm256_set1_pd( std::numeric_limits<double>::infinity() ); }
+		static Vector4D XM_CALLCONV sNegInf() { return _mm256_set1_pd( -std::numeric_limits<double>::infinity() ); }
 
 		static Vector4D XM_CALLCONV sLoad( const double *inD4 ) { return _mm256_loadu_pd( inD4 ); }
 
