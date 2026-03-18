@@ -185,6 +185,7 @@
     <ClInclude Include="UI\Toolbar.hpp" />
     <ClInclude Include="UI\Tool\SelectionTool.hpp" />
     <ClInclude Include="UI\Tool\SelectionTransformTool.hpp" />
+    <ClInclude Include="UI\ViewportData.hpp" />
     <ClInclude Include="UI\ViewportElement.hpp" />
     <ClInclude Include="UI\ViewportElementOrthographic.hpp" />
     <ClInclude Include="UI\ViewportElementPerspective.hpp" />

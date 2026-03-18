@@ -88,24 +88,28 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 
 		ImGui::SetNextWindowSizeConstraints( { kMinViewportSize, kMinViewportSize }, { viewSize.x - kMinViewportSize, viewSize.y - kMinViewportSize } );
 		if ( ImGui::BeginChild( "PerspectiveView", { ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y / 2 }, ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY, viewportFlags ) ) {
-			viewSizePerspective = ImGui::GetWindowSize();
+			mViewportPerspective->UpdateViewportData();
+			viewSizePerspective = mViewportPerspective->GetViewportData().mViewSize;
 		}
 		ImGui::EndChild();
 
 		ImGui::SameLine();
 		if ( ImGui::BeginChild( "TopView", { ImGui::GetContentRegionAvail().x, viewSizePerspective.y }, ImGuiChildFlags_Borders, viewportFlags ) ) {
-			viewSizeTop = ImGui::GetWindowSize();
+			mViewportTop->UpdateViewportData();
+			viewSizeTop = mViewportTop->GetViewportData().mViewSize;
 		}
 		ImGui::EndChild();
 
 		if ( ImGui::BeginChild( "FrontView", { viewSizePerspective.x, ImGui::GetContentRegionAvail().y }, ImGuiChildFlags_Borders, viewportFlags ) ) {
-			viewSizeFront = ImGui::GetWindowSize();
+			mViewportFront->UpdateViewportData();
+			viewSizeFront = mViewportFront->GetViewportData().mViewSize;
 		}
 		ImGui::EndChild();
 
 		ImGui::SameLine();
 		if ( ImGui::BeginChild( "SideView", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders, viewportFlags ) ) {
-			viewSizeSide = ImGui::GetWindowSize();
+			mViewportSide->UpdateViewportData();
+			viewSizeSide = mViewportSide->GetViewportData().mViewSize;
 		}
 		ImGui::EndChild();
 

@@ -3,6 +3,9 @@
 // Cyclone utils
 #include "Cyclone/Util/NonCopyable.hpp"
 
+// Cyclone UI
+#include "Cyclone/UI/ViewportData.hpp"
+
 // Common includes
 #include <MSAAHelper.h>
 #include <RenderTexture.h>
@@ -26,6 +29,8 @@ namespace Cyclone::UI
 		virtual ~ViewportElement();
 
 		void SetDevice( ID3D11Device3 *inDevice );
+		void UpdateViewportData();
+		const ViewportData &GetViewportData() const { return mViewportData; }
 
 		ID3D11ShaderResourceView *GetOrResizeSRV( size_t inWidth, size_t inHeight );
 		void Clear( ID3D11DeviceContext3 *inDeviceContext );
@@ -47,6 +52,8 @@ namespace Cyclone::UI
 		std::unique_ptr<DirectX::BasicEffect>		mWireframeGridEffect;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	mWireframeGridInputLayout;
 		std::unique_ptr<DirectX::CommonStates>		mCommonStates;
+
+		ViewportData								mViewportData;
 
 		size_t										mWidth;
 		size_t										mHeight;

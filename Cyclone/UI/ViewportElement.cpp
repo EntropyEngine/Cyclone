@@ -47,6 +47,13 @@ void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 *inDevice )
 	mWireframeGridBatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>( deviceContext.Get() );
 }
 
+void Cyclone::UI::ViewportElement::UpdateViewportData()
+{
+	mViewportData.mViewSize = ImGui::GetWindowSize();
+	mViewportData.mViewOrigin = ImGui::GetCursorScreenPos();
+	mViewportData.mDrawList = ImGui::GetWindowDrawList();
+}
+
 ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetOrResizeSRV( size_t inWidth, size_t inHeight )
 {
 	mTargetMSAA->SizeResources( inWidth, inHeight );
