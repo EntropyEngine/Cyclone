@@ -121,6 +121,8 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 		// Clear all visibility tags first
 		registry.clear<entt::tag<"draw_perspective"_hs>, entt::tag<"draw_top"_hs>, entt::tag<"draw_front"_hs>, entt::tag<"draw_side"_hs>>();
 
+		UpdateDrawListAndSelectionBox( inLevelInterface );
+
 		ImGui::SetNextWindowSizeConstraints( viewSizePerspective, viewSizePerspective );
 		if ( ImGui::BeginChild( "PerspectiveView", viewSizePerspective ) ) {
 			mViewportPerspective->Update( inDeltaTime, inLevelInterface );
@@ -172,4 +174,42 @@ void Cyclone::UI::ViewportManager::ToggleAntialiasing( bool inEnabled )
 	mViewportTop->ToggleAntialiasing( inEnabled );
 	mViewportFront->ToggleAntialiasing( inEnabled );
 	mViewportSide->ToggleAntialiasing( inEnabled );
+}
+
+void Cyclone::UI::ViewportManager::UpdateDrawListAndSelectionBox( Cyclone::Core::LevelInterface *inLevelInterface )
+{
+	entt::registry &registry = inLevelInterface->GetRegistry();
+	auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
+	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
+	const auto &gridContext = inLevelInterface->GetGridCtx();
+
+	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
+	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
+
+	Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> topBox{ orthographicContext.mCenter2D, mViewportTop->GetViewBoundingBoxExtent( gridContext.mWorldLimit, orthographicContext.mZoomScale2D ) };
+	Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> frontBox{ orthographicContext.mCenter2D, mViewportFront->GetViewBoundingBoxExtent( gridContext.mWorldLimit, orthographicContext.mZoomScale2D ) };
+	Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> sideBox{ orthographicContext.mCenter2D, mViewportSide->GetViewBoundingBoxExtent( gridContext.mWorldLimit, orthographicContext.mZoomScale2D ) };
+
+
+	transformContext.OnPreUpdate();
+
+	auto view = registry.group<Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox, entt::tag<"is_visible"_hs>>();
+	for ( const entt::entity entity : view ) {
+		const auto &position = view.get<Cyclone::Core::Component::Position>( entity );
+		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
+
+		bool entityInSelection = selectedEntities.contains( entity );
+		bool entityIsSelected = selectedEntity == entity;
+
+		if ( entityInSelection ) {
+			transformContext.IncludeSelectedEntity( position, boundingBox );
+		}
+
+		Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> entBox{ position.mValue + boundingBox.mValue.mCenter, boundingBox.mValue.mExtent };
+		Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> posBox{ position.mValue + boundingBox.mValue.mCenter, Cyclone::Math::Vector4D::sZero() };
+		if ( topBox.Intersects( entBox ) || topBox.Intersects( posBox ) ) registry.emplace<ViewportTypeTraits<EViewportType::TopXZ>::DrawTag>( entity );
+		if ( frontBox.Intersects( entBox ) || frontBox.Intersects( posBox ) ) registry.emplace<ViewportTypeTraits<EViewportType::FrontXY>::DrawTag>( entity );
+		if ( sideBox.Intersects( entBox ) || sideBox.Intersects( posBox ) ) registry.emplace<ViewportTypeTraits<EViewportType::SideYZ>::DrawTag>( entity );
+	}
 }

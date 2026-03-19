@@ -52,6 +52,9 @@ namespace Cyclone::Core::Tool
 			mSelectionMax += inDelta;
 		}
 
+		Cyclone::Math::Vector4D XM_CALLCONV GetSelectionMin() const { return mSelectionMin; }
+		Cyclone::Math::Vector4D XM_CALLCONV GetSelectionMax() const { return mSelectionMax; }
+
 	protected:
 		Cyclone::Math::Vector4D mSelectionMin = Cyclone::Math::Vector4D::sPosInf();
 		Cyclone::Math::Vector4D mSelectionMax = Cyclone::Math::Vector4D::sNegInf();

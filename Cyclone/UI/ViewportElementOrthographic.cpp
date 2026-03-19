@@ -173,12 +173,11 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 		DrawCross( drawList, gridPos, 2.0f, IM_COL32( 255, 255, 255, 255 ) );
 	}
 
-	// Draw entites and get selection bounding box
-	ImVec2 selectedBoxMin, selectedBoxMax;
-	DrawEntities( inLevelInterface, drawList, viewOrigin, viewSize, selectedBoxMin, selectedBoxMax, drawCrosses );
-
 	// Perform selection transform
-	Tool::SelectionTransformTool().OnUpdate<T>( inLevelInterface, drawList, viewOrigin, selectedBoxMin, selectedBoxMax );
+	Tool::SelectionTransformTool().OnUpdate<T>( inLevelInterface, mViewportData );
+
+	// Draw entites and get selection bounding box
+	DrawEntities( inLevelInterface, drawCrosses );
 }
 
 template<Cyclone::UI::EViewportType T>
@@ -254,47 +253,70 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 		// Iterate over all entities
 		entt::registry &registry = inLevelInterface->GetRegistry();
-		auto view = registry.view<EntityType, Position, BoundingBox, ViewportTypeTraits<T>::DrawTag>();
-		view.use<BoundingBox>();
-		for ( const entt::entity entity : view ) {
-			const auto &entityType = view.get<EntityType>( entity );
-			const auto &position = view.get<Position>( entity ).mValue;
-			const auto &boundingBox = view.get<BoundingBox>( entity ).mValue;
+		{
+			auto view = registry.view<EntityType, Position, BoundingBox, ViewportTypeTraits<T>::DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>> );
+			//view.use<BoundingBox>();
+			for ( const entt::entity entity : view ) {
+				const auto &entityType = view.get<EntityType>( entity );
+				const auto &position = view.get<Position>( entity ).mValue;
+				const auto &boundingBox = view.get<BoundingBox>( entity ).mValue;
 
-			bool entityInSelection = selectedEntities.contains( entity );
-			bool entityIsSelected = selectedEntity == entity;
+				uint32_t entityColorU32 = entityManager.GetEntityTypeColor( entityType );
 
-			uint32_t entityColorU32;
-			if ( entityIsSelected ) {
-				entityColorU32 = Cyclone::Util::ColorU32( 255, 255, 0, 255 );
+				DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
+
+				Vector4D rebasedEntityPosition = ( position - orthographicContext.mCenter2D );
+				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
+
+				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
 			}
-			else if ( entityInSelection ) {
-				entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
-			}
-			else {
-				entityColorU32 = entityManager.GetEntityTypeColor( entityType );
-			}
-
-			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
-
-			Vector4D rebasedEntityPosition = ( position - orthographicContext.mCenter2D );
-			Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
-
-			mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+			mWireframeBoxShader->DrawInstances( inDeviceContext );
 		}
-		mWireframeBoxShader->DrawInstances( inDeviceContext );
+
+		inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
+
+		{
+			auto view = registry.view<Position, BoundingBox, ViewportTypeTraits<T>::DrawTag, entt::tag<"is_selected"_hs>>();
+			//view.use<BoundingBox>();
+			for ( const entt::entity entity : view ) {
+				const auto &position = view.get<Position>( entity ).mValue;
+				const auto &boundingBox = view.get<BoundingBox>( entity ).mValue;
+
+				bool entityIsSelected = selectedEntity == entity;
+
+				uint32_t entityColorU32;
+				if ( entityIsSelected ) {
+					entityColorU32 = Cyclone::Util::ColorU32( 255, 255, 0, 255 );
+				}
+				else {
+					entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
+				}
+
+				DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
+
+				Vector4D rebasedEntityPosition = ( position - orthographicContext.mCenter2D );
+				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
+
+				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+			}
+			mWireframeBoxShader->DrawInstances( inDeviceContext );
+		}
 	}
 
 	Resolve( inDeviceContext );
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::LevelInterface *inLevelInterface, ImDrawList *drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax, bool inCanvasIsHovered ) const
+void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::LevelInterface *inLevelInterface, bool inCanvasIsHovered ) const
 {
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
 
 	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
+
+	ImDrawList *drawList = mViewportData.mDrawList;
+	ImVec2 inViewSize = mViewportData.mViewSize;
+	ImVec2 inViewOrigin = mViewportData.mViewOrigin;
 
 	// Split channels into 3 planes
 	drawList->ChannelsSplit( 3 );
@@ -304,9 +326,6 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::L
 	ImGuiIO &io = ImGui::GetIO();
 	ImFont* narrowFont = io.Fonts->Fonts[1];
 	float fontSize = ImGui::GetFontSize();
-
-	outSelectedBoxMin = { inViewOrigin.x + inViewSize.x, inViewOrigin.y + inViewSize.y };
-	outSelectedBoxMax = inViewOrigin;
 
 	const double invZoom = 1.0 / orthographicContext.mZoomScale2D;
 	const float offsetX = inViewSize.x / 2.0f + inViewOrigin.x;
@@ -322,8 +341,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::L
 
 	// Iterate over all entities
 	entt::registry &registry = inLevelInterface->GetRegistry();
-	auto view = registry.view<EntityType, Position, BoundingBox, entt::tag<"is_visible"_hs>>();
-	view.use<BoundingBox>();
+	auto view = registry.view<EntityType, Position, BoundingBox, ViewportTypeTraits<T>::DrawTag>();
+	//view.use<BoundingBox>();
 	for ( const entt::entity entity : view ) {
 		const auto &entityType = view.get<EntityType>( entity );
 		const auto &position = view.get<Position>( entity ).mValue;
@@ -363,43 +382,23 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::L
 		localPos.x = static_cast<float>( rebasedEntityPosition.Get<AxisU>() * invZoom ) + offsetX;
 		localPos.y = static_cast<float>( rebasedEntityPosition.Get<AxisV>() * invZoom ) + offsetY;
 
-
-		bool posInBounds = true;
-		bool boxInBounds = true;
-
-		if ( posInBounds && ( localPos.x < inViewOrigin.x || localPos.y < inViewOrigin.y ) ) posInBounds &= false;
-		if ( posInBounds && ( localPos.x > maxViewCoord.x || localPos.y > maxViewCoord.y ) ) posInBounds &= false;
-
-		if ( boxInBounds && ( localBoxMax.x < inViewOrigin.x || localBoxMax.y < inViewOrigin.y ) ) boxInBounds &= false;
-		if ( boxInBounds && ( localBoxMin.x > maxViewCoord.x || localBoxMin.y > maxViewCoord.y ) ) boxInBounds &= false;
-
-		bool inBounds = posInBounds || boxInBounds;
-
 		// Only draw X if smaller than bounding box
-		if ( inBounds && inCanvasIsHovered && kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y ) {
+		if ( inCanvasIsHovered && kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y ) {
 			DrawCross( drawList, localPos, kPositionHandleSize, entityColor );
 		}
 
-		if ( inBounds && entityInSelection && kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y ) {
+		if ( entityInSelection && kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y ) {
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, entityManager.GetEntityTypeName( entityType ) );
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, Cyclone::Util::PrefixString( "id=", entity ) );
 		}
 
 		if ( entityInSelection ) {
-			if ( inBounds ) {
-				drawList->AddRect( localBoxMin, localBoxMax, entityColor, 0, 0, 2 );
-			}
-
-			outSelectedBoxMin.x = std::min( outSelectedBoxMin.x, localBoxMin.x );
-			outSelectedBoxMin.y = std::min( outSelectedBoxMin.y, localBoxMin.y );
-
-			outSelectedBoxMax.x = std::max( outSelectedBoxMax.x, localBoxMax.x );
-			outSelectedBoxMax.y = std::max( outSelectedBoxMax.y, localBoxMax.y );
+			//drawList->AddRect( localBoxMin, localBoxMax, entityColor, 0, 0, 2 );
 		}
 
-		if ( inBounds ) {
-			registry.emplace<ViewportTypeTraits<T>::DrawTag>( entity );
-		}
+		//if ( inBounds ) {
+		//	registry.emplace<ViewportTypeTraits<T>::DrawTag>( entity );
+		//}
 	}
 
 	drawList->ChannelsMerge();

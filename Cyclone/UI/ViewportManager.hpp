@@ -39,6 +39,8 @@ namespace Cyclone::UI
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::FrontXY>> mViewportFront;
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::SideYZ>> mViewportSide;
 
+		void UpdateDrawListAndSelectionBox( Cyclone::Core::LevelInterface *inLevelInterface );
+
 		bool mShouldAutosize = true;
 		bool mAntialiasingEnabled = false;
 	};

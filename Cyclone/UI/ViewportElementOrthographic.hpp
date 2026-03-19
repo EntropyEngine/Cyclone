@@ -30,9 +30,23 @@ namespace Cyclone::UI
 		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface );
 
+		Cyclone::Math::Vector4D XM_CALLCONV GetViewBoundingBoxExtent( double inWorldLimit, double inZoomScale2D )
+		{
+			double mExtentU = mViewportData.mViewSize.x * inZoomScale2D / 2;
+			double mExtentV = mViewportData.mViewSize.y * inZoomScale2D / 2;
+			double mExtentW = inWorldLimit;
+
+			Cyclone::Math::Vector4D extent = Cyclone::Math::Vector4D::sZero();
+			extent.Set<ViewportElementOrthographic::AxisU>( mExtentU );
+			extent.Set<ViewportElementOrthographic::AxisV>( mExtentV );
+			extent.Set<ViewportElementOrthographic::AxisW>( mExtentW );
+
+			return extent;
+		}
+
 	protected:
 		/// @note mutates global ImGui state
-		void DrawEntities( Cyclone::Core::LevelInterface *inLevelInterface, ImDrawList* drawList, const ImVec2 &inViewOrigin, const ImVec2 &inViewSize, ImVec2 &outSelectedBoxMin, ImVec2 &outSelectedBoxMax, bool inCanvasIsHovered ) const;
+		void DrawEntities( Cyclone::Core::LevelInterface *inLevelInterface, bool inCanvasIsHovered ) const;
 
 	private:
 		void XM_CALLCONV GetMinMaxUV( Cyclone::Math::Vector4D inCenter2D, double inWorldLimit, double inZoomScale2D, double &outMinU, double &outMaxU, double &outMinV, double &outMaxV ) const
