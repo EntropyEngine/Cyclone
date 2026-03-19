@@ -45,7 +45,7 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
 
 	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
-	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
+	entt::entity selectedEntity = selectionContext.GetSelectedEntity();
 
 	const double invZoom = 1.0 / orthographicContext.mZoomScale2D;
 	const float offsetX = inViewportData.mViewSize.x / 2.0f + inViewportData.mViewOrigin.x;
@@ -77,13 +77,21 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 
 			ImVec2 selectionMouseDrag = ImGui::GetMouseDragDelta( ImGuiMouseButton_Left );
 
-			const auto &currentPosition = registry.get<Cyclone::Core::Component::Position>( selectedEntity ).mValue;
+			auto currentPosition = registry.get<Cyclone::Core::Component::Position>( selectedEntity ).mValue;
 
 			if ( !transformContext.IsActiveEntity( selectedEntity ) ) {
 				assert( transformContext.GetActiveEntity() == entt::null );
 
-				entityManager.BeginAction();
-				transformContext.SetActiveEntity( selectedEntity, currentPosition );
+				if ( ImGui::IsKeyDown( ImGuiMod_Shift ) ) {
+					entityManager.BeginCloneAction( registry );
+					selectedEntity = selectionContext.GetSelectedEntity();
+					currentPosition = registry.get<Cyclone::Core::Component::Position>( selectedEntity ).mValue;
+					transformContext.SetActiveEntity( selectedEntity, currentPosition );
+				}
+				else {
+					entityManager.BeginAction();
+					transformContext.SetActiveEntity( selectedEntity, currentPosition );
+				}
 			}
 
 			const Vector4D startPosition = transformContext.GetInitialPosition();

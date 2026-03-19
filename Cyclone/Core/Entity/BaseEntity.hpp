@@ -29,6 +29,8 @@ namespace Cyclone::Core::Entity
 
 			entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sSaveHistory>( "save_history"_hs );
 			entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sRestoreHistory>( "restore_history"_hs );
+
+			entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sCloneEntity>( "clone_entity"_hs );
 		}
 
 		static entt::entity sCreateEntity( entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
@@ -56,6 +58,12 @@ namespace Cyclone::Core::Entity
 			Cyclone::Util::ApplyOverTypeList<T::history_components>( CopyComponentFunctor{}, inHistoryRegistry, inRegistry, inEntity );
 		}
 
+		static void sCloneEntity( entt::registry &inRegistry, entt::entity inSrc, entt::entity inDst )
+		{
+			// Copy back from inRegistryHistory -> inRegistry
+			Cyclone::Util::ApplyOverTypeList<T::history_components>( CopyEntityFunctor{}, inRegistry, inSrc, inDst );
+		}
+
 	protected:
 		static entt::entity sCreate( entt::registry &inRegistry )
 		{
@@ -74,11 +82,22 @@ namespace Cyclone::Core::Entity
 		struct CopyComponentFunctor
 		{
 			template<typename T>
-			void Apply( const entt::registry &inRegistry, entt::registry &inHistoryRegistry, entt::entity inEntity ) const
+			void operator()( const entt::registry &inRegistry, entt::registry &inHistoryRegistry, entt::entity inEntity ) const
 			{
 				// TODO: is the copy by value required, or can copy by reference be used?
 				const T copy = inRegistry.get<T>( inEntity );
 				inHistoryRegistry.emplace_or_replace<T>( inEntity, copy );
+			}
+		};
+
+		struct CopyEntityFunctor
+		{
+			template<typename T>
+			void operator()( entt::registry &inRegistry, entt::entity inSrc, entt::entity inDst ) const
+			{
+				// TODO: is the copy by value required, or can copy by reference be used?
+				const T copy = inRegistry.get<T>( inSrc );
+				inRegistry.emplace<T>( inDst, copy );
 			}
 		};
 	};

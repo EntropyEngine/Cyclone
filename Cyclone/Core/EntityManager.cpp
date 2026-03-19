@@ -282,8 +282,13 @@ void Cyclone::Core::EntityManager::UpdateEntity( entt::entity inEntity, entt::re
 	const auto type = static_cast<entt::id_type>( inRegistry.get<Component::EntityType>( inEntity ) );
 
 	entt::resolve( mEntityMetaContext, type ).func( "save_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( mUndoStack[epochToUpdate].mRegistry ), inEntity );
-	mUndoStack[epochToUpdate].mRegistry.emplace_or_replace<Component::EpochNumber>( inEntity, inRegistry.get<Component::EpochNumber>( inEntity ) );
-	inRegistry.emplace_or_replace<Component::EpochNumber>( inEntity, static_cast<Component::EpochNumber>( epochToUpdate ) );
+
+	// Check if the entity was created this epoch, if so, don't emplace epoch number in registry
+	const auto currentEntityEpochNumber = inRegistry.get<Component::EpochNumber>( inEntity );
+	if ( currentEntityEpochNumber != static_cast<Component::EpochNumber>( epochToUpdate ) ) {
+		mUndoStack[epochToUpdate].mRegistry.emplace_or_replace<Component::EpochNumber>( inEntity, currentEntityEpochNumber );
+		inRegistry.emplace_or_replace<Component::EpochNumber>( inEntity, static_cast<Component::EpochNumber>( epochToUpdate ) );
+	}
 }
 
 void Cyclone::Core::EntityManager::DeleteEntity( entt::entity inEntity, entt::registry & inRegistry )
@@ -307,6 +312,71 @@ void Cyclone::Core::EntityManager::DeleteEntity( entt::entity inEntity, entt::re
 	inRegistry.destroy( inEntity );
 	[[maybe_unused]] entt::entity created = inRegistry.create( inEntity );
 	assert( created == inEntity );
+}
+
+void Cyclone::Core::EntityManager::BeginCloneAction( entt::registry &inRegistry )
+{
+	std::vector<entt::entity> clonedEntities;
+	clonedEntities.reserve( mSelectionTool.GetSelectedEntities().size() );
+
+	entt::entity newSelectedEntity = entt::null;
+
+	BeginAction();
+
+	for ( entt::entity entity : mSelectionTool.GetSelectedEntities() ) {
+		entt::entity newEntity = CopyEntity( entity, inRegistry );
+
+		if ( entity == mSelectionTool.GetSelectedEntity() ) {
+			newSelectedEntity = newEntity;
+		}
+
+		clonedEntities.push_back( newEntity );
+	}
+
+	mSelectionTool.ClearSelection();
+
+	for ( entt::entity entity : clonedEntities ) {
+		mSelectionTool.AddSelectedEntity( entity );
+	}
+
+	mSelectionTool.AddSelectedEntity( newSelectedEntity );
+
+	ValidateSelection( inRegistry );
+	UpdateVisibilityTags( inRegistry );
+}
+
+entt::entity Cyclone::Core::EntityManager::CopyEntity( entt::entity inEntity, entt::registry &inRegistry )
+{
+	assert( mUndoStackLock && "Can only clone entities within Begin()/End()" );
+
+	size_t epochToUpdate = mUndoStackEpoch + 1;
+
+	entt::id_type entityType = static_cast<entt::id_type>( inRegistry.get<Component::EntityType>( inEntity ) );
+
+	auto type = entt::resolve( mEntityMetaContext, entityType );
+	if ( !type ) {
+		assert( !"Failed to clone entity: unknown type" );
+		return entt::null;
+	}
+
+	auto func = type.func( "clone_entity"_hs );
+	if ( !func ) {
+		assert( !"Failed to clone entity: type has no clone_entity function" );
+		return entt::null;
+	}
+
+	entt::entity entity = inRegistry.create();
+
+	auto result = func.invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( inEntity ), entt::forward_as_meta( entity ) );
+	if ( !result ) {
+		assert( !"Failed to clone entity: type has incorrect clone_entity function, please report!" );
+		return entt::null;
+	}
+
+	type.func( "save_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( mUndoStack[epochToUpdate].mRegistry ), entity );
+	inRegistry.emplace_or_replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( epochToUpdate ) );
+
+	return entity;
 }
 
 void Cyclone::Core::EntityManager::RestoreContextStatePreUndo()

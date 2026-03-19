@@ -11,7 +11,7 @@ namespace Cyclone::Util
 	void ApplyOverTypeList( const auto &functor, auto&&... args )
 	{
 		// Invokes functor.Apply(args...) to current Index in type list
-		functor.template Apply<entt::type_list_element_t<Index, TypeList>>( std::forward<decltype( args )>( args )... );
+		functor.template operator()<entt::type_list_element_t<Index, TypeList>>( std::forward<decltype( args )>( args )... );
 		
 		// Recursively calls ApplyOverTypeList if more types remain
 		if constexpr ( Index + 1 < TypeList::size )

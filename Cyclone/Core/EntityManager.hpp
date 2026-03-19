@@ -56,7 +56,7 @@ namespace Cyclone::Core
 		entt::entity			CreateEntity( entt::id_type inType, entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition );
 		void					UpdateEntity( entt::entity inEntity, entt::registry &inRegistry );
 		void					DeleteEntity( entt::entity inEntity, entt::registry &inRegistry );
-
+		void					BeginCloneAction( entt::registry &inRegistry );
 
 		size_t					GetUndoEpoch() const { return static_cast<size_t>( mUndoStackEpoch ); }
 		const auto &			GetUndoStack() const { return mUndoStack; }
@@ -67,6 +67,8 @@ namespace Cyclone::Core
 	protected:
 		template<typename T>
 		void RegisterEntityClass();
+
+		entt::entity			CopyEntity( entt::entity inEntity, entt::registry &inRegistry );
 
 		void RestoreContextStatePreUndo(); ///< We need to do an extra step for undo actions which flips the context state
 		void RestoreContextStatePostAction();
