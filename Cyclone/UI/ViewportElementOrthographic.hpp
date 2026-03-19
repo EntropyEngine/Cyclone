@@ -27,7 +27,9 @@ namespace Cyclone::UI
 	public:
 		ViewportElementOrthographic( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor, bool inAntialiasing ) : ViewportElement( inBackBufferFormat, inDepthBufferFormat, inClearColor, inAntialiasing ) {}
 
-		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
+		void UpdateNavigation( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
+		void UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
+		void DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface );
 
 		Cyclone::Math::Vector4D XM_CALLCONV GetViewBoundingBoxExtent( double inWorldLimit, double inZoomScale2D )
@@ -46,7 +48,7 @@ namespace Cyclone::UI
 
 	protected:
 		/// @note mutates global ImGui state
-		void DrawEntities( Cyclone::Core::LevelInterface *inLevelInterface, bool inCanvasIsHovered ) const;
+		void DrawEntities( Cyclone::Core::LevelInterface *inLevelInterface ) const;
 
 	private:
 		void XM_CALLCONV GetMinMaxUV( Cyclone::Math::Vector4D inCenter2D, double inWorldLimit, double inZoomScale2D, double &outMinU, double &outMaxU, double &outMinV, double &outMaxV ) const

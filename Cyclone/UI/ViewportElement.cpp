@@ -52,6 +52,7 @@ void Cyclone::UI::ViewportElement::UpdateViewportData()
 	mViewportData.mViewSize = ImGui::GetWindowSize();
 	mViewportData.mViewOrigin = ImGui::GetCursorScreenPos();
 	mViewportData.mDrawList = ImGui::GetWindowDrawList();
+	mViewportData.mIsActive = false;
 }
 
 ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetOrResizeSRV( size_t inWidth, size_t inHeight )

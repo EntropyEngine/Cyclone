@@ -7,5 +7,9 @@ namespace Cyclone::UI
 		ImDrawList *mDrawList;
 		ImVec2 mViewOrigin;
 		ImVec2 mViewSize;
+		bool mIsActive;
+
+		double mWorldMouseU;
+		double mWorldMouseV;
 	};
 }

@@ -48,18 +48,6 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 		inSelectedBoxMin.x = offsetX - static_cast<float>( selectionBoxMaxRebased.Get<AxisU>() ) * invZoom;
 		inSelectedBoxMin.y = offsetY - static_cast<float>( selectionBoxMaxRebased.Get<AxisV>() ) * invZoom;
 
-		inDrawList->AddRect( inSelectedBoxMin, inSelectedBoxMax, IM_COL32( 255, 0, 0, 255 ), 0, 0, 2 );
-
-		for ( float x = inSelectedBoxMin.x; x < inSelectedBoxMax.x - 8; x += 16 ) {
-			inDrawList->AddLine( { x, inSelectedBoxMin.y }, { x + 8, inSelectedBoxMin.y }, IM_COL32( 255, 255, 0, 255 ), 2 );
-			inDrawList->AddLine( { x - 1, inSelectedBoxMax.y - 1 }, { x + 7, inSelectedBoxMax.y - 1 }, IM_COL32( 255, 255, 0, 255 ), 2 );
-		}
-
-		for ( float y = inSelectedBoxMin.y; y < inSelectedBoxMax.y - 8; y += 16 ) {
-			inDrawList->AddLine( { inSelectedBoxMin.x, y }, { inSelectedBoxMin.x, y + 8 }, IM_COL32( 255, 255, 0, 255 ), 2 );
-			inDrawList->AddLine( { inSelectedBoxMax.x - 1, y - 1 }, { inSelectedBoxMax.x - 1, y + 7 }, IM_COL32( 255, 255, 0, 255 ), 2 );
-		}
-
 		ImGui::SetCursorPos( { inSelectedBoxMin.x - inViewportData.mViewOrigin.x, inSelectedBoxMin.y - inViewportData.mViewOrigin.y } );
 		ImGui::InvisibleButton( "Selection", { inSelectedBoxMax.x - inSelectedBoxMin.x, inSelectedBoxMax.y - inSelectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft );
 		const bool isSelectionHovered = ImGui::IsItemHovered();
@@ -103,6 +91,7 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 			for ( const entt::entity entity : selectedEntities ) {
 				registry.patch<Cyclone::Core::Component::Position>( entity, [positionDelta]( Cyclone::Core::Component::Position &inPosition ) { inPosition.mValue += positionDelta; } );
 			}
+			transformContext.UpdateOnDrag( positionDelta );
 		}
 		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) && transformContext.GetActiveEntity() != entt::null ) {
 			for ( const entt::entity entity : selectedEntities ) {
@@ -115,6 +104,60 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 	}
 }
 
+template<Cyclone::UI::EViewportType T>
+inline void Cyclone::UI::Tool::SelectionTransformTool::OnDraw( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
+{
+	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
+	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
+
+	ImGuiIO &io = ImGui::GetIO();
+
+	auto &entityManager = inLevelInterface->GetEntityManager();
+	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
+
+	const auto &gridContext = inLevelInterface->GetGridCtx();
+	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
+
+	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
+	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
+
+	const double invZoom = 1.0 / orthographicContext.mZoomScale2D;
+	const float offsetX = inViewportData.mViewSize.x / 2.0f + inViewportData.mViewOrigin.x;
+	const float offsetY = inViewportData.mViewSize.y / 2.0f + inViewportData.mViewOrigin.y;
+
+	ImDrawList *inDrawList = inViewportData.mDrawList;
+
+	if ( !selectedEntities.empty() ) {
+		Vector4D selectionBoxMinRebased = transformContext.GetSelectionMin() - orthographicContext.mCenter2D;
+		Vector4D selectionBoxMaxRebased = transformContext.GetSelectionMax() - orthographicContext.mCenter2D;
+
+		ImVec2 inSelectedBoxMax;
+		inSelectedBoxMax.x = offsetX - static_cast<float>( selectionBoxMinRebased.Get<AxisU>() ) * invZoom;
+		inSelectedBoxMax.y = offsetY - static_cast<float>( selectionBoxMinRebased.Get<AxisV>() ) * invZoom;
+
+		ImVec2 inSelectedBoxMin;
+		inSelectedBoxMin.x = offsetX - static_cast<float>( selectionBoxMaxRebased.Get<AxisU>() ) * invZoom;
+		inSelectedBoxMin.y = offsetY - static_cast<float>( selectionBoxMaxRebased.Get<AxisV>() ) * invZoom;
+
+		inDrawList->AddRect( inSelectedBoxMin, inSelectedBoxMax, IM_COL32( 255, 0, 0, 255 ), 0, 0, 2 );
+
+		for ( float x = inSelectedBoxMin.x; x < inSelectedBoxMax.x - 8; x += 16 ) {
+			inDrawList->AddLine( { x, inSelectedBoxMin.y }, { x + 8, inSelectedBoxMin.y }, IM_COL32( 255, 255, 0, 255 ), 2 );
+			inDrawList->AddLine( { x - 1, inSelectedBoxMax.y - 1 }, { x + 7, inSelectedBoxMax.y - 1 }, IM_COL32( 255, 255, 0, 255 ), 2 );
+		}
+
+		for ( float y = inSelectedBoxMin.y; y < inSelectedBoxMax.y - 8; y += 16 ) {
+			inDrawList->AddLine( { inSelectedBoxMin.x, y }, { inSelectedBoxMin.x, y + 8 }, IM_COL32( 255, 255, 0, 255 ), 2 );
+			inDrawList->AddLine( { inSelectedBoxMax.x - 1, y - 1 }, { inSelectedBoxMax.x - 1, y + 7 }, IM_COL32( 255, 255, 0, 255 ), 2 );
+		}
+	}
+}
+
 template void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate<Cyclone::UI::EViewportType::TopXZ>( Cyclone::Core::LevelInterface *, const ViewportData & );
 template void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate<Cyclone::UI::EViewportType::FrontXY>( Cyclone::Core::LevelInterface *, const ViewportData & );
 template void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate<Cyclone::UI::EViewportType::SideYZ>( Cyclone::Core::LevelInterface *, const ViewportData & );
+
+template void Cyclone::UI::Tool::SelectionTransformTool::OnDraw<Cyclone::UI::EViewportType::TopXZ>( Cyclone::Core::LevelInterface *, const ViewportData & );
+template void Cyclone::UI::Tool::SelectionTransformTool::OnDraw<Cyclone::UI::EViewportType::FrontXY>( Cyclone::Core::LevelInterface *, const ViewportData & );
+template void Cyclone::UI::Tool::SelectionTransformTool::OnDraw<Cyclone::UI::EViewportType::SideYZ>( Cyclone::Core::LevelInterface *, const ViewportData & );

@@ -78,7 +78,7 @@ namespace
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
@@ -106,7 +106,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	const bool isCanvasActive = ImGui::IsItemActive();
 	const bool isLeftClickShort = ImGui::IsMouseReleased( 0 ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
 
-	bool drawCrosses = ImGui::GetCurrentContext()->ActiveIdWindow == ImGui::GetCurrentWindow() || ( ImGui::GetCurrentContext()->ActiveIdWindow == nullptr && isCanvasHovered );
+	mViewportData.mIsActive = ImGui::GetCurrentContext()->ActiveIdWindow == ImGui::GetCurrentWindow() || ( ImGui::GetCurrentContext()->ActiveIdWindow == nullptr && isCanvasHovered );
 
 	if ( isCanvasHovered || isCanvasActive ) ImGui::SetItemKeyOwner( ImGuiMod_Alt );
 
@@ -115,6 +115,9 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 
 	double worldMouseU = orthographicContext.mCenter2D.Get<AxisU>() - viewportRelMousePos.x * orthographicContext.mZoomScale2D;
 	double worldMouseV = orthographicContext.mCenter2D.Get<AxisV>() - viewportRelMousePos.y * orthographicContext.mZoomScale2D;
+
+	mViewportData.mWorldMouseU = worldMouseU;
+	mViewportData.mWorldMouseV = worldMouseV;
 
 	double worldSnapU = std::round( worldMouseU / gridContext.mGridSize ) * gridContext.mGridSize;
 	double worldSnapV = std::round( worldMouseV / gridContext.mGridSize ) * gridContext.mGridSize;
@@ -140,10 +143,6 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	);
 	ImGui::PopStyleVar( 2 );
 
-	if ( isCanvasHovered && isLeftClickShort ) {
-		Tool::SelectionTool().OnClick<T>( inLevelInterface, worldMouseU, worldMouseV, 2.0f * kPositionHandleSize * orthographicContext.mZoomScale2D, gridContext.mWorldLimit );
-	}
-
 	// Middle click pan view
 	if ( ( isCanvasActive ) && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) ) {
 		orthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * orthographicContext.mZoomScale2D );
@@ -151,7 +150,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 	}
 
 	// Zoom view
-	if ( isCanvasHovered && io.MouseWheel && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) ) {
+	if ( mViewportData.mIsActive && io.MouseWheel && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) ) {
 		int newZoomLevel = orthographicContext.mZoomLevel - ( ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 ) );
 		double newZoomScale2D = orthographicContext.sZoomLevelToScale( newZoomLevel );
 
@@ -173,11 +172,37 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Update( float inDeltaTime, Cyc
 		DrawCross( drawList, gridPos, 2.0f, IM_COL32( 255, 255, 255, 255 ) );
 	}
 
+	
+
+	
+}
+
+template<Cyclone::UI::EViewportType T>
+void Cyclone::UI::ViewportElementOrthographic<T>::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
+{
+	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
+	const auto &gridContext = inLevelInterface->GetGridCtx();
+
+	ImGuiIO &io = ImGui::GetIO();
+
+	const bool isLeftClickShort = ImGui::IsMouseReleased( 0 ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
+
+	if ( mViewportData.mIsActive && isLeftClickShort ) {
+		Tool::SelectionTool().OnClick<T>( inLevelInterface, mViewportData.mWorldMouseU, mViewportData.mWorldMouseV, 2.0f * kPositionHandleSize * orthographicContext.mZoomScale2D, gridContext.mWorldLimit );
+	}
+
 	// Perform selection transform
 	Tool::SelectionTransformTool().OnUpdate<T>( inLevelInterface, mViewportData );
+}
 
+template<Cyclone::UI::EViewportType T>
+void Cyclone::UI::ViewportElementOrthographic<T>::DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
+{
 	// Draw entites and get selection bounding box
-	DrawEntities( inLevelInterface, drawCrosses );
+	DrawEntities( inLevelInterface );
+
+	// Perform selection transform draws
+	Tool::SelectionTransformTool().OnDraw<T>( inLevelInterface, mViewportData );
 }
 
 template<Cyclone::UI::EViewportType T>
@@ -310,7 +335,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::LevelInterface *inLevelInterface, bool inCanvasIsHovered ) const
+void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::LevelInterface *inLevelInterface ) const
 {
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
@@ -386,7 +411,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::L
 		localPos.y = static_cast<float>( rebasedEntityPosition.Get<AxisV>() * invZoom ) + offsetY;
 
 		// Only draw X if smaller than bounding box
-		if ( inCanvasIsHovered && kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y ) {
+		if ( mViewportData.mIsActive && kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y ) {
 			DrawCross( drawList, localPos, kPositionHandleSize, entityColor );
 		}
 

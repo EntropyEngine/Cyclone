@@ -120,29 +120,25 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	{
 		ImGui::SetNextWindowSizeConstraints( viewSizePerspective, viewSizePerspective );
 		if ( ImGui::BeginChild( "PerspectiveView", viewSizePerspective ) ) {
-			mViewportPerspective->Update( inDeltaTime, inLevelInterface );
-			DrawViewportOverlay( "Perspective" );
+			mViewportPerspective->UpdateNavigation( inDeltaTime, inLevelInterface );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeTop, viewSizeTop );
 		if ( ImGui::BeginChild( "TopView", viewSizeTop ) ) {
-			mViewportTop->Update( inDeltaTime, inLevelInterface );
-			DrawViewportOverlay( "Top (X/Z)" );
+			mViewportTop->UpdateNavigation( inDeltaTime, inLevelInterface );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeFront, viewSizeFront );
 		if ( ImGui::BeginChild( "FrontView", viewSizeFront ) ) {
-			mViewportFront->Update( inDeltaTime, inLevelInterface );
-			DrawViewportOverlay( "Front (X/Y)" );
+			mViewportFront->UpdateNavigation( inDeltaTime, inLevelInterface );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeSide, viewSizeSide );
 		if ( ImGui::BeginChild( "SideView", viewSizeSide ) ) {
-			mViewportSide->Update( inDeltaTime, inLevelInterface );
-			DrawViewportOverlay( "Side (Y/Z)" );
+			mViewportSide->UpdateNavigation( inDeltaTime, inLevelInterface );
 		}
 		ImGui::EndChild();
 

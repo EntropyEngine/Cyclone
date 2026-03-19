@@ -37,7 +37,7 @@ namespace
 	}
 }
 
-void Cyclone::UI::ViewportElementPerspective::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::ViewportElementPerspective::UpdateNavigation( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	ImVec2 &viewSize = mViewportData.mViewSize;
 
@@ -50,8 +50,10 @@ void Cyclone::UI::ViewportElementPerspective::Update( float inDeltaTime, Cyclone
 
 	ImGui::SetCursorPos( { 0, 0 } );
 	ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
-	const bool isHovered = ImGui::IsItemHovered();
+	const bool isCanvasHovered = ImGui::IsItemHovered();
 	const bool isActive = ImGui::IsItemActive();
+
+	mViewportData.mIsActive = ImGui::GetCurrentContext()->ActiveIdWindow == ImGui::GetCurrentWindow() || ( ImGui::GetCurrentContext()->ActiveIdWindow == nullptr && isCanvasHovered );
 
 	if ( isActive && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
 		perspectiveContext.mCameraPitch += io.MouseDelta.y * kMouseSensitivity;
@@ -78,7 +80,7 @@ void Cyclone::UI::ViewportElementPerspective::Update( float inDeltaTime, Cyclone
 		}
 	}
 
-	if ( isHovered ) {
+	if ( mViewportData.mIsActive ) {
 		float scroll = io.MouseWheel;
 		scroll *= kCameraDollySensitivity;
 		if ( scroll ) {
@@ -87,6 +89,12 @@ void Cyclone::UI::ViewportElementPerspective::Update( float inDeltaTime, Cyclone
 		}
 	}
 }
+
+void Cyclone::UI::ViewportElementPerspective::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface * inLevelInterface )
+{}
+
+void Cyclone::UI::ViewportElementPerspective::DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface * inLevelInterface )
+{}
 
 void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
 {

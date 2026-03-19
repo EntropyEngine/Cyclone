@@ -20,5 +20,8 @@ namespace Cyclone::UI::Tool
 
 		template<EViewportType T>
 		void OnUpdate( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
+
+		template<EViewportType T>
+		void OnDraw( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
 	};
 }
