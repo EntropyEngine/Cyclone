@@ -255,7 +255,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 		// Iterate over all entities
 		entt::registry &registry = inLevelInterface->GetRegistry();
 		auto view = registry.view<EntityType, Position, BoundingBox, ViewportTypeTraits<T>::DrawTag>();
-		view.use<Position>();
+		view.use<BoundingBox>();
 		for ( const entt::entity entity : view ) {
 			const auto &entityType = view.get<EntityType>( entity );
 			const auto &position = view.get<Position>( entity ).mValue;
@@ -323,7 +323,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::L
 	// Iterate over all entities
 	entt::registry &registry = inLevelInterface->GetRegistry();
 	auto view = registry.view<EntityType, Position, BoundingBox, entt::tag<"is_visible"_hs>>();
-	view.use<Position>();
+	view.use<BoundingBox>();
 	for ( const entt::entity entity : view ) {
 		const auto &entityType = view.get<EntityType>( entity );
 		const auto &position = view.get<Position>( entity ).mValue;

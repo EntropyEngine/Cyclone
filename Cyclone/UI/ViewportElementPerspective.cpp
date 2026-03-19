@@ -139,7 +139,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 		// Iterate over all entities
 		const entt::registry &cregistry = inLevelInterface->GetRegistry();
 		auto view = cregistry.view<EntityType, Position, BoundingBox, entt::tag<"is_visible"_hs>>();
-		view.use<Position>();
+		view.use<BoundingBox>();
 		for ( const entt::entity entity : view ) {
 			const auto &entityType = view.get<EntityType>( entity );
 			const auto &position = view.get<Position>( entity ).mValue;
