@@ -12,6 +12,12 @@ namespace Cyclone::Core::Editor
 		static constexpr const char *kGridSizeText[] = { "1cm", "5cm", "10cm", "25cm", "50cm", "1m", "2.5m", "5m", "10m" };
 		static constexpr const char *kSnapTypeText[] = { "To Grid", "By Grid", "None" };
 
+		static constexpr float kTransformHandleSize = 8.0f;
+		static constexpr float kPositionHandleSize = 4.0f;
+		static constexpr float kInformationVirtualSize = 8.0f; // Pretend the position handle was this size, if the handle is wider than the bounding box hide information
+
+		static constexpr float kMinGridSize = 5.0f;
+
 		enum class ESnapType	{ ToGrid, ByGrid, None };
 		ESnapType				mSnapType = ESnapType::ToGrid;
 

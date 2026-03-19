@@ -186,7 +186,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateTools( float inDeltaTime
 	const bool isLeftClickShort = ( ImGui::IsMouseReleased( 0, mViewportData.mCanvasID ) || ImGui::IsMouseReleased( 0, ImGuiKeyOwner_NoOwner ) ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
 
 	if ( mViewportData.mIsActive && isLeftClickShort ) {
-		Tool::SelectionTool().OnClick<T>( inLevelInterface, mViewportData.mWorldMouseU, mViewportData.mWorldMouseV, 2.0f * kPositionHandleSize * orthographicContext.mZoomScale2D, gridContext.mWorldLimit );
+		Tool::SelectionTool().OnClick<T>( inLevelInterface, mViewportData.mWorldMouseU, mViewportData.mWorldMouseV, 2.0f * Cyclone::Core::Editor::GridContext::kPositionHandleSize * orthographicContext.mZoomScale2D, gridContext.mWorldLimit );
 	}
 
 	// Perform selection transform
@@ -233,17 +233,17 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 		double subgridStep = gridContext.mGridSize;
 		double gridStep = std::pow( 10.0, std::ceil( std::log10( subgridStep * 4 ) ) ) / 2;
 
-		while ( subgridStep / orthographicContext.mZoomScale2D < kMinGridSize ) {
+		while ( subgridStep / orthographicContext.mZoomScale2D < Cyclone::Core::Editor::GridContext::kMinGridSize ) {
 			//subgridStep *= 10;
 			subgridStep = std::pow( 10.0, std::ceil( std::log10( subgridStep * 4 ) ) ) / 2;
 		}
 
-		while ( gridStep / orthographicContext.mZoomScale2D < kMinGridSize * 5 ) {
+		while ( gridStep / orthographicContext.mZoomScale2D < Cyclone::Core::Editor::GridContext::kMinGridSize * 5 ) {
 			//gridStep *= 10;
 			gridStep = std::pow( 10.0, std::ceil( std::log10( gridStep * 4 ) ) ) / 2;
 		}
 
-		if ( subgridStep / orthographicContext.mZoomScale2D > kMinGridSize ) {
+		if ( subgridStep / orthographicContext.mZoomScale2D > Cyclone::Core::Editor::GridContext::kMinGridSize ) {
 			DrawLineLoop<AxisU, AxisV>( orthographicContext.mCenter2D, minU, maxU, minV, maxV, subgridStep, DirectX::ColorsLinear::DimGray );
 			DrawLineLoop<AxisV, AxisU>( orthographicContext.mCenter2D, minV, maxV, minU, maxU, subgridStep, DirectX::ColorsLinear::DimGray );
 		}
@@ -409,11 +409,11 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::L
 		localPos.y = static_cast<float>( rebasedEntityPosition.Get<AxisV>() * invZoom ) + offsetY;
 
 		// Only draw X if smaller than bounding box
-		if ( mViewportData.mIsActive && kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y ) {
-			DrawCross( drawList, localPos, kPositionHandleSize, entityColor );
+		if ( mViewportData.mIsActive && Cyclone::Core::Editor::GridContext::kPositionHandleSize * 2 <= localBoxMax.x - localBoxMin.x && Cyclone::Core::Editor::GridContext::kPositionHandleSize * 2 <= localBoxMax.y - localBoxMin.y ) {
+			DrawCross( drawList, localPos, Cyclone::Core::Editor::GridContext::kPositionHandleSize, entityColor );
 		}
 
-		if ( entityInSelection && kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y ) {
+		if ( entityInSelection && Cyclone::Core::Editor::GridContext::kInformationVirtualSize * 2 <= localBoxMax.x - localBoxMin.x && Cyclone::Core::Editor::GridContext::kInformationVirtualSize * 2 <= localBoxMax.y - localBoxMin.y ) {
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMin.y - ImGui::GetTextLineHeight() }, entityColor, entityManager.GetEntityTypeName( entityType ) );
 			drawList->AddText( narrowFont, fontSize, { localBoxMin.x, localBoxMax.y }, entityColor, Cyclone::Util::PrefixString( "id=", entity ) );
 		}
