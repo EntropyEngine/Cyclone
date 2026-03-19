@@ -71,8 +71,8 @@ namespace Cyclone::Math
 		static Vector4D XM_CALLCONV sGreater( Vector4D inLhs, Vector4D inRhs ) { return _mm256_cmp_pd( inLhs, inRhs, _CMP_GT_OQ ); } /// @note returns bitmask
 		static Vector4D XM_CALLCONV sGreaterEqual( Vector4D inLhs, Vector4D inRhs ) { return _mm256_cmp_pd( inLhs, inRhs, _CMP_GE_OQ ); } /// @note returns bitmask
 
-		static Vector4D XM_CALLCONV sBitwiseOr( Vector4D inLhs, Vector4D inRhs ) { return _mm256_castsi256_pd( _mm256_or_si256( _mm256_castpd_si256( inLhs ), _mm256_castpd_si256( inRhs ) ) ); }
-		static bool XM_CALLCONV sAnyTrue( Vector4D inV ) { return _mm256_movemask_epi8( _mm256_castpd_si256( inV ) ) != 0x0; }
+		static Vector4D XM_CALLCONV sBitwiseOr( Vector4D inLhs, Vector4D inRhs ) { return _mm256_or_pd( inLhs, inRhs ); }
+		static bool XM_CALLCONV sAnyTrue( Vector4D inV ) { return _mm256_movemask_pd( inV ) != 0x0; }
 
 		// Cast to 32 bit
 		DirectX::XMVECTOR XM_CALLCONV ToXMVECTOR() const
