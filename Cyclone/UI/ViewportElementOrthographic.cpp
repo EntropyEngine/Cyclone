@@ -172,15 +172,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDelt
 		gridPos.y = static_cast<float>( ( orthographicContext.mCenter2D.Get<AxisV>() - worldSnapV ) / orthographicContext.mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
 
 		DrawCross( drawList, gridPos, 2.0f, IM_COL32( 255, 255, 255, 255 ) );
-	}
-
-	
-	ImGui::SetCursorPos( { 100, 100 } );
-	ImGui::Button( "A button" );
-	if ( ImGui::IsItemHovered( ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem ) ) {
-		ImGui::SetItemKeyOwner( ImGuiKey_MouseLeft );
-	}
-	
+	}	
 }
 
 template<Cyclone::UI::EViewportType T>
@@ -191,7 +183,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateTools( float inDeltaTime
 
 	ImGuiIO &io = ImGui::GetIO();
 
-	const bool isLeftClickShort = ( ImGui::IsMouseReleased( 0, mViewportData.mCanvasID ) || ImGui::IsMouseReleased( 0 ) && ImGui::GetKeyOwner( ImGuiKey_MouseLeft ) == ImGuiKeyOwner_NoOwner ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
+	const bool isLeftClickShort = ( ImGui::IsMouseReleased( 0, mViewportData.mCanvasID ) || ImGui::IsMouseReleased( 0, ImGuiKeyOwner_NoOwner ) ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
 
 	if ( mViewportData.mIsActive && isLeftClickShort ) {
 		Tool::SelectionTool().OnClick<T>( inLevelInterface, mViewportData.mWorldMouseU, mViewportData.mWorldMouseV, 2.0f * kPositionHandleSize * orthographicContext.mZoomScale2D, gridContext.mWorldLimit );

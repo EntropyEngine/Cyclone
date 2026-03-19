@@ -103,6 +103,7 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 			transformContext.Deactivate();
 		}
 		else if ( isSelectionActive ) {
+			// If selection active, but long click checks failed, revert key owner to none for passthrough
 			ImGui::SetKeyOwner( ImGuiKey_MouseLeft, ImGuiKeyOwner_NoOwner );
 		}
 	}
