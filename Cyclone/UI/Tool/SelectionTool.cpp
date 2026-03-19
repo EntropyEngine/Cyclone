@@ -121,6 +121,14 @@ void Cyclone::UI::Tool::SelectionTool::OnUpdate( Cyclone::Core::LevelInterface *
 	if ( selectionContext.mDirty ) {
 		entityManager.BeginAction();
 		entityManager.EndAction( registry );
+
+		auto &transfromContext = inLevelInterface->GetSelectionTransformCtx();
+
+		for ( const entt::entity entity : selectionContext.GetSelectedEntities() ) {
+			const auto &[position, box] = registry.get<Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>( entity );
+
+			transfromContext.IncludeSelectedEntity( position, box );
+		}
 	}
 }
 

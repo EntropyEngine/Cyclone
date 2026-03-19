@@ -51,24 +51,24 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 	const float offsetX = inViewportData.mViewSize.x / 2.0f + inViewportData.mViewOrigin.x;
 	const float offsetY = inViewportData.mViewSize.y / 2.0f + inViewportData.mViewOrigin.y;
 
-	ImDrawList *inDrawList = inViewportData.mDrawList;
+	ImDrawList *drawList = inViewportData.mDrawList;
 
 	if ( !selectedEntities.empty() ) {
 
 		Vector4D selectionBoxMinRebased = transformContext.GetSelectionMin() - orthographicContext.mCenter2D;
 		Vector4D selectionBoxMaxRebased = transformContext.GetSelectionMax() - orthographicContext.mCenter2D;
 
-		ImVec2 inSelectedBoxMax;
-		inSelectedBoxMax.x = offsetX - static_cast<float>( selectionBoxMinRebased.Get<AxisU>() ) * invZoom;
-		inSelectedBoxMax.y = offsetY - static_cast<float>( selectionBoxMinRebased.Get<AxisV>() ) * invZoom;
+		ImVec2 selectedBoxMax;
+		selectedBoxMax.x = offsetX - static_cast<float>( selectionBoxMinRebased.Get<AxisU>() ) * invZoom;
+		selectedBoxMax.y = offsetY - static_cast<float>( selectionBoxMinRebased.Get<AxisV>() ) * invZoom;
 
-		ImVec2 inSelectedBoxMin;
-		inSelectedBoxMin.x = offsetX - static_cast<float>( selectionBoxMaxRebased.Get<AxisU>() ) * invZoom;
-		inSelectedBoxMin.y = offsetY - static_cast<float>( selectionBoxMaxRebased.Get<AxisV>() ) * invZoom;
+		ImVec2 selectedBoxMin;
+		selectedBoxMin.x = offsetX - static_cast<float>( selectionBoxMaxRebased.Get<AxisU>() ) * invZoom;
+		selectedBoxMin.y = offsetY - static_cast<float>( selectionBoxMaxRebased.Get<AxisV>() ) * invZoom;
 
-		ImGui::SetCursorPos( { inSelectedBoxMin.x - inViewportData.mViewOrigin.x, inSelectedBoxMin.y - inViewportData.mViewOrigin.y } );
+		ImGui::SetCursorPos( { selectedBoxMin.x - inViewportData.mViewOrigin.x, selectedBoxMin.y - inViewportData.mViewOrigin.y } );
 		ImGui::SetNextItemAllowOverlap();
-		ImGui::InvisibleButton( "Selection", { inSelectedBoxMax.x - inSelectedBoxMin.x, inSelectedBoxMax.y - inSelectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft );
+		ImGui::InvisibleButton( "Selection", { selectedBoxMax.x - selectedBoxMin.x, selectedBoxMax.y - selectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft );
 		const bool isLongClick = io.MouseDownDuration[0] > io.MouseDoubleClickTime;
 		const bool isSelectionHovered = ImGui::IsItemHovered();
 		const bool isSelectionActive = ImGui::IsItemActive();
@@ -149,30 +149,33 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnDraw( Cyclone::Core::Le
 	const float offsetX = inViewportData.mViewSize.x / 2.0f + inViewportData.mViewOrigin.x;
 	const float offsetY = inViewportData.mViewSize.y / 2.0f + inViewportData.mViewOrigin.y;
 
-	ImDrawList *inDrawList = inViewportData.mDrawList;
+	ImDrawList *drawList = inViewportData.mDrawList;
 
 	if ( !selectedEntities.empty() ) {
 		Vector4D selectionBoxMinRebased = transformContext.GetSelectionMin() - orthographicContext.mCenter2D;
 		Vector4D selectionBoxMaxRebased = transformContext.GetSelectionMax() - orthographicContext.mCenter2D;
 
-		ImVec2 inSelectedBoxMax;
-		inSelectedBoxMax.x = offsetX - static_cast<float>( selectionBoxMinRebased.Get<AxisU>() ) * invZoom;
-		inSelectedBoxMax.y = offsetY - static_cast<float>( selectionBoxMinRebased.Get<AxisV>() ) * invZoom;
+		ImVec2 selectedBoxMax;
+		selectedBoxMax.x = offsetX - static_cast<float>( selectionBoxMinRebased.Get<AxisU>() ) * invZoom;
+		selectedBoxMax.y = offsetY - static_cast<float>( selectionBoxMinRebased.Get<AxisV>() ) * invZoom;
 
-		ImVec2 inSelectedBoxMin;
-		inSelectedBoxMin.x = offsetX - static_cast<float>( selectionBoxMaxRebased.Get<AxisU>() ) * invZoom;
-		inSelectedBoxMin.y = offsetY - static_cast<float>( selectionBoxMaxRebased.Get<AxisV>() ) * invZoom;
+		ImVec2 selectedBoxMin;
+		selectedBoxMin.x = offsetX - static_cast<float>( selectionBoxMaxRebased.Get<AxisU>() ) * invZoom;
+		selectedBoxMin.y = offsetY - static_cast<float>( selectionBoxMaxRebased.Get<AxisV>() ) * invZoom;
 
-		inDrawList->AddRect( inSelectedBoxMin, inSelectedBoxMax, IM_COL32( 255, 0, 0, 255 ), 0, 0, 2 );
+		if ( selectedBoxMin.x > selectedBoxMax.x ) return;
+		if ( selectedBoxMin.y > selectedBoxMax.y ) return;
 
-		for ( float x = inSelectedBoxMin.x; x < inSelectedBoxMax.x - 8; x += 16 ) {
-			inDrawList->AddLine( { x, inSelectedBoxMin.y }, { x + 8, inSelectedBoxMin.y }, IM_COL32( 255, 255, 0, 255 ), 2 );
-			inDrawList->AddLine( { x - 1, inSelectedBoxMax.y - 1 }, { x + 7, inSelectedBoxMax.y - 1 }, IM_COL32( 255, 255, 0, 255 ), 2 );
+		drawList->AddRect( selectedBoxMin, selectedBoxMax, IM_COL32( 255, 0, 0, 255 ), 0, 0, 2 );
+
+		for ( float x = selectedBoxMin.x; x < selectedBoxMax.x - 8; x += 16 ) {
+			drawList->AddLine( { x, selectedBoxMin.y }, { x + 8, selectedBoxMin.y }, IM_COL32( 255, 255, 0, 255 ), 2 );
+			drawList->AddLine( { x - 1, selectedBoxMax.y - 1 }, { x + 7, selectedBoxMax.y - 1 }, IM_COL32( 255, 255, 0, 255 ), 2 );
 		}
 
-		for ( float y = inSelectedBoxMin.y; y < inSelectedBoxMax.y - 8; y += 16 ) {
-			inDrawList->AddLine( { inSelectedBoxMin.x, y }, { inSelectedBoxMin.x, y + 8 }, IM_COL32( 255, 255, 0, 255 ), 2 );
-			inDrawList->AddLine( { inSelectedBoxMax.x - 1, y - 1 }, { inSelectedBoxMax.x - 1, y + 7 }, IM_COL32( 255, 255, 0, 255 ), 2 );
+		for ( float y = selectedBoxMin.y; y < selectedBoxMax.y - 8; y += 16 ) {
+			drawList->AddLine( { selectedBoxMin.x, y }, { selectedBoxMin.x, y + 8 }, IM_COL32( 255, 255, 0, 255 ), 2 );
+			drawList->AddLine( { selectedBoxMax.x - 1, y - 1 }, { selectedBoxMax.x - 1, y + 7 }, IM_COL32( 255, 255, 0, 255 ), 2 );
 		}
 	}
 }
