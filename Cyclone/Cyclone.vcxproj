@@ -183,6 +183,7 @@
     <ClInclude Include="UI\MainUI.hpp" />
     <ClInclude Include="UI\Outliner.hpp" />
     <ClInclude Include="UI\Toolbar.hpp" />
+    <ClInclude Include="UI\Tool\BaseTool.hpp" />
     <ClInclude Include="UI\Tool\SelectionTool.hpp" />
     <ClInclude Include="UI\Tool\SelectionTransformTool.hpp" />
     <ClInclude Include="UI\ViewportData.hpp" />

@@ -206,6 +206,9 @@
     <ClInclude Include="UI\ViewportData.hpp">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="UI\Tool\BaseTool.hpp">
+      <Filter>UI\Tool</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">

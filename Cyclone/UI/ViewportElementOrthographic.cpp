@@ -183,14 +183,10 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateTools( float inDeltaTime
 
 	ImGuiIO &io = ImGui::GetIO();
 
-	const bool isLeftClickShort = ( ImGui::IsMouseReleased( 0, mViewportData.mCanvasID ) || ImGui::IsMouseReleased( 0, ImGuiKeyOwner_NoOwner ) ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
-
-	if ( mViewportData.mIsActive && isLeftClickShort ) {
-		Tool::SelectionTool().OnClick<T>( inLevelInterface, mViewportData.mWorldMouseU, mViewportData.mWorldMouseV, 2.0f * Cyclone::Core::Editor::GridContext::kPositionHandleSize * orthographicContext.mZoomScale2D, gridContext.mWorldLimit );
-	}
+	Tool::SelectionTool().OnUpdate( T, inLevelInterface, mViewportData );
 
 	// Perform selection transform
-	Tool::SelectionTransformTool().OnUpdate<T>( inLevelInterface, mViewportData );
+	Tool::SelectionTransformTool().OnUpdate( T, inLevelInterface, mViewportData );
 }
 
 template<Cyclone::UI::EViewportType T>
@@ -200,7 +196,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawGizmos( float inDeltaTime,
 	DrawEntities( inLevelInterface );
 
 	// Perform selection transform draws
-	Tool::SelectionTransformTool().OnDraw<T>( inLevelInterface, mViewportData );
+	Tool::SelectionTransformTool().OnDraw( T, inLevelInterface, mViewportData );
 }
 
 template<Cyclone::UI::EViewportType T>

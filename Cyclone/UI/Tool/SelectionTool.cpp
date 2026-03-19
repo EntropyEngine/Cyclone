@@ -14,9 +14,23 @@
 // ImGui Includes
 #include <imgui_internal.h>
 
-template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *inLevelInterface, double inWorldSpaceU, double inWorldSpaceV, double inHandleRadius, double inWorldLimit )
+void Cyclone::UI::Tool::SelectionTool::OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
 {
+	switch ( inType ) {
+		case EViewportType::TopXZ: OnUpdate<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
+		case EViewportType::FrontXY: OnUpdate<EViewportType::FrontXY>( inLevelInterface, inViewportData ); break;
+		case EViewportType::SideYZ: OnUpdate<EViewportType::SideYZ>( inLevelInterface, inViewportData ); break;
+	}
+}
+
+template<Cyclone::UI::EViewportType T>
+void Cyclone::UI::Tool::SelectionTool::OnUpdate( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
+{
+	ImGuiIO &io = ImGui::GetIO();
+
+	const bool isLeftClickShort = ( ImGui::IsMouseReleased( 0, inViewportData.mCanvasID ) || ImGui::IsMouseReleased( 0, ImGuiKeyOwner_NoOwner ) ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
+	if ( !inViewportData.mIsActive || !isLeftClickShort ) return;
+
 	auto &entityManager = inLevelInterface->GetEntityManager();
 	if ( !entityManager.CanAquireActionLock() ) return;
 
@@ -26,6 +40,8 @@ void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *i
 	if ( !( ctrlHeld || shiftHeld ) ) {}
 
 	auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
+	const auto &gridContext = inLevelInterface->GetGridCtx();
 
 	// Not a reference; need original
 	const std::set<entt::entity> previousSelectedEntities = selectionContext.GetSelectedEntities();
@@ -33,13 +49,14 @@ void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *i
 	std::set<entt::entity> selectionCandidates;
 
 	double clickPositionD[4] = { 0, 0, 0, 0 };
-	clickPositionD[ViewportTypeTraits<T>::AxisU] = inWorldSpaceU;
-	clickPositionD[ViewportTypeTraits<T>::AxisV] = inWorldSpaceV;
+	clickPositionD[ViewportTypeTraits<T>::AxisU] = inViewportData.mWorldMouseU;
+	clickPositionD[ViewportTypeTraits<T>::AxisV] = inViewportData.mWorldMouseV;
 	Cyclone::Math::Vector4D clickPosition = Cyclone::Math::Vector4D::sLoad( clickPositionD );
-	Cyclone::Math::Vector4D clickExtent = Cyclone::Math::Vector4D::sZeroSetValueByIndex<ViewportTypeTraits<T>::AxisW>( inWorldLimit );
+	Cyclone::Math::Vector4D clickExtent = Cyclone::Math::Vector4D::sZeroSetValueByIndex<ViewportTypeTraits<T>::AxisW>( gridContext.mWorldLimit );
 	Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> clickBox{ .mCenter = clickPosition, .mExtent = clickExtent };
 
-	Cyclone::Math::Vector4D entityExtent = Cyclone::Math::Vector4D::sReplicate( inHandleRadius );
+	double handleRadius = 2.0f * Cyclone::Core::Editor::GridContext::kPositionHandleSize * orthographicContext.mZoomScale2D;
+	Cyclone::Math::Vector4D entityExtent = Cyclone::Math::Vector4D::sReplicate( handleRadius );
 
 	entt::registry &registry = inLevelInterface->GetRegistry();
 	const entt::registry &cregistry = registry;
@@ -107,7 +124,6 @@ void Cyclone::UI::Tool::SelectionTool::OnClick( Cyclone::Core::LevelInterface *i
 	}
 }
 
-
-template void Cyclone::UI::Tool::SelectionTool::OnClick<Cyclone::UI::EViewportType::TopXZ>( Cyclone::Core::LevelInterface *, double, double, double, double );
-template void Cyclone::UI::Tool::SelectionTool::OnClick<Cyclone::UI::EViewportType::FrontXY>( Cyclone::Core::LevelInterface *, double, double, double, double );
-template void Cyclone::UI::Tool::SelectionTool::OnClick<Cyclone::UI::EViewportType::SideYZ>( Cyclone::Core::LevelInterface *, double, double, double, double );
+//template void Cyclone::UI::Tool::SelectionTool::OnUpdate<Cyclone::UI::EViewportType::TopXZ>( Cyclone::Core::LevelInterface *, const ViewportData & );
+//template void Cyclone::UI::Tool::SelectionTool::OnUpdate<Cyclone::UI::EViewportType::FrontXY>( Cyclone::Core::LevelInterface *, const ViewportData & );
+//template void Cyclone::UI::Tool::SelectionTool::OnUpdate<Cyclone::UI::EViewportType::SideYZ>( Cyclone::Core::LevelInterface *, const ViewportData & );

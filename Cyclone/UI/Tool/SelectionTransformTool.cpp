@@ -11,6 +11,24 @@
 
 using Cyclone::Math::Vector4D;
 
+void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
+{
+	switch ( inType ) {
+		case EViewportType::TopXZ: OnUpdate<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
+		case EViewportType::FrontXY: OnUpdate<EViewportType::FrontXY>( inLevelInterface, inViewportData ); break;
+		case EViewportType::SideYZ: OnUpdate<EViewportType::SideYZ>( inLevelInterface, inViewportData ); break;
+	}
+}
+
+void Cyclone::UI::Tool::SelectionTransformTool::OnDraw( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
+{
+	switch ( inType ) {
+		case EViewportType::TopXZ: OnDraw<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
+		case EViewportType::FrontXY: OnDraw<EViewportType::FrontXY>( inLevelInterface, inViewportData ); break;
+		case EViewportType::SideYZ: OnDraw<EViewportType::SideYZ>( inLevelInterface, inViewportData ); break;
+	}
+}
+
 template<Cyclone::UI::EViewportType T>
 inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
 {
@@ -158,11 +176,3 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnDraw( Cyclone::Core::Le
 		}
 	}
 }
-
-template void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate<Cyclone::UI::EViewportType::TopXZ>( Cyclone::Core::LevelInterface *, const ViewportData & );
-template void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate<Cyclone::UI::EViewportType::FrontXY>( Cyclone::Core::LevelInterface *, const ViewportData & );
-template void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate<Cyclone::UI::EViewportType::SideYZ>( Cyclone::Core::LevelInterface *, const ViewportData & );
-
-template void Cyclone::UI::Tool::SelectionTransformTool::OnDraw<Cyclone::UI::EViewportType::TopXZ>( Cyclone::Core::LevelInterface *, const ViewportData & );
-template void Cyclone::UI::Tool::SelectionTransformTool::OnDraw<Cyclone::UI::EViewportType::FrontXY>( Cyclone::Core::LevelInterface *, const ViewportData & );
-template void Cyclone::UI::Tool::SelectionTransformTool::OnDraw<Cyclone::UI::EViewportType::SideYZ>( Cyclone::Core::LevelInterface *, const ViewportData & );

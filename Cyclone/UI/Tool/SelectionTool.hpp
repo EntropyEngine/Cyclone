@@ -1,10 +1,7 @@
 #pragma once
 
 // Cyclone UI
-#include "Cyclone/UI/ViewportType.hpp"
-
-// Cyclone utils
-#include "Cyclone/Util/NonCopyable.hpp"
+#include "Cyclone/UI/Tool/BaseTool.hpp"
 
 namespace Cyclone::Core {
 	class LevelInterface;
@@ -12,12 +9,15 @@ namespace Cyclone::Core {
 
 namespace Cyclone::UI::Tool
 {
-	class SelectionTool : public Cyclone::Util::NonCopyable
+	class SelectionTool : public BaseTool
 	{
 	public:
-		SelectionTool() {}
+		virtual void OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override;
 
+		virtual void OnDraw( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override {}
+
+	protected:
 		template<EViewportType T>
-		void OnClick( Cyclone::Core::LevelInterface *inLevelInterface, double inWorldSpaceU, double inWorldSpaceV, double inHandleRadius, double inWorldLimit );
+		void OnUpdate( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
 	};
 }
