@@ -277,28 +277,31 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 		{
 			auto view = registry.view<Position, BoundingBox, ViewportTypeTraits<T>::DrawTag, entt::tag<"is_selected"_hs>>();
-			//view.use<BoundingBox>();
+
+			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
 			for ( const entt::entity entity : view ) {
+				if ( selectedEntity == entity ) continue;
+
 				const auto &position = view.get<Position>( entity ).mValue;
 				const auto &boundingBox = view.get<BoundingBox>( entity ).mValue;
-
-				bool entityIsSelected = selectedEntity == entity;
-
-				uint32_t entityColorU32;
-				if ( entityIsSelected ) {
-					entityColorU32 = Cyclone::Util::ColorU32( 255, 255, 0, 255 );
-				}
-				else {
-					entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
-				}
-
-				DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
 
 				Vector4D rebasedEntityPosition = ( position - orthographicContext.mCenter2D );
 				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
 				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
 			}
+
+			entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 255, 0, 255 ) );
+			if ( selectedEntity != entt::null ) {
+				const auto &position = view.get<Position>( selectedEntity ).mValue;
+				const auto &boundingBox = view.get<BoundingBox>( selectedEntity ).mValue;
+
+				Vector4D rebasedEntityPosition = ( position - orthographicContext.mCenter2D );
+				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
+
+				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+			}
+
 			mWireframeBoxShader->DrawInstances( inDeviceContext );
 		}
 	}

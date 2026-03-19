@@ -162,22 +162,26 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 		{
 			auto view = cregistry.view<Position, BoundingBox, entt::tag<"is_visible"_hs>, entt::tag<"is_selected"_hs>>();
-			//view.use<BoundingBox>();
+
+			entt::entity selectedEntity = selectionContext.GetSelectedEntity();
+
+			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
 			for ( const entt::entity entity : view ) {
+				if ( selectedEntity == entity ) continue;
+
 				const auto &position = view.get<Position>( entity ).mValue;
 				const auto &boundingBox = view.get<BoundingBox>( entity ).mValue;
 
-				bool entityIsSelected = selectionContext.GetSelectedEntity() == entity;
+				Vector4D rebasedEntityPosition = ( position - perspectiveContext.mCenter3D );
+				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
-				uint32_t entityColorU32;
-				if ( entityIsSelected ) {
-					entityColorU32 = Cyclone::Util::ColorU32( 255, 255, 0, 255 );
-				}
-				else {
-					entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
-				}
+				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+			}
 
-				DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
+			entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 255, 0, 255 ) );
+			if ( selectedEntity != entt::null ) {
+				const auto &position = view.get<Position>( selectedEntity ).mValue;
+				const auto &boundingBox = view.get<BoundingBox>( selectedEntity ).mValue;
 
 				Vector4D rebasedEntityPosition = ( position - perspectiveContext.mCenter3D );
 				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
