@@ -123,7 +123,7 @@ void Cyclone::UI::Tool::SelectionTool::OnUpdate( Cyclone::Core::LevelInterface *
 		entityManager.EndAction( registry );
 
 		auto &transfromContext = inLevelInterface->GetSelectionTransformCtx();
-
+		transfromContext.OnPreUpdate();
 		for ( const entt::entity entity : selectionContext.GetSelectedEntities() ) {
 			const auto &[position, box] = registry.get<Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>( entity );
 
