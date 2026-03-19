@@ -50,6 +50,8 @@ void Cyclone::UI::ViewportElementPerspective::UpdateNavigation( float inDeltaTim
 
 	ImGui::SetCursorPos( { 0, 0 } );
 	ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
+	mViewportData.mCanvasID = ImGui::GetItemID();
+
 	const bool isCanvasHovered = ImGui::IsItemHovered();
 	const bool isActive = ImGui::IsItemActive();
 

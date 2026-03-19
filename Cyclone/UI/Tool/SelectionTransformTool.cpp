@@ -49,10 +49,11 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 		inSelectedBoxMin.y = offsetY - static_cast<float>( selectionBoxMaxRebased.Get<AxisV>() ) * invZoom;
 
 		ImGui::SetCursorPos( { inSelectedBoxMin.x - inViewportData.mViewOrigin.x, inSelectedBoxMin.y - inViewportData.mViewOrigin.y } );
+		ImGui::SetNextItemAllowOverlap();
 		ImGui::InvisibleButton( "Selection", { inSelectedBoxMax.x - inSelectedBoxMin.x, inSelectedBoxMax.y - inSelectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft );
+		const bool isLongClick = io.MouseDownDuration[0] > io.MouseDoubleClickTime;
 		const bool isSelectionHovered = ImGui::IsItemHovered();
 		const bool isSelectionActive = ImGui::IsItemActive();
-		const bool isLongClick = io.MouseDownDuration[0] > io.MouseDoubleClickTime;
 		const bool isDragging = ImGui::IsMouseDragging( ImGuiMouseButton_Left );
 
 		entt::registry &registry = inLevelInterface->GetRegistry();
@@ -100,6 +101,9 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 			entityManager.EndAction( registry );
 
 			transformContext.Deactivate();
+		}
+		else if ( isSelectionActive ) {
+			ImGui::SetKeyOwner( ImGuiKey_MouseLeft, ImGuiKeyOwner_NoOwner );
 		}
 	}
 }

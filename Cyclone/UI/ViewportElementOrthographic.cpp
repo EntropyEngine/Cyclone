@@ -102,6 +102,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDelt
 	ImGui::SetCursorPos( { 0, 0 } );
 	if( !ImGui::IsMouseDown( ImGuiMouseButton_Middle ) ) ImGui::SetNextItemAllowOverlap(); // Ensure middle mouse "wins" over selection
 	ImGui::InvisibleButton( "canvas", viewSize, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle );
+	mViewportData.mCanvasID = ImGui::GetItemID();
+
 	const bool isCanvasHovered = ImGui::IsItemHovered( ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem );
 	const bool isCanvasActive = ImGui::IsItemActive();
 	const bool isLeftClickShort = ImGui::IsMouseReleased( 0 ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
@@ -173,7 +175,11 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDelt
 	}
 
 	
-
+	ImGui::SetCursorPos( { 100, 100 } );
+	ImGui::Button( "A button" );
+	if ( ImGui::IsItemHovered( ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem ) ) {
+		ImGui::SetItemKeyOwner( ImGuiKey_MouseLeft );
+	}
 	
 }
 
@@ -185,7 +191,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateTools( float inDeltaTime
 
 	ImGuiIO &io = ImGui::GetIO();
 
-	const bool isLeftClickShort = ImGui::IsMouseReleased( 0 ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
+	const bool isLeftClickShort = ( ImGui::IsMouseReleased( 0, mViewportData.mCanvasID ) || ImGui::IsMouseReleased( 0 ) && ImGui::GetKeyOwner( ImGuiKey_MouseLeft ) == ImGuiKeyOwner_NoOwner ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
 
 	if ( mViewportData.mIsActive && isLeftClickShort ) {
 		Tool::SelectionTool().OnClick<T>( inLevelInterface, mViewportData.mWorldMouseU, mViewportData.mWorldMouseV, 2.0f * kPositionHandleSize * orthographicContext.mZoomScale2D, gridContext.mWorldLimit );
