@@ -14,7 +14,7 @@ namespace Cyclone::UI::Tool
 	public:
 		virtual void OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override;
 
-		virtual void OnDraw( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override {}
+		virtual void OnDraw( EViewportType, Cyclone::Core::LevelInterface *, const ViewportData & ) override {}
 
 	protected:
 		template<EViewportType T>

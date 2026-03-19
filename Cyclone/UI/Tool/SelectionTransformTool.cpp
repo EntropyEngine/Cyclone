@@ -51,8 +51,6 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 	const float offsetX = inViewportData.mViewSize.x / 2.0f + inViewportData.mViewOrigin.x;
 	const float offsetY = inViewportData.mViewSize.y / 2.0f + inViewportData.mViewOrigin.y;
 
-	ImDrawList *drawList = inViewportData.mDrawList;
-
 	if ( !selectedEntities.empty() ) {
 
 		Vector4D selectionBoxMinRebased = transformContext.GetSelectionMin() - orthographicContext.mCenter2D;
@@ -133,17 +131,12 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnDraw( Cyclone::Core::Le
 	constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
 
-	ImGuiIO &io = ImGui::GetIO();
-
-	auto &entityManager = inLevelInterface->GetEntityManager();
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
 
-	const auto &gridContext = inLevelInterface->GetGridCtx();
 	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
 
 	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
-	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
 
 	const double invZoom = 1.0 / orthographicContext.mZoomScale2D;
 	const float offsetX = inViewportData.mViewSize.x / 2.0f + inViewportData.mViewOrigin.x;

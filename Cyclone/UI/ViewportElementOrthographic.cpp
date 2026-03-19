@@ -106,7 +106,6 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDelt
 
 	const bool isCanvasHovered = ImGui::IsItemHovered( ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem );
 	const bool isCanvasActive = ImGui::IsItemActive();
-	const bool isLeftClickShort = ImGui::IsMouseReleased( 0 ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
 
 	mViewportData.mIsActive = ImGui::GetCurrentContext()->ActiveIdWindow == ImGui::GetCurrentWindow() || ( ImGui::GetCurrentContext()->ActiveIdWindow == nullptr && isCanvasHovered );
 
@@ -178,11 +177,6 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDelt
 template<Cyclone::UI::EViewportType T>
 void Cyclone::UI::ViewportElementOrthographic<T>::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
-	const auto &gridContext = inLevelInterface->GetGridCtx();
-
-	ImGuiIO &io = ImGui::GetIO();
-
 	Tool::SelectionTool().OnUpdate( T, inLevelInterface, mViewportData );
 
 	// Perform selection transform
@@ -267,7 +261,6 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 		const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 		const auto &entityManager = inLevelInterface->GetEntityManager();
 
-		const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
 		const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
 
 		// Iterate over all entities

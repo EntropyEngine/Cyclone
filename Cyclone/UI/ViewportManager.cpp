@@ -4,6 +4,10 @@
 // Cyclone core includes
 #include "Cyclone/Core/LevelInterface.hpp"
 
+// Cyclone UI tools
+#include "Cyclone/UI/Tool/SelectionTool.hpp"
+#include "Cyclone/UI/Tool/SelectionTransformTool.hpp"
+
 // Cyclone components
 #include "Cyclone/Core/Component/EntityType.hpp"
 #include "Cyclone/Core/Component/Position.hpp"
@@ -52,6 +56,9 @@ Cyclone::UI::ViewportManager::ViewportManager()
 	mViewportTop = std::make_unique<ViewportElementOrthographic<EViewportType::TopXZ>>( rtvFormat, dsvFormat, clearColor, mAntialiasingEnabled );
 	mViewportFront = std::make_unique<ViewportElementOrthographic<EViewportType::FrontXY>>( rtvFormat, dsvFormat, clearColor, mAntialiasingEnabled );
 	mViewportSide = std::make_unique<ViewportElementOrthographic<EViewportType::SideYZ>>( rtvFormat, dsvFormat, clearColor, mAntialiasingEnabled );
+
+	mToolChanger.emplace_back( std::make_unique<Tool::SelectionTool>() );
+	mToolChanger.emplace_back( std::make_unique<Tool::SelectionTransformTool>() );
 }
 
 void Cyclone::UI::ViewportManager::SetDevice( ID3D11Device3 *inDevice )
@@ -74,8 +81,6 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	ImGuiWindowFlags viewportFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking;
 	ImVec2 viewSizePerspective, viewSizeTop, viewSizeFront, viewSizeSide;
 	ImVec2 viewSize = ImGui::GetWindowSize();
-
-	entt::registry &registry = inLevelInterface->GetRegistry();
 
 	// Instantiate all windows and grab their positional data
 	{
@@ -239,7 +244,6 @@ void Cyclone::UI::ViewportManager::UpdateDrawListAndSelectionBox( Cyclone::Core:
 	const auto &gridContext = inLevelInterface->GetGridCtx();
 
 	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
-	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
 
 	// Pre calculate full screen bounding boxes for the orthgraphic viewports
 	Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> topBox{ orthographicContext.mCenter2D, mViewportTop->GetViewBoundingBoxExtent( gridContext.mWorldLimit, orthographicContext.mZoomScale2D ) };
@@ -258,7 +262,6 @@ void Cyclone::UI::ViewportManager::UpdateDrawListAndSelectionBox( Cyclone::Core:
 		const auto &boundingBox = view.get<Cyclone::Core::Component::BoundingBox>( entity );
 
 		bool entityInSelection = selectedEntities.contains( entity );
-		bool entityIsSelected = selectedEntity == entity;
 
 		// Add entity to selection bounding box
 		if ( entityInSelection ) {

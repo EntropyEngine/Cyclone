@@ -7,6 +7,7 @@
 #include "Cyclone/UI/ViewportElementPerspective.hpp"
 #include "Cyclone/UI/ViewportElementOrthographic.hpp"
 #include "Cyclone/UI/ViewportType.hpp"
+#include "Cyclone/UI/Tool/BaseTool.hpp"
 
 namespace Cyclone::Core {
 	class LevelInterface;
@@ -38,6 +39,8 @@ namespace Cyclone::UI
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::TopXZ>> mViewportTop;
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::FrontXY>> mViewportFront;
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::SideYZ>> mViewportSide;
+
+		std::vector<std::unique_ptr<Tool::BaseTool>> mToolChanger;
 
 		void UpdateDrawListAndSelectionBox( Cyclone::Core::LevelInterface *inLevelInterface );
 
