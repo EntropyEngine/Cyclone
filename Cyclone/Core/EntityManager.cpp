@@ -334,6 +334,9 @@ void Cyclone::Core::EntityManager::RestoreContextStatePostAction()
 
 void Cyclone::Core::EntityManager::ValidateSelection( entt::registry & inRegistry )
 {
+	// Clear selected tags
+	inRegistry.clear<entt::tag<"is_selected"_hs>>();
+
 	// NOT A REFERENCE
 	const auto previousSelection = mSelectionTool.GetSelectedEntities();
 
@@ -379,6 +382,8 @@ void Cyclone::Core::EntityManager::ValidateSelection( entt::registry & inRegistr
 			mSelectionTool.DeselectEntity( entity );
 			continue;
 		}
+
+		inRegistry.emplace<entt::tag<"is_selected"_hs>>( entity );
 	}
 }
 
