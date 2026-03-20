@@ -56,6 +56,9 @@
     <Filter Include="Rendering\Shader">
       <UniqueIdentifier>{7d5be832-f6a7-46a0-a586-9dc875f75ee3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common\Im3D">
+      <UniqueIdentifier>{a54796ff-0a1b-4bea-8b15-75a04f716ad1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -212,6 +215,15 @@
     <ClInclude Include="UI\Tool\GizmoTransformTool.hpp">
       <Filter>UI\Tool</Filter>
     </ClInclude>
+    <ClInclude Include="Im3D\im3d.h">
+      <Filter>Common\Im3D</Filter>
+    </ClInclude>
+    <ClInclude Include="Im3D\im3d_config.h">
+      <Filter>Common\Im3D</Filter>
+    </ClInclude>
+    <ClInclude Include="Im3D\im3d_math.h">
+      <Filter>Common\Im3D</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -307,6 +319,9 @@
     </ClCompile>
     <ClCompile Include="UI\Tool\GizmoTransformTool.cpp">
       <Filter>UI\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="Im3D\im3d.cpp">
+      <Filter>Common\Im3D</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

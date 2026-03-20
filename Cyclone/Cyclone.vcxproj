@@ -167,6 +167,9 @@
     <ClInclude Include="Core\Tool\SelectionToolContext.hpp" />
     <ClInclude Include="Core\Tool\SelectionTransformToolContext.hpp" />
     <ClInclude Include="entt.hpp" />
+    <ClInclude Include="Im3D\im3d.h" />
+    <ClInclude Include="Im3D\im3d_config.h" />
+    <ClInclude Include="Im3D\im3d_math.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Math\BoundingBox.hpp" />
@@ -209,6 +212,11 @@
     <ClCompile Include="Core\Level.cpp" />
     <ClCompile Include="Core\Tool\SelectionToolContext.cpp" />
     <ClCompile Include="Core\Tool\SelectionTransformToolContext.cpp" />
+    <ClCompile Include="Im3D\im3d.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="ImGui\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
