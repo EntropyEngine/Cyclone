@@ -209,6 +209,9 @@
     <ClInclude Include="UI\Tool\BaseTool.hpp">
       <Filter>UI\Tool</Filter>
     </ClInclude>
+    <ClInclude Include="UI\Tool\GizmoTransformTool.hpp">
+      <Filter>UI\Tool</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -301,6 +304,9 @@
     </ClCompile>
     <ClCompile Include="Core\HistoryAction.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Tool\GizmoTransformTool.cpp">
+      <Filter>UI\Tool</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

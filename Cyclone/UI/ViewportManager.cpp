@@ -7,6 +7,7 @@
 // Cyclone UI tools
 #include "Cyclone/UI/Tool/SelectionTool.hpp"
 #include "Cyclone/UI/Tool/SelectionTransformTool.hpp"
+#include "Cyclone/UI/Tool/GizmoTransformTool.hpp"
 
 // Cyclone components
 #include "Cyclone/Core/Component/EntityType.hpp"
@@ -59,6 +60,14 @@ Cyclone::UI::ViewportManager::ViewportManager()
 
 	mToolChanger.emplace_back( std::make_unique<Tool::SelectionTool>() );
 	mToolChanger.emplace_back( std::make_unique<Tool::SelectionTransformTool>() );
+	mToolChanger.emplace_back( std::make_unique<Tool::GizmoTransformTool>() );
+
+	mToolChanger[0]->mIsSelected = true;
+	mToolChanger[1]->mIsSelected = true;
+	mToolChanger[2]->mIsSelected = false;
+
+	mToolChanger[0]->mTiedTool = mToolChanger[1].get();
+	//mToolChanger[1]->mTiedTool = mToolChanger[0].get();
 }
 
 void Cyclone::UI::ViewportManager::SetDevice( ID3D11Device3 *inDevice )
@@ -74,6 +83,24 @@ void Cyclone::UI::ViewportManager::MenuBarUpdate()
 	if ( ImGui::MenuItem( "Enable Antialiasing", nullptr, &mAntialiasingEnabled ) ) ToggleAntialiasing( mAntialiasingEnabled );
 	ImGui::Separator();
 	if ( ImGui::MenuItem( "Autosize Viewports", "Ctrl+A" ) ) mShouldAutosize = true;
+}
+
+void Cyclone::UI::ViewportManager::SideBarUpdate()
+{
+	float buttonSize = ImGui::GetContentRegionAvail().x;
+	
+	for ( auto &tool : mToolChanger ) {
+		if ( ImGui::Selectable( tool->GetDebugName(), true, tool->mIsSelected ? ImGuiSelectableFlags_Highlight : 0, { buttonSize, buttonSize } ) ) {
+			for ( auto &otherTool : mToolChanger ) {
+				if ( otherTool.get() != tool.get() && otherTool.get() != tool->mTiedTool ) {
+					otherTool->mIsSelected = false;
+				}
+				tool->mIsSelected = true;
+				if ( tool->mTiedTool ) tool->mTiedTool->mIsSelected = true;
+			}
+		}
+		ImGui::Dummy( {} );
+	}
 }
 
 void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
@@ -168,19 +195,19 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeTop, viewSizeTop );
 		if ( ImGui::BeginChild( "TopView", viewSizeTop ) ) {
-			mViewportTop->UpdateTools( inDeltaTime, inLevelInterface );
+			mViewportTop->UpdateTools( inDeltaTime, inLevelInterface, mToolChanger );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeFront, viewSizeFront );
 		if ( ImGui::BeginChild( "FrontView", viewSizeFront ) ) {
-			mViewportFront->UpdateTools( inDeltaTime, inLevelInterface );
+			mViewportFront->UpdateTools( inDeltaTime, inLevelInterface, mToolChanger );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeSide, viewSizeSide );
 		if ( ImGui::BeginChild( "SideView", viewSizeSide ) ) {
-			mViewportSide->UpdateTools( inDeltaTime, inLevelInterface );
+			mViewportSide->UpdateTools( inDeltaTime, inLevelInterface, mToolChanger );
 		}
 		ImGui::EndChild();
 	}
@@ -196,21 +223,21 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeTop, viewSizeTop );
 		if ( ImGui::BeginChild( "TopView", viewSizeTop ) ) {
-			mViewportTop->DrawGizmos( inDeltaTime, inLevelInterface );
+			mViewportTop->DrawGizmos( inDeltaTime, inLevelInterface, mToolChanger );
 			DrawViewportOverlay( "Top (X/Z)" );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeFront, viewSizeFront );
 		if ( ImGui::BeginChild( "FrontView", viewSizeFront ) ) {
-			mViewportFront->DrawGizmos( inDeltaTime, inLevelInterface );
+			mViewportFront->DrawGizmos( inDeltaTime, inLevelInterface, mToolChanger );
 			DrawViewportOverlay( "Front (X/Y)" );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeSide, viewSizeSide );
 		if ( ImGui::BeginChild( "SideView", viewSizeSide ) ) {
-			mViewportSide->DrawGizmos( inDeltaTime, inLevelInterface );
+			mViewportSide->DrawGizmos( inDeltaTime, inLevelInterface, mToolChanger );
 			DrawViewportOverlay( "Side (Y/Z)" );
 		}
 		ImGui::EndChild();

@@ -12,8 +12,8 @@ namespace Cyclone::UI::Tool
 	class SelectionTool : public BaseTool
 	{
 	public:
+		virtual const char *GetDebugName() const override { return "Sel"; }
 		virtual void OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override;
-
 		virtual void OnDraw( EViewportType, Cyclone::Core::LevelInterface *, const ViewportData & ) override {}
 
 	protected:

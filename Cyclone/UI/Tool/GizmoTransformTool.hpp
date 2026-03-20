@@ -9,12 +9,12 @@ namespace Cyclone::Core {
 
 namespace Cyclone::UI::Tool
 {
-	class SelectionTransformTool : public BaseTool
+	class GizmoTransformTool : public BaseTool
 	{
 	public:
-		virtual const char *GetDebugName() const override { return "Box"; }
-		virtual void OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override;
-		virtual void OnDraw( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override;
+		virtual const char *GetDebugName() const override { return "Gizmo"; }
+		virtual void OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override {}
+		virtual void OnDraw( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override {}
 
 	protected:
 		template<EViewportType T>

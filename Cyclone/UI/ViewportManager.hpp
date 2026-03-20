@@ -28,6 +28,7 @@ namespace Cyclone::UI
 		void SetDevice( ID3D11Device3 *inDevice );
 
 		void MenuBarUpdate();
+		void SideBarUpdate();
 		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface );
 

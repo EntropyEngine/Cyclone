@@ -1,10 +1,6 @@
 #include "pch.h"
 #include "Cyclone/UI/ViewportElementOrthographic.hpp"
 
-// Cyclone UI Tools
-#include "Cyclone/UI/Tool/SelectionTool.hpp"
-#include "Cyclone/UI/Tool/SelectionTransformTool.hpp"
-
 // Cyclone core includes
 #include "Cyclone/Core/LevelInterface.hpp"
 
@@ -175,22 +171,23 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDelt
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::ViewportElementOrthographic<T>::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
 {
-	Tool::SelectionTool().OnUpdate( T, inLevelInterface, mViewportData );
-
-	// Perform selection transform
-	Tool::SelectionTransformTool().OnUpdate( T, inLevelInterface, mViewportData );
+	for ( auto &tool : inTools ) {
+		if ( tool->mIsSelected )
+		tool->OnUpdate( T, inLevelInterface, mViewportData );
+	}
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::ViewportElementOrthographic<T>::DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
 {
 	// Draw entites and get selection bounding box
 	DrawEntities( inLevelInterface );
 
-	// Perform selection transform draws
-	Tool::SelectionTransformTool().OnDraw( T, inLevelInterface, mViewportData );
+	for ( auto &tool : inTools ) {
+		tool->OnDraw( T, inLevelInterface, mViewportData );
+	}
 }
 
 template<Cyclone::UI::EViewportType T>
