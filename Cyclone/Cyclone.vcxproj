@@ -167,6 +167,7 @@
     <ClInclude Include="Core\Tool\SelectionToolContext.hpp" />
     <ClInclude Include="Core\Tool\SelectionTransformToolContext.hpp" />
     <ClInclude Include="entt.hpp" />
+    <ClInclude Include="ImGuzimo\ImGuizmo.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Math\BoundingBox.hpp" />
@@ -240,6 +241,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ImGui\imgui_widgets.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ImGuzimo\ImGuizmo.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">NotUsing</PrecompiledHeader>
