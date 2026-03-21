@@ -31,6 +31,10 @@ namespace Cyclone::UI::Tool
 		virtual void		OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) = 0;
 		virtual void		OnDraw( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) = 0;
 
+		// TODO
+		// TODO: MUST ADD "DISABLE NAVIGATION WHILE UPDATING" FLAG!!!
+		// TODO
+
 	public:
 		BaseTool *			mTiedTool;
 		bool				mIsSelected;	///< Is the tool currently selected
