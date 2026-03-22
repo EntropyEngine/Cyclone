@@ -16,6 +16,9 @@
 // ImGui Includes
 #include <imgui_internal.h>
 
+// DX includes
+#include <DebugDraw.h>
+
 using Cyclone::Math::Vector4D;
 
 using Cyclone::Core::Component::EntityType;
@@ -90,6 +93,11 @@ void Cyclone::UI::ViewportElementPerspective::UpdateNavigation( float inDeltaTim
 			perspectiveContext.mCenter3D += Vector4D::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::XMVectorSet( 0, 0, scroll, 0 ), rotationMatrix ) );
 		}
 	}
+
+	ImVec2 viewportAbsMousePos( io.MousePos.x - mViewportData.mViewOrigin.x, io.MousePos.y - mViewportData.mViewOrigin.y );
+	ImVec2 viewportRelMousePos( viewportAbsMousePos.x - viewSize.x / 2.0f, viewportAbsMousePos.y - viewSize.y / 2.0f );
+	mViewportData.mWorldMouseU = viewportRelMousePos.x / ( viewSize.x / 2.0f );
+	mViewportData.mWorldMouseV = -viewportRelMousePos.y / ( viewSize.y / 2.0f );
 }
 
 void Cyclone::UI::ViewportElementPerspective::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface * inLevelInterface )
@@ -137,6 +145,68 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 	// Switch to depth buffer
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
+
+	// Gizmo tests
+	{
+		mWireframeGridBatch->Begin();
+
+		DirectX::XMVECTOR axis = DirectX::XMVectorSetZ( DirectX::XMVectorZero(), 1 );
+
+		DirectX::XMVECTOR P = DirectX::XMVectorZero();
+		DirectX::XMVECTOR A = ( -perspectiveContext.mCenter3D ).ToXMVECTOR();
+		DirectX::XMVECTOR B = DirectX::XMVectorAdd( A, axis );
+
+		DirectX::XMVECTOR AP = DirectX::XMVectorSubtract( P, A );
+		DirectX::XMVECTOR AB = DirectX::XMVectorSubtract( B, A );
+
+		DirectX::XMVECTOR projPoint = DirectX::XMVectorAdd( A, DirectX::XMVectorMultiply( DirectX::XMVectorDivide( DirectX::XMVector3Dot( AP, AB ), DirectX::XMVector3Dot( AB, AB ) ), AB ) );
+		DirectX::XMFLOAT3 projPoint3;
+		DirectX::XMStoreFloat3( &projPoint3, projPoint );
+
+		DirectX::XMVECTOR deltaP = DirectX::XMVector3Normalize( DirectX::XMVectorSubtract( P, projPoint ) );
+
+		DirectX::XMVECTOR relativeUp = DirectX::XMVector3Normalize( DirectX::XMVector3Cross( axis, deltaP ) );
+
+		DirectX::XMMATRIX viewProj = DirectX::XMMatrixMultiply( viewMatrix, projMatrix );
+		DirectX::XMMATRIX viewProjInverse = DirectX::XMMatrixInverse( nullptr, viewProj );
+
+		DirectX::XMVECTOR mousePosNear = DirectX::XMVector3TransformCoord( DirectX::XMVectorSet( mViewportData.mWorldMouseU, mViewportData.mWorldMouseV, 0.0f, 0.0f ), viewProjInverse );
+		DirectX::XMVECTOR mousePosFar = DirectX::XMVector3TransformCoord( DirectX::XMVectorSet( mViewportData.mWorldMouseU, mViewportData.mWorldMouseV, 0.99f, 0.0f ), viewProjInverse );
+
+		DirectX::XMVECTOR mouseDir = DirectX::XMVector3Normalize( DirectX::XMVectorSubtract( mousePosFar, mousePosNear ) );
+
+		DirectX::XMVECTOR planeEquation = DirectX::XMPlaneFromPoints( A, DirectX::XMVectorAdd( A, axis ), DirectX::XMVectorAdd( A, relativeUp ) );
+
+		DirectX::XMVECTOR planeIntersection = DirectX::XMPlaneIntersectLine( planeEquation, mousePosNear, mousePosFar );
+		DirectX::XMFLOAT3 mousePos3;
+		DirectX::XMStoreFloat3( &mousePos3, planeIntersection );
+
+		DirectX::XMVECTOR intersectionDir = DirectX::XMVector3Normalize( DirectX::XMVectorSubtract( planeIntersection, mousePosNear ) );
+
+		float flip = DirectX::XMVectorGetX( DirectX::XMVector3Dot( mouseDir, intersectionDir ) );
+
+		mousePos3.x *= flip;
+		mousePos3.y *= flip;
+		mousePos3.z *= flip;
+
+		
+
+		size_t size = 1000;
+		DX::DrawGrid( mWireframeGridBatch.get(), DirectX::XMVectorScale( axis, size ), DirectX::XMVectorScale( relativeUp, size ), A, 2 * size, 2, DirectX::Colors::Gray );
+		DX::Draw( mWireframeGridBatch.get(), DirectX::BoundingBox( projPoint3, DirectX::XMFLOAT3( .1, .1, .1 ) ) );
+		DX::Draw( mWireframeGridBatch.get(), DirectX::BoundingBox( mousePos3, DirectX::XMFLOAT3( .1, .1, .1 ) ) );
+		DX::Draw( mWireframeGridBatch.get(), DirectX::BoundingBox( DirectX::XMFLOAT3( -perspectiveContext.mCenter3D.GetX(), -perspectiveContext.mCenter3D.GetY(), mousePos3.z ), DirectX::XMFLOAT3( .1, .1, .1 ) ) );
+		mWireframeGridBatch->End();
+
+		if ( mViewportData.mIsActive ) ImGui::SetTooltip(
+			"(%.2f, %.2f)\n(%.2f, %.2f, %.2f)\nDot=(%.2f)",
+			mViewportData.mWorldMouseU, mViewportData.mWorldMouseV,
+			mousePos3.x + flip * perspectiveContext.mCenter3D.GetX(),
+			mousePos3.y + flip * perspectiveContext.mCenter3D.GetY(),
+			mousePos3.z + flip * perspectiveContext.mCenter3D.GetZ(),
+			flip
+		);
+	}
 
 	{
 		mWireframeBoxShader->Apply( inDeviceContext );
