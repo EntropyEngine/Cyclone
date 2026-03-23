@@ -230,20 +230,17 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 			Vector4D mouseDir = mouseDelta.GetNorm3();
 
 			Vector4D axisDir = Vector4D::sZeroSetValueByIndex<2>( 1.0 );
+			Vector4D axisA = entityOriginalPos; // Vector4D::sZero();
 
 			Vector4D cameraP = perspectiveContext.mCenter3D;
-			Vector4D axisA = entityOriginalPos; // Vector4D::sZero();
-			Vector4D axisB = axisA + axisDir;
-
 			Vector4D AP = cameraP - axisA;
-			Vector4D AB = axisB - axisA;
 
-			Vector4D cameraProjectedP = axisA + AB * Vector4D::sReplicate( AP.Dot3( AB ) / AB.Dot3( AB ) ); // Todo: can we reduce lane switches?
+			Vector4D cameraProjectedP = axisA + axisDir * Vector4D::sReplicate( AP.Dot3( axisDir ) ); // Todo: can we reduce lane switches?
 			Vector4D deltaP = ( cameraP - cameraProjectedP ).GetNorm3();
 
-			Vector4D relativeUp = Vector4D::sCross3( axisDir, deltaP ).GetNorm3();
+			Vector4D relativeUp = Vector4D::sCross3( axisDir, deltaP );
 
-			Vector4D planeNormal = Vector4D::sCross3( axisDir, relativeUp ).GetNorm3();
+			Vector4D planeNormal = Vector4D::sCross3( axisDir, relativeUp );
 			double planeCoordW = -planeNormal.Dot3( axisA );
 
 			double planeV1 = planeNormal.Dot3( mousePosNear );
@@ -256,10 +253,9 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 			double flip = mouseDir.Dot3( intersectionDir.GetNorm3() );
 			Vector4D mousePos = planeIntersection;
-			if ( flip < 0 ) mousePos *= ( Vector4D::sReplicate( 1 ) - axisDir ) - axisDir;
-
-			DirectX::XMFLOAT3 projPoint3;
-			DirectX::XMStoreFloat3( &projPoint3, ( cameraProjectedP - cameraP ).ToXMVECTOR() );
+			if ( flip < 0 ) {
+				mousePos *= ( Vector4D::sReplicate( 1 ) - axisDir ) - axisDir;
+			}
 
 			DirectX::XMFLOAT3 mousePos3;
 			DirectX::XMStoreFloat3( &mousePos3, ( mousePos - cameraP ).ToXMVECTOR() );
@@ -276,25 +272,45 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 
 			Vector4D objPosNew = objPosDelta + entityOriginalPos;
+			objPosNew = Vector4D::sClamp( objPosNew, Vector4D::sReplicate( -gridContext.mWorldLimit ), Vector4D::sReplicate( gridContext.mWorldLimit ) );
+
 			DirectX::XMFLOAT3 objPosNew3;
 			DirectX::XMStoreFloat3( &objPosNew3, ( objPosNew - cameraP ).ToXMVECTOR() );
 
 			registry.get<Position>( selectedEntity ).mValue = objPosNew;
 
+			DirectX::XMFLOAT4 reprojectedMousePos;
+			DirectX::XMStoreFloat4( &reprojectedMousePos, DirectX::XMVector3TransformCoord( ( objPos - perspectiveContext.mCenter3D ).ToXMVECTOR(), viewProj ) );
+			//if ( flip < 0 ) {
+			//	ImVec2 teleportPos = {
+			//		reprojectedMousePos.x * ( mViewportData.mViewSize.x / 2 ) + ( mViewportData.mViewSize.x / 2 ) + mViewportData.mViewOrigin.x + 0.5f,
+			//		-reprojectedMousePos.y * ( mViewportData.mViewSize.y / 2 ) + ( mViewportData.mViewSize.y / 2 ) + mViewportData.mViewOrigin.y + 0.5f
+			//	};
+			//	POINT pos = { (int) teleportPos.x, (int) teleportPos.y };
+			//	if ( ( ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable ) == 0 )
+			//		::ClientToScreen( ::GetForegroundWindow(), &pos );
+			//	//ImGui::GetIO().MousePos = teleportPos;
+			//	//ImGui::GetIO().WantSetMousePos = true;
+			//	::SetCursorPos( pos.x, pos.y );
+			//	//ImGui::TeleportMousePos(  );
+			//}
+
 			size_t size = 1000;
-			DX::DrawGrid( mWireframeGridBatch.get(), DirectX::XMVectorScale( axisDir.ToXMVECTOR(), size ), DirectX::XMVectorScale( relativeUp.ToXMVECTOR(), size ), ( axisA - cameraP ).ToXMVECTOR(), 2 * size, 2, DirectX::Colors::Gray );
-			DX::Draw( mWireframeGridBatch.get(), DirectX::BoundingBox( projPoint3, DirectX::XMFLOAT3( .1, .1, .1 ) ) );
+			DX::DrawGrid( mWireframeGridBatch.get(), DirectX::XMVectorScale( axisDir.ToXMVECTOR(), size ), DirectX::XMVectorScale( relativeUp.ToXMVECTOR(), size ), ( axisA - cameraP ).ToXMVECTOR(), 2 * size, 2, DirectX::Colors::Gray / 2 );
 			DX::Draw( mWireframeGridBatch.get(), DirectX::BoundingBox( mousePos3, DirectX::XMFLOAT3( .1, .1, .1 ) ) );
 			DX::Draw( mWireframeGridBatch.get(), DirectX::BoundingBox( objPos3, DirectX::XMFLOAT3( .1, .1, .1 ) ) );
 			DX::Draw( mWireframeGridBatch.get(), DirectX::BoundingBox( objPosNew3, DirectX::XMFLOAT3( .1, .1, .1 ) ) );
 
 			if ( mViewportData.mIsActive ) ImGui::SetTooltip(
-				"(%.2f, %.2f)\n(%.2f, %.2f, %.2f)\nDot=(%.2f)",
+				"MouseClip=(%.2f, %.2f)\nMouse3D=(%.2f, %.2f, %.2f)\nDot=(%.2f)\nPlaneVT=(%.2f)\nMouseDir=(%.2f, %.2f, %.2f)\nreprojectedMousePos=(%.2f, %.2f, %.2f, %.2f)",
 				mViewportData.mWorldMouseU, mViewportData.mWorldMouseV,
 				mousePos.GetX(),
 				mousePos.GetY(),
 				mousePos.GetZ(),
-				flip
+				flip,
+				planeVT,
+				mouseDir.GetX(), mouseDir.GetY(), mouseDir.GetZ(),
+				reprojectedMousePos.x, reprojectedMousePos.y, reprojectedMousePos.z, reprojectedMousePos.w
 			);
 
 			mWireframeGridBatch->End();
