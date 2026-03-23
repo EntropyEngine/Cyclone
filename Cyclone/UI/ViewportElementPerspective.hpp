@@ -21,6 +21,6 @@ namespace Cyclone::UI
 		void UpdateNavigation( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 		void UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 		void DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
-		void Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface );
+		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface );
 	};
 }

@@ -126,11 +126,11 @@ namespace Cyclone::Math
 			return HSum4( _mm256_mul_pd( xyz, xyz ) );
 		}
 
-		double XM_CALLCONV Dot4( Vector4D inV ) const { _mm_cvtsd_f64( Dot4V( inV ) ); }
-		double XM_CALLCONV Dot3( Vector4D inV ) const { _mm_cvtsd_f64( Dot3V( inV ) ); }
+		double XM_CALLCONV Dot4( Vector4D inV ) const { return _mm_cvtsd_f64( Dot4V( inV ) ); }
+		double XM_CALLCONV Dot3( Vector4D inV ) const { return _mm_cvtsd_f64( Dot3V( inV ) ); }
 
-		double             Dot4()				const { _mm_cvtsd_f64( Dot4V() ); }
-		double             Dot3()				const { _mm_cvtsd_f64( Dot3V() ); }
+		double             Dot4()				const { return _mm_cvtsd_f64( Dot4V() ); }
+		double             Dot3()				const { return _mm_cvtsd_f64( Dot3V() ); }
 		/// @}
 
 		/// @name Length and Normalization
@@ -144,6 +144,19 @@ namespace Cyclone::Math
 		Vector4D XM_CALLCONV GetNorm4()    const { return _mm256_div_pd( mVector, GetLength4V() ); }
 		Vector4D XM_CALLCONV GetNorm3()    const { return _mm256_div_pd( mVector, GetLength3V() ); } // TODO: should we nuke the 4th component? 0, 1, z or unchanged?
 		/// @}
+
+		static Vector4D XM_CALLCONV sCross3( Vector4D inLhs, Vector4D inRhs )
+		{
+			__m256d vTemp1 = _mm256_permute4x64_pd( inLhs, _MM_SHUFFLE( 3, 0, 2, 1 ) );
+			__m256d vTemp2 = _mm256_permute4x64_pd( inRhs, _MM_SHUFFLE( 3, 1, 0, 2 ) );
+			__m256d vResult = _mm256_mul_pd( vTemp1, vTemp2 );
+
+			vTemp1 = _mm256_permute4x64_pd( vTemp1, _MM_SHUFFLE( 3, 0, 2, 1 ) );
+			vTemp2 = _mm256_permute4x64_pd( vTemp2, _MM_SHUFFLE( 3, 1, 0, 2 ) );
+			vResult = _mm256_fnmadd_pd( vTemp1, vTemp2, vResult );
+
+			return vResult;
+		}
 
 		/// @name Cast Operators
 		/// @{

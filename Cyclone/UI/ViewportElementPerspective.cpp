@@ -106,7 +106,7 @@ void Cyclone::UI::ViewportElementPerspective::UpdateTools( float inDeltaTime, Cy
 void Cyclone::UI::ViewportElementPerspective::DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface * inLevelInterface )
 {}
 
-void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, const Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	const auto &gridContext = inLevelInterface->GetGridCtx();
 	const auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
@@ -147,7 +147,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
 
 	// Gizmo tests
-	{
+	if constexpr ( false ) {
 		mWireframeGridBatch->Begin();
 
 		DirectX::XMVECTOR axis = DirectX::XMVectorSetZ( DirectX::XMVectorZero(), 1 );
@@ -189,8 +189,6 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 		mousePos3.y *= flip;
 		mousePos3.z *= flip;
 
-		
-
 		size_t size = 1000;
 		DX::DrawGrid( mWireframeGridBatch.get(), DirectX::XMVectorScale( axis, size ), DirectX::XMVectorScale( relativeUp, size ), A, 2 * size, 2, DirectX::Colors::Gray );
 		DX::Draw( mWireframeGridBatch.get(), DirectX::BoundingBox( projPoint3, DirectX::XMFLOAT3( .1, .1, .1 ) ) );
@@ -206,6 +204,101 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 			mousePos3.z + flip * perspectiveContext.mCenter3D.GetZ(),
 			flip
 		);
+	}
+	else {
+		const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+		entt::entity selectedEntity = selectionContext.GetSelectedEntity();
+		entt::registry &registry = inLevelInterface->GetRegistry();
+
+		if ( mViewportData.mIsActive && ImGui::IsMouseDown( ImGuiMouseButton_Left ) && selectedEntity != entt::null ) {
+			mWireframeGridBatch->Begin();
+
+			static Vector4D entityOriginalPos = Vector4D::sZero();
+			static Vector4D mouseOriginalPos = Vector4D::sZero();
+
+			if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
+				entityOriginalPos = registry.get<Position>( selectedEntity ).mValue;
+			}
+
+
+			DirectX::XMMATRIX viewProj = DirectX::XMMatrixMultiply( viewMatrix, projMatrix );
+			DirectX::XMMATRIX viewProjInverse = DirectX::XMMatrixInverse( nullptr, viewProj );
+
+			Vector4D mousePosNear = Vector4D::sFromXMVECTOR( DirectX::XMVector3TransformCoord( DirectX::XMVectorSet( mViewportData.mWorldMouseU, mViewportData.mWorldMouseV, 0.0f, 0.0f ), viewProjInverse ) ) + perspectiveContext.mCenter3D;
+			Vector4D mousePosFar = Vector4D::sFromXMVECTOR( DirectX::XMVector3TransformCoord( DirectX::XMVectorSet( mViewportData.mWorldMouseU, mViewportData.mWorldMouseV, 0.99f, 0.0f ), viewProjInverse ) ) + perspectiveContext.mCenter3D;
+			Vector4D mouseDelta = mousePosFar - mousePosNear;
+			Vector4D mouseDir = mouseDelta.GetNorm3();
+
+			Vector4D axisDir = Vector4D::sZeroSetValueByIndex<2>( 1.0 );
+
+			Vector4D cameraP = perspectiveContext.mCenter3D;
+			Vector4D axisA = entityOriginalPos; // Vector4D::sZero();
+			Vector4D axisB = axisA + axisDir;
+
+			Vector4D AP = cameraP - axisA;
+			Vector4D AB = axisB - axisA;
+
+			Vector4D cameraProjectedP = axisA + AB * Vector4D::sReplicate( AP.Dot3( AB ) / AB.Dot3( AB ) ); // Todo: can we reduce lane switches?
+			Vector4D deltaP = ( cameraP - cameraProjectedP ).GetNorm3();
+
+			Vector4D relativeUp = Vector4D::sCross3( axisDir, deltaP ).GetNorm3();
+
+			Vector4D planeNormal = Vector4D::sCross3( axisDir, relativeUp ).GetNorm3();
+			double planeCoordW = -planeNormal.Dot3( axisA );
+
+			double planeV1 = planeNormal.Dot3( mousePosNear );
+			double planeV2 = planeNormal.Dot3( mousePosFar );
+			double planeD = planeV1 - planeV2;
+			double planeVT = ( planeV1 + planeCoordW ) / planeD;
+
+			Vector4D intersectionDir = mouseDelta * Vector4D::sReplicate( planeVT );
+			Vector4D planeIntersection = intersectionDir + mousePosNear;
+
+			double flip = mouseDir.Dot3( intersectionDir.GetNorm3() );
+			Vector4D mousePos = planeIntersection;
+			if ( flip < 0 ) mousePos *= ( Vector4D::sReplicate( 1 ) - axisDir ) - axisDir;
+
+			DirectX::XMFLOAT3 projPoint3;
+			DirectX::XMStoreFloat3( &projPoint3, ( cameraProjectedP - cameraP ).ToXMVECTOR() );
+
+			DirectX::XMFLOAT3 mousePos3;
+			DirectX::XMStoreFloat3( &mousePos3, ( mousePos - cameraP ).ToXMVECTOR() );
+
+			Vector4D objPos = mousePos * axisDir + axisA * ( Vector4D::sReplicate( 1 ) - axisDir );
+			DirectX::XMFLOAT3 objPos3;
+			DirectX::XMStoreFloat3( &objPos3, ( objPos - cameraP ).ToXMVECTOR() );
+
+			if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
+				mouseOriginalPos = objPos;
+			}
+
+			Vector4D objPosDelta = objPos - mouseOriginalPos;
+
+
+			Vector4D objPosNew = objPosDelta + entityOriginalPos;
+			DirectX::XMFLOAT3 objPosNew3;
+			DirectX::XMStoreFloat3( &objPosNew3, ( objPosNew - cameraP ).ToXMVECTOR() );
+
+			registry.get<Position>( selectedEntity ).mValue = objPosNew;
+
+			size_t size = 1000;
+			DX::DrawGrid( mWireframeGridBatch.get(), DirectX::XMVectorScale( axisDir.ToXMVECTOR(), size ), DirectX::XMVectorScale( relativeUp.ToXMVECTOR(), size ), ( axisA - cameraP ).ToXMVECTOR(), 2 * size, 2, DirectX::Colors::Gray );
+			DX::Draw( mWireframeGridBatch.get(), DirectX::BoundingBox( projPoint3, DirectX::XMFLOAT3( .1, .1, .1 ) ) );
+			DX::Draw( mWireframeGridBatch.get(), DirectX::BoundingBox( mousePos3, DirectX::XMFLOAT3( .1, .1, .1 ) ) );
+			DX::Draw( mWireframeGridBatch.get(), DirectX::BoundingBox( objPos3, DirectX::XMFLOAT3( .1, .1, .1 ) ) );
+			DX::Draw( mWireframeGridBatch.get(), DirectX::BoundingBox( objPosNew3, DirectX::XMFLOAT3( .1, .1, .1 ) ) );
+
+			if ( mViewportData.mIsActive ) ImGui::SetTooltip(
+				"(%.2f, %.2f)\n(%.2f, %.2f, %.2f)\nDot=(%.2f)",
+				mViewportData.mWorldMouseU, mViewportData.mWorldMouseV,
+				mousePos.GetX(),
+				mousePos.GetY(),
+				mousePos.GetZ(),
+				flip
+			);
+
+			mWireframeGridBatch->End();
+		}
 	}
 
 	{
