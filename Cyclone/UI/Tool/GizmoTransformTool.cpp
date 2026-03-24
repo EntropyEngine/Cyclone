@@ -28,27 +28,37 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 	const auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 
+	auto &entityManager = inLevelInterface->GetEntityManager();
+
 	auto &gizmoContext = inLevelInterface->GetGizmoCtx();
 
 	entt::entity selectedEntity = selectionContext.GetSelectedEntity();
+	const auto & selectedEntities = selectionContext.GetSelectedEntities();
 	entt::registry &registry = inLevelInterface->GetRegistry();
 
 	const DirectX::XMMATRIX viewMatrix = inViewportData.mViewMatrix;
 	const DirectX::XMMATRIX projMatrix = inViewportData.mProjMatrix;
 
 	gizmoContext.mCurrentAxis = GizmoToolContext::ZAxis;
-	gizmoContext.mCurrentAxis = GizmoToolContext::XAxis | GizmoToolContext::ZAxis;
-	gizmoContext.mCurrentAxis = GizmoToolContext::XAxis | GizmoToolContext::YAxis | GizmoToolContext::ZAxis;
+	//gizmoContext.mCurrentAxis = GizmoToolContext::XAxis | GizmoToolContext::ZAxis;
+	//gizmoContext.mCurrentAxis = GizmoToolContext::XAxis | GizmoToolContext::YAxis | GizmoToolContext::ZAxis;
 
 	if ( mIsSelected && inViewportData.mIsActive && ImGui::IsMouseDown( ImGuiMouseButton_Left ) && selectedEntity != entt::null ) {
 		inPrimitiveBatch->Begin();
 
-		static Vector4D entityOriginalPos = Vector4D::sZero();
-		static Vector4D mouseOriginalPos = Vector4D::sZero();
 
 		if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
-			entityOriginalPos = registry.get<Position>( selectedEntity ).mValue;
+			assert( gizmoContext.mActiveEntity == entt::null && "Active entity already set!" );
+
+			entityManager.BeginAction();
+
+			gizmoContext.mInitialEntityPosition = registry.get<Position>( selectedEntity ).mValue;
+			gizmoContext.mActiveEntity = selectedEntity;
 		}
+
+		assert( gizmoContext.mActiveEntity == selectedEntity && "Active entity missmatch!" );
+
+		Vector4D entityOriginalPos = gizmoContext.mInitialEntityPosition;
 
 
 		DirectX::XMMATRIX viewProj = DirectX::XMMatrixMultiply( viewMatrix, projMatrix );
@@ -200,18 +210,34 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 		DirectX::XMStoreFloat3( &objPos3, ( objPos - cameraP ).ToXMVECTOR() );
 
 		if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
-			mouseOriginalPos = objPos;
+			gizmoContext.mInitialMousePosition = objPos;
 		}
+		Vector4D mouseOriginalPos = gizmoContext.mInitialMousePosition;
 
 		Vector4D objPosDelta = objPos - mouseOriginalPos;
+
+		Vector4D gridSize = Vector4D::sReplicate( gridContext.mGridSize );
+		Vector4D gridSizeInv = Vector4D::sReplicate( 1.0 / gridContext.mGridSize );
+
+		if ( gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ByGrid ) {
+			objPosDelta = objPosDelta * axisMaskInv + Vector4D::sRound( objPosDelta * gridSizeInv ) * gridSize * axisMask;
+		}
 
 		Vector4D objPosNew = objPosDelta + entityOriginalPos;
 		objPosNew = Vector4D::sClamp( objPosNew, Vector4D::sReplicate( -gridContext.mWorldLimit ), Vector4D::sReplicate( gridContext.mWorldLimit ) );
 
+		if ( gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ToGrid ) {
+			objPosNew = objPosNew * axisMaskInv + Vector4D::sRound( objPosNew * gridSizeInv ) * gridSize * axisMask;
+		}
+
+		Vector4D perFrameDelta = objPosNew - registry.get<Position>( selectedEntity ).mValue;
+
 		DirectX::XMFLOAT3 objPosNew3;
 		DirectX::XMStoreFloat3( &objPosNew3, ( objPosNew - cameraP ).ToXMVECTOR() );
 
-		registry.get<Position>( selectedEntity ).mValue = objPosNew;
+		for ( const entt::entity entity : selectedEntities ) {
+			registry.patch<Position>( entity, [perFrameDelta]( Position &inPosition ) { inPosition.mValue += perFrameDelta; } );
+		}
 
 		DirectX::XMFLOAT4 reprojectedMousePos;
 		DirectX::XMStoreFloat4( &reprojectedMousePos, DirectX::XMVector3TransformCoord( ( objPos - cameraP ).ToXMVECTOR(), viewProj ) );
@@ -232,5 +258,12 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 		);
 
 		inPrimitiveBatch->End();
+	}
+	else if ( ImGui::IsMouseReleased( ImGuiMouseButton_Left ) && gizmoContext.mActiveEntity != entt::null ) {
+		for ( const entt::entity entity : selectedEntities ) {
+			entityManager.UpdateEntity( entity, registry );
+		}
+		entityManager.EndAction( registry );
+		gizmoContext.Deactivate();
 	}
 }
