@@ -11,8 +11,10 @@ namespace Cyclone::UI
 		ImGuiID mCanvasID;
 		bool mIsActive;
 
-
 		double mWorldMouseU;
 		double mWorldMouseV;
+
+		DirectX::XMMATRIX mViewMatrix;
+		DirectX::XMMATRIX mProjMatrix;
 	};
 }

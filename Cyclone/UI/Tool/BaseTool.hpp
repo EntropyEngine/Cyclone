@@ -7,6 +7,10 @@
 #include "Cyclone/UI/ViewportData.hpp"
 #include "Cyclone/UI/ViewportType.hpp"
 
+// DX Includes
+#include <PrimitiveBatch.h>
+#include <VertexTypes.h>
+
 namespace Cyclone::Core {
 	class LevelInterface;
 }
@@ -24,12 +28,15 @@ namespace Cyclone::UI::Tool
 	class BaseTool : public Cyclone::Util::NonCopyable
 	{
 	public:
+		using DrawType = DirectX::PrimitiveBatch<DirectX::VertexPositionColor>;
+
 		virtual ~BaseTool() = default;
 
 		virtual const char *GetDebugName() const = 0;
 
 		virtual void		OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) = 0;
 		virtual void		OnDraw( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) = 0;
+		virtual void		OnRender( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData, DrawType *inPrimitiveBatch ) = 0;
 
 		// TODO
 		// TODO: MUST ADD "DISABLE NAVIGATION WHILE UPDATING" FLAG!!!

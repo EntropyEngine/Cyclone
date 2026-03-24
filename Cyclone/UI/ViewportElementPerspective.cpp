@@ -98,6 +98,12 @@ void Cyclone::UI::ViewportElementPerspective::UpdateNavigation( float inDeltaTim
 	ImVec2 viewportRelMousePos( viewportAbsMousePos.x - viewSize.x / 2.0f, viewportAbsMousePos.y - viewSize.y / 2.0f );
 	mViewportData.mWorldMouseU = viewportRelMousePos.x / ( viewSize.x / 2.0f );
 	mViewportData.mWorldMouseV = -viewportRelMousePos.y / ( viewSize.y / 2.0f );
+
+	const auto &gridContext = inLevelInterface->GetGridCtx();
+
+	// Update matrices
+	mViewportData.mViewMatrix = GetViewMatrix( perspectiveContext.mCameraPitch, perspectiveContext.mCameraYaw );
+	mViewportData.mProjMatrix = GetProjMatrix( mWidth, mHeight, kHorizontalFOV, gridContext.mWorldLimit );
 }
 
 void Cyclone::UI::ViewportElementPerspective::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface * inLevelInterface )
@@ -118,8 +124,8 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 	inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mCommonStates->Wireframe() : mWireframeRSS.Get() );
 	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
 
-	DirectX::XMMATRIX viewMatrix = GetViewMatrix( perspectiveContext.mCameraPitch, perspectiveContext.mCameraYaw );
-	DirectX::XMMATRIX projMatrix = GetProjMatrix( mWidth, mHeight, kHorizontalFOV, gridContext.mWorldLimit );
+	DirectX::XMMATRIX viewMatrix = mViewportData.mViewMatrix;
+	DirectX::XMMATRIX projMatrix = mViewportData.mProjMatrix;
 
 	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), viewMatrix, projMatrix );
 	mWireframeGridEffect->Apply( inDeviceContext );
@@ -229,7 +235,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 			Vector4D mouseDelta = mousePosFar - mousePosNear;
 			Vector4D mouseDir = mouseDelta.GetNorm3();
 
-			if ( false ) {
+			if ( true ) {
 
 				Vector4D axisDir = Vector4D::sZeroSetValueByIndex<2>( 1.0 );
 				Vector4D axisA = entityOriginalPos; // Vector4D::sZero();

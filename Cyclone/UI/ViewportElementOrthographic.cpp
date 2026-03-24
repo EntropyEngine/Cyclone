@@ -167,7 +167,11 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDelt
 		gridPos.y = static_cast<float>( ( orthographicContext.mCenter2D.Get<AxisV>() - worldSnapV ) / orthographicContext.mZoomScale2D + viewSize.y / 2.0f + viewOrigin.y );
 
 		DrawCross( drawList, gridPos, 2.0f, IM_COL32( 255, 255, 255, 255 ) );
-	}	
+	}
+
+	// Update matrices
+	mViewportData.mViewMatrix = GetViewMatrix<T>( gridContext.mWorldLimit );
+	mViewportData.mProjMatrix = GetProjMatrix( mWidth, mHeight, orthographicContext.mZoomScale2D, gridContext.mWorldLimit );
 }
 
 template<Cyclone::UI::EViewportType T>
@@ -199,8 +203,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 	const auto &gridContext = inLevelInterface->GetGridCtx();
 	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
 
-	DirectX::XMMATRIX viewMatrix = GetViewMatrix<T>( gridContext.mWorldLimit );
-	DirectX::XMMATRIX projMatrix = GetProjMatrix( mWidth, mHeight, orthographicContext.mZoomScale2D, gridContext.mWorldLimit );
+	const DirectX::XMMATRIX viewMatrix = mViewportData.mViewMatrix;
+	const DirectX::XMMATRIX projMatrix = mViewportData.mProjMatrix;
 
 	Clear( inDeviceContext );
 
