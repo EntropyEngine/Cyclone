@@ -23,7 +23,8 @@ namespace Cyclone::Math
 
 		__m256d mVector;
 
-		Vector4D( __m256d inVector ) : mVector( inVector ) {}
+		constexpr explicit Vector4D( std::nullptr_t ) {}
+		constexpr Vector4D( __m256d inVector ) : mVector( inVector ) {}
 		Vector4D( double inX, double inY, double inZ, double inW ) : mVector( _mm256_set_pd( inW, inZ, inY, inX ) ) {}
 		Vector4D( double inX, double inY, double inZ ) : Vector4D( inX, inY, inZ, 0.0 ) {};
 
@@ -41,6 +42,17 @@ namespace Cyclone::Math
 		template<> Vector4D XM_CALLCONV sZeroSetValueByIndex<1>( double inV ) { return Vector4D( 0.0, inV, 0.0, 0.0 ); }
 		template<> Vector4D XM_CALLCONV sZeroSetValueByIndex<2>( double inV ) { return Vector4D( 0.0, 0.0, inV, 0.0 ); }
 		template<> Vector4D XM_CALLCONV sZeroSetValueByIndex<3>( double inV ) { return Vector4D( 0.0, 0.0, 0.0, inV ); }
+
+		static Vector4D XM_CALLCONV sZeroSetValueByIndex( size_t inAxis, double inV )
+		{
+			switch ( inAxis ) {
+				case 0: return sZeroSetValueByIndex<0>( inV );
+				case 1: return sZeroSetValueByIndex<1>( inV );
+				case 2: return sZeroSetValueByIndex<2>( inV );
+				case 3: return sZeroSetValueByIndex<3>( inV );
+				default: __assume( false );
+			}
+		}
 
 		/// Creates a vector with the input value broadcast to all components
 		static Vector4D XM_CALLCONV sReplicate( double inV ) { return _mm256_set1_pd( inV ); }

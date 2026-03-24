@@ -11,6 +11,7 @@
 #include "Cyclone/Core/Editor/PerspectiveContext.hpp"
 #include "Cyclone/Core/Tool/SelectionToolContext.hpp"
 #include "Cyclone/Core/Tool/SelectionTransformToolContext.hpp"
+#include "Cyclone/Core/Tool/GizmoToolContext.hpp"
 
 // Cyclone rendering
 #include "Cyclone/Rendering/Primitives.hpp"
@@ -58,6 +59,10 @@ namespace Cyclone::Core
 		Tool::SelectionTransformToolContext & GetSelectionTransformCtx() { return mSelectionTransformTool; }
 		const Tool::SelectionTransformToolContext & GetSelectionTransformCtx() const { return mSelectionTransformTool; }
 
+		Tool::GizmoToolContext & GetGizmoCtx()							{ return mGizmoToolContext; }
+		const Tool::GizmoToolContext & GetGizmoCtx() const				{ return mGizmoToolContext; }
+
+
 		Cyclone::Rendering::Primitives * GetPrimitives()				{ return mPrimitives.get(); }
 		const Cyclone::Rendering::Primitives * GetPrimitives() const	{ return mPrimitives.get(); }
 
@@ -72,6 +77,7 @@ namespace Cyclone::Core
 		Editor::PerspectiveContext	mPerspectiveContext;
 
 		Tool::SelectionTransformToolContext mSelectionTransformTool;
+		Tool::GizmoToolContext		mGizmoToolContext;
 
 		std::unique_ptr<Cyclone::Rendering::Primitives> mPrimitives;
 	};
