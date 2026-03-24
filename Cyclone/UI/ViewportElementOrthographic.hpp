@@ -25,7 +25,7 @@ namespace Cyclone::UI
 		void UpdateNavigation( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 		void UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools );
 		void DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools );
-		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface );
+		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools );
 
 		Cyclone::Math::Vector4D XM_CALLCONV GetViewBoundingBoxExtent( double inWorldLimit, double inZoomScale2D )
 		{

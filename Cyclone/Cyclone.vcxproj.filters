@@ -212,6 +212,10 @@
     <ClInclude Include="UI\Tool\GizmoTransformTool.hpp">
       <Filter>UI\Tool</Filter>
     </ClInclude>
+    <ClInclude Include="DebugDraw.h" />
+    <ClInclude Include="Core\Tool\GizmoToolContext.hpp">
+      <Filter>Core\Tool</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -307,6 +311,10 @@
     </ClCompile>
     <ClCompile Include="UI\Tool\GizmoTransformTool.cpp">
       <Filter>UI\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugDraw.cpp" />
+    <ClCompile Include="Core\Tool\GizmoToolContext.cpp">
+      <Filter>Core\Tool</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

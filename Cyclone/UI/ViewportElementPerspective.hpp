@@ -1,6 +1,8 @@
 #pragma once
 
+// Cyclone UI
 #include "Cyclone/UI/ViewportElement.hpp"
+#include "Cyclone/UI/Tool/BaseTool.hpp"
 
 namespace Cyclone::Core {
 	class LevelInterface;
@@ -19,8 +21,8 @@ namespace Cyclone::UI
 		ViewportElementPerspective( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor, bool inAntialiasing ) : ViewportElement( inBackBufferFormat, inDepthBufferFormat, inClearColor, inAntialiasing ) {}
 
 		void UpdateNavigation( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
-		void UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
-		void DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
-		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface );
+		void UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools );
+		void DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools );
+		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools );
 	};
 }

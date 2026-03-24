@@ -195,7 +195,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawGizmos( float inDeltaTime,
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
 {
 	constexpr size_t AxisU = ViewportElementOrthographic::AxisU;
 	constexpr size_t AxisV = ViewportElementOrthographic::AxisV;
@@ -253,6 +253,11 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 	// Switch to depth buffer
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
+
+	// Call all tool renders with depth enables
+	for ( auto &tool : inTools ) {
+		tool->OnRender( T, inLevelInterface, mViewportData, mWireframeGridBatch.get() );
+	}
 
 	{
 		mWireframeBoxShader->Apply( inDeviceContext );

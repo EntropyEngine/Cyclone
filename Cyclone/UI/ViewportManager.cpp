@@ -189,7 +189,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	{
 		ImGui::SetNextWindowSizeConstraints( viewSizePerspective, viewSizePerspective );
 		if ( ImGui::BeginChild( "PerspectiveView", viewSizePerspective ) ) {
-			mViewportPerspective->UpdateTools( inDeltaTime, inLevelInterface );
+			mViewportPerspective->UpdateTools( inDeltaTime, inLevelInterface, mToolChanger );
 		}
 		ImGui::EndChild();
 
@@ -216,7 +216,7 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	{
 		ImGui::SetNextWindowSizeConstraints( viewSizePerspective, viewSizePerspective );
 		if ( ImGui::BeginChild( "PerspectiveView", viewSizePerspective ) ) {
-			mViewportPerspective->DrawGizmos( inDeltaTime, inLevelInterface );
+			mViewportPerspective->DrawGizmos( inDeltaTime, inLevelInterface, mToolChanger );
 			DrawViewportOverlay( "Perspective" );
 		}
 		ImGui::EndChild();
@@ -246,10 +246,10 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 
 void Cyclone::UI::ViewportManager::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface )
 {
-	mViewportPerspective->Render( inDeviceContext, inLevelInterface );
-	mViewportTop->Render( inDeviceContext, inLevelInterface );
-	mViewportFront->Render( inDeviceContext, inLevelInterface );
-	mViewportSide->Render( inDeviceContext, inLevelInterface );
+	mViewportPerspective->Render( inDeviceContext, inLevelInterface, mToolChanger );
+	mViewportTop->Render( inDeviceContext, inLevelInterface, mToolChanger );
+	mViewportFront->Render( inDeviceContext, inLevelInterface, mToolChanger );
+	mViewportSide->Render( inDeviceContext, inLevelInterface, mToolChanger );
 }
 
 void Cyclone::UI::ViewportManager::ToggleAntialiasing( bool inEnabled )

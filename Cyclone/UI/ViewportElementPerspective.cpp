@@ -106,13 +106,21 @@ void Cyclone::UI::ViewportElementPerspective::UpdateNavigation( float inDeltaTim
 	mViewportData.mProjMatrix = GetProjMatrix( mWidth, mHeight, kHorizontalFOV, gridContext.mWorldLimit );
 }
 
-void Cyclone::UI::ViewportElementPerspective::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface * inLevelInterface )
-{}
+void Cyclone::UI::ViewportElementPerspective::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
+{
+	for ( auto &tool : inTools ) {
+		tool->OnUpdate( EViewportType::Perspective, inLevelInterface, mViewportData );
+	}
+}
 
-void Cyclone::UI::ViewportElementPerspective::DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface * inLevelInterface )
-{}
+void Cyclone::UI::ViewportElementPerspective::DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
+{
+	for ( auto &tool : inTools ) {
+		tool->OnDraw( EViewportType::Perspective, inLevelInterface, mViewportData );
+	}
+}
 
-void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
 {
 	const auto &gridContext = inLevelInterface->GetGridCtx();
 	const auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
@@ -151,6 +159,11 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 	// Switch to depth buffer
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
+
+	// Call all tool renders with depth enables
+	for ( auto &tool : inTools ) {
+		tool->OnRender( EViewportType::Perspective, inLevelInterface, mViewportData, mWireframeGridBatch.get() );
+	}
 
 	// Gizmo tests
 	if constexpr ( false ) {
