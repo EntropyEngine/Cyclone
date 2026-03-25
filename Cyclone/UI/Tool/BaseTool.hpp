@@ -21,7 +21,8 @@ namespace Cyclone::UI::Tool
 	{
 		Object,
 		EditPath,
-		EditMesh
+		EditMesh,
+		COUNT,
 	};
 
 	inline constexpr const char* kCategoryNames[] = {

@@ -228,6 +228,9 @@
     <ClInclude Include="UI\Tool\MeshSelectionTool.hpp">
       <Filter>UI\Tool</Filter>
     </ClInclude>
+    <ClInclude Include="UI\Sidebar.hpp">
+      <Filter>UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -336,6 +339,9 @@
     </ClCompile>
     <ClCompile Include="UI\Tool\MeshSelectionTool.cpp">
       <Filter>UI\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Sidebar.cpp">
+      <Filter>UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

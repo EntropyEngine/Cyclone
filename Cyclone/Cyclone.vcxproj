@@ -185,6 +185,7 @@
     <ClInclude Include="Application.hpp" />
     <ClInclude Include="UI\MainUI.hpp" />
     <ClInclude Include="UI\Outliner.hpp" />
+    <ClInclude Include="UI\Sidebar.hpp" />
     <ClInclude Include="UI\Toolbar.hpp" />
     <ClInclude Include="UI\Tool\BaseTool.hpp" />
     <ClInclude Include="UI\Tool\GizmoTransformTool.hpp" />
@@ -273,6 +274,7 @@
     <ClCompile Include="RenderTexture.cpp" />
     <ClCompile Include="UI\MainUI.cpp" />
     <ClCompile Include="UI\Outliner.cpp" />
+    <ClCompile Include="UI\Sidebar.cpp" />
     <ClCompile Include="UI\Toolbar.cpp" />
     <ClCompile Include="UI\Tool\GizmoTransformTool.cpp" />
     <ClCompile Include="UI\Tool\MeshSelectionTool.cpp" />

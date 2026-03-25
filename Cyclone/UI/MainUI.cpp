@@ -90,7 +90,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	ImGui::SetNextWindowPos( { viewport->WorkPos.x, viewport->WorkPos.y + kToolbarHeight } );
 	ImGui::SetNextWindowSize( { kSidebarWidth, viewport->WorkSize.y - kToolbarHeight } );
 	if ( ImGui::Begin( "SideBar", nullptr, windowFlags ) ) {
-		mViewportManager->SideBarUpdate();
+		mViewportManager->SideBarUpdate( inLevelInterface );
 	}
 	ImGui::End();
 

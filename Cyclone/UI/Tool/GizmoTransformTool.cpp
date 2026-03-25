@@ -288,21 +288,5 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdatePerspective( Cyclone::Core::
 
 void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData, DrawType *inPrimitiveBatch )
 {
-	const auto &gridContext = inLevelInterface->GetGridCtx();
-	const auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
-	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
-
-	auto &entityManager = inLevelInterface->GetEntityManager();
-	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
-
-	auto &gizmoContext = inLevelInterface->GetGizmoCtx();
-
-	entt::entity selectedEntity = selectionContext.GetSelectedEntity();
-	const auto & selectedEntities = selectionContext.GetSelectedEntities();
-	entt::registry &registry = inLevelInterface->GetRegistry();
-
-	const DirectX::XMMATRIX viewMatrix = inViewportData.mViewMatrix;
-	const DirectX::XMMATRIX projMatrix = inViewportData.mProjMatrix;
-
 	
 }

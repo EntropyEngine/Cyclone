@@ -7,7 +7,7 @@
 #include "Cyclone/UI/ViewportElementPerspective.hpp"
 #include "Cyclone/UI/ViewportElementOrthographic.hpp"
 #include "Cyclone/UI/ViewportType.hpp"
-#include "Cyclone/UI/Tool/BaseTool.hpp"
+#include "Cyclone/UI/Sidebar.hpp"
 
 namespace Cyclone::Core {
 	class LevelInterface;
@@ -28,7 +28,7 @@ namespace Cyclone::UI
 		void SetDevice( ID3D11Device3 *inDevice );
 
 		void MenuBarUpdate();
-		void SideBarUpdate();
+		void SideBarUpdate( Cyclone::Core::LevelInterface *inLevelInterface );
 		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
 		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface );
 
@@ -41,7 +41,7 @@ namespace Cyclone::UI
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::FrontXY>> mViewportFront;
 		std::unique_ptr<ViewportElementOrthographic<EViewportType::SideYZ>> mViewportSide;
 
-		std::vector<std::unique_ptr<Tool::BaseTool>> mToolChanger;
+		Sidebar mSidebar;
 
 		void UpdateDrawListAndSelectionBox( Cyclone::Core::LevelInterface *inLevelInterface );
 
