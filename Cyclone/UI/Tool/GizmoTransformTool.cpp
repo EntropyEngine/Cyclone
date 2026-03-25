@@ -48,90 +48,11 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdatePerspective( Cyclone::Core::
 
 
 	if ( mIsSelected && selectedEntity != entt::null ) {
-		DirectX::XMMATRIX viewProj = DirectX::XMMatrixMultiply( viewMatrix, projMatrix );
-		DirectX::XMMATRIX viewProjInverse = DirectX::XMMatrixInverse( nullptr, viewProj );
-
 		Vector4D cameraP = perspectiveContext.mCenter3D;
 		Vector4D entityCurrentPosition = registry.get<Position>( selectedEntity ).mValue;
 		Vector4D entityCurrentPositionRel = entityCurrentPosition - cameraP;
 
-		// TODO: optimize for SSE lanes
-		//
-		//
-
-		DirectX::XMMATRIX viewRotation = DirectX::XMMatrixRotationRollPitchYaw( static_cast<float>( perspectiveContext.mCameraPitch ), static_cast<float>( perspectiveContext.mCameraYaw ), 0.0f );
-		Vector4D axisDir1 = Vector4D::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::g_XMIdentityR0, viewRotation ) );
-		Vector4D axisDir2 = Vector4D::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::g_XMIdentityR2, viewRotation ) );
-
-		DirectX::XMVECTOR endpointO = entityCurrentPositionRel.ToXMVECTOR();
-		DirectX::XMVECTOR endpointO1 = ( entityCurrentPositionRel + axisDir1 ).ToXMVECTOR();
-
-		float O0X = DirectX::XMVectorGetX( DirectX::XMVector3TransformCoord( endpointO, viewProj ) );
-		float O1X = DirectX::XMVectorGetX( DirectX::XMVector3TransformCoord( endpointO1, viewProj ) );
-		float scale = 128.0f / ( std::max( inViewportData.mViewSize.x, inViewportData.mViewSize.y ) * ( O0X - O1X ) * 0.5f );
-
-		DirectX::XMVECTOR endpointX = ( entityCurrentPositionRel + Vector4D( scale, 0, 0 ) ).ToXMVECTOR();
-		DirectX::XMVECTOR endpointY = ( entityCurrentPositionRel + Vector4D( 0, scale, 0 ) ).ToXMVECTOR();
-		DirectX::XMVECTOR endpointZ = ( entityCurrentPositionRel + Vector4D( 0, 0, scale ) ).ToXMVECTOR();
-
-		Vector4D axisDir2X = Vector4D::sCross3( entityCurrentPositionRel.GetNorm3(), Vector4D( 1, 0, 0 ) ).GetNorm3();
-		Vector4D axisDir3X = Vector4D::sCross3( axisDir2X, Vector4D( 1, 0, 0 ) ).GetNorm3();
-
-		DirectX::XMVECTOR endpointXT1 = ( entityCurrentPositionRel + ( Vector4D( 8, 0.0, 0.0 ) + axisDir2X + axisDir3X ) * Vector4D::sReplicate( scale * 0.1 ) ).ToXMVECTOR();
-		DirectX::XMVECTOR endpointXT2 = ( entityCurrentPositionRel + ( Vector4D( 8, 0.0, 0.0 ) + axisDir2X - axisDir3X ) * Vector4D::sReplicate( scale * 0.1 ) ).ToXMVECTOR();
-		DirectX::XMVECTOR endpointXT3 = ( entityCurrentPositionRel + ( Vector4D( 8, 0.0, 0.0 ) - axisDir2X - axisDir3X ) * Vector4D::sReplicate( scale * 0.1 ) ).ToXMVECTOR();
-		DirectX::XMVECTOR endpointXT4 = ( entityCurrentPositionRel + ( Vector4D( 8, 0.0, 0.0 ) - axisDir2X + axisDir3X ) * Vector4D::sReplicate( scale * 0.1 ) ).ToXMVECTOR();
-
-		Vector4D axisDir2Y = Vector4D::sCross3( entityCurrentPositionRel.GetNorm3(), Vector4D( 0, 1, 0 ) ).GetNorm3();
-		Vector4D axisDir3Y = Vector4D::sCross3( axisDir2Y, Vector4D( 0, 1, 0 ) ).GetNorm3();
-
-		DirectX::XMVECTOR endpointYT1 = ( entityCurrentPositionRel + ( Vector4D( 0.0, 8, 0.0 ) + axisDir2Y + axisDir3Y ) * Vector4D::sReplicate( scale * 0.1 ) ).ToXMVECTOR();
-		DirectX::XMVECTOR endpointYT2 = ( entityCurrentPositionRel + ( Vector4D( 0.0, 8, 0.0 ) + axisDir2Y - axisDir3Y ) * Vector4D::sReplicate( scale * 0.1 ) ).ToXMVECTOR();
-		DirectX::XMVECTOR endpointYT3 = ( entityCurrentPositionRel + ( Vector4D( 0.0, 8, 0.0 ) - axisDir2Y - axisDir3Y ) * Vector4D::sReplicate( scale * 0.1 ) ).ToXMVECTOR();
-		DirectX::XMVECTOR endpointYT4 = ( entityCurrentPositionRel + ( Vector4D( 0.0, 8, 0.0 ) - axisDir2Y + axisDir3Y ) * Vector4D::sReplicate( scale * 0.1 ) ).ToXMVECTOR();
-
-		Vector4D axisDir2Z = Vector4D::sCross3( entityCurrentPositionRel.GetNorm3(), Vector4D( 0, 0, 1 ) ).GetNorm3();
-		Vector4D axisDir3Z = Vector4D::sCross3( axisDir2Z, Vector4D( 0, 0, 1 ) ).GetNorm3();
-
-		DirectX::XMVECTOR endpointZT1 = ( entityCurrentPositionRel + ( Vector4D( 0.0, 0.0, 8 ) + axisDir2Z + axisDir3Z ) * Vector4D::sReplicate( scale * 0.1 ) ).ToXMVECTOR();
-		DirectX::XMVECTOR endpointZT2 = ( entityCurrentPositionRel + ( Vector4D( 0.0, 0.0, 8 ) + axisDir2Z - axisDir3Z ) * Vector4D::sReplicate( scale * 0.1 ) ).ToXMVECTOR();
-		DirectX::XMVECTOR endpointZT3 = ( entityCurrentPositionRel + ( Vector4D( 0.0, 0.0, 8 ) - axisDir2Z - axisDir3Z ) * Vector4D::sReplicate( scale * 0.1 ) ).ToXMVECTOR();
-		DirectX::XMVECTOR endpointZT4 = ( entityCurrentPositionRel + ( Vector4D( 0.0, 0.0, 8 ) - axisDir2Z + axisDir3Z ) * Vector4D::sReplicate( scale * 0.1 ) ).ToXMVECTOR();
-
-		auto transform = [viewProj, inViewportData]( DirectX::XMVECTOR &inPosition ) {
-			DirectX::XMFLOAT2 clip;
-			DirectX::XMStoreFloat2( &clip, DirectX::XMVector3TransformCoord( inPosition, viewProj ) );
-
-			ImVec2 screen;
-			screen.x = clip.x * ( inViewportData.mViewSize.x / 2.0f ) + ( inViewportData.mViewSize.x / 2.0f ) + inViewportData.mViewOrigin.x;
-			screen.y = clip.y * ( inViewportData.mViewSize.y / -2.f ) + ( inViewportData.mViewSize.y / 2.0f ) + inViewportData.mViewOrigin.y;
-
-			return screen;
-		};
-
-		ImVec2 endpointScreenX = transform( endpointX );
-		ImVec2 endpointScreenY = transform( endpointY );
-		ImVec2 endpointScreenZ = transform( endpointZ );
-		ImVec2 endpointScreenO = transform( endpointO );
-
-		inViewportData.mDrawList->AddLine( endpointScreenO, endpointScreenX, IM_COL32( 255, 0, 0, 255 ), 2.0f );
-		inViewportData.mDrawList->AddLine( endpointScreenO, endpointScreenY, IM_COL32( 0, 255, 0, 255 ), 2.0f );
-		inViewportData.mDrawList->AddLine( endpointScreenO, endpointScreenZ, IM_COL32( 0, 0, 255, 255 ), 2.0f );
-
-		inViewportData.mDrawList->AddTriangleFilled( endpointScreenX, transform( endpointXT1 ), transform( endpointXT2 ), IM_COL32( 255, 0, 0, 255 ) );
-		inViewportData.mDrawList->AddTriangleFilled( endpointScreenX, transform( endpointXT2 ), transform( endpointXT3 ), IM_COL32( 255, 0, 0, 255 ) );
-		inViewportData.mDrawList->AddTriangleFilled( endpointScreenX, transform( endpointXT3 ), transform( endpointXT4 ), IM_COL32( 255, 0, 0, 255 ) );
-		inViewportData.mDrawList->AddTriangleFilled( endpointScreenX, transform( endpointXT4 ), transform( endpointXT1 ), IM_COL32( 255, 32, 32, 255 ) );
-
-		inViewportData.mDrawList->AddTriangleFilled( endpointScreenY, transform( endpointYT1 ), transform( endpointYT2 ), IM_COL32( 0, 255, 0, 255 ) );
-		inViewportData.mDrawList->AddTriangleFilled( endpointScreenY, transform( endpointYT2 ), transform( endpointYT3 ), IM_COL32( 0, 255, 0, 255 ) );
-		inViewportData.mDrawList->AddTriangleFilled( endpointScreenY, transform( endpointYT3 ), transform( endpointYT4 ), IM_COL32( 0, 255, 0, 255 ) );
-		inViewportData.mDrawList->AddTriangleFilled( endpointScreenY, transform( endpointYT4 ), transform( endpointYT1 ), IM_COL32( 32, 255, 32, 255 ) );
-
-		inViewportData.mDrawList->AddTriangleFilled( endpointScreenZ, transform( endpointZT1 ), transform( endpointZT2 ), IM_COL32( 0, 0, 255, 255 ) );
-		inViewportData.mDrawList->AddTriangleFilled( endpointScreenZ, transform( endpointZT2 ), transform( endpointZT3 ), IM_COL32( 0, 0, 255, 255 ) );
-		inViewportData.mDrawList->AddTriangleFilled( endpointScreenZ, transform( endpointZT3 ), transform( endpointZT4 ), IM_COL32( 0, 0, 255, 255 ) );
-		inViewportData.mDrawList->AddTriangleFilled( endpointScreenZ, transform( endpointZT4 ), transform( endpointZT1 ), IM_COL32( 32, 32, 255, 255 ) );
+		
 	}
 }
 
