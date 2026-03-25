@@ -83,6 +83,8 @@ void Cyclone::UI::ViewportElementPerspective::UpdateNavigation( float inDeltaTim
 			DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw( perspectiveContext.mCameraPitch, perspectiveContext.mCameraYaw, 0.0f );
 			perspectiveContext.mCenter3D += Vector4D::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::XMVectorSet( left, 0, forward, 0 ), rotationMatrix ) );
 		}
+
+		ImGui::SetKeyOwner( ImGuiKey_F24, mViewportData.mCanvasID, ImGuiInputFlags_LockThisFrame );
 	}
 
 	if ( mViewportData.mIsActive && !ImGuizmo::IsUsingAny() ) {

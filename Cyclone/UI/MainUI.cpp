@@ -122,26 +122,28 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 		auto &registry = inLevelInterface->GetRegistry();
 		auto &selectionContext = inLevelInterface->GetSelectionCtx();
 
-		if ( ImGui::IsKeyChordPressed( ImGuiKey_Z | ImGuiMod_Ctrl ) ) entityManager.UndoAction( registry );
-		if ( ImGui::IsKeyChordPressed( ImGuiKey_Y | ImGuiMod_Ctrl ) ) entityManager.RedoAction( registry );
+		if ( ImGui::GetKeyOwner( ImGuiKey_F24 ) == ImGuiKeyOwner_NoOwner ) {
+			if ( ImGui::IsKeyChordPressed( ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_None, ImGuiKeyOwner_NoOwner ) ) entityManager.UndoAction( registry );
+			if ( ImGui::IsKeyChordPressed( ImGuiKey_Y | ImGuiMod_Ctrl, ImGuiInputFlags_None, ImGuiKeyOwner_NoOwner ) ) entityManager.RedoAction( registry );
 
-		if ( ImGui::IsKeyChordPressed( ImGuiKey_A | ImGuiMod_Ctrl ) ) mViewportManager->ResizeViewports();
+			if ( ImGui::IsKeyChordPressed( ImGuiKey_A | ImGuiMod_Ctrl, ImGuiInputFlags_None, ImGuiKeyOwner_NoOwner ) ) mViewportManager->ResizeViewports();
 
-		if ( ImGui::IsKeyChordPressed( ImGuiKey_Delete ) && !selectionContext.GetSelectedEntities().empty() ) {
-			entityManager.BeginAction();
-			for ( entt::entity entity : selectionContext.GetSelectedEntities() ) {
-				entityManager.DeleteEntity( entity, registry );
+			if ( ImGui::IsKeyChordPressed( ImGuiKey_Delete, ImGuiInputFlags_None, ImGuiKeyOwner_NoOwner ) && !selectionContext.GetSelectedEntities().empty() ) {
+				entityManager.BeginAction();
+				for ( entt::entity entity : selectionContext.GetSelectedEntities() ) {
+					entityManager.DeleteEntity( entity, registry );
+				}
+				entityManager.EndAction( registry );
 			}
-			entityManager.EndAction( registry );
-		}
 
-		if ( ImGui::IsKeyChordPressed( ImGuiKey_H | ImGuiMod_Ctrl ) && !selectionContext.GetSelectedEntities().empty() ) {
-			entityManager.BeginAction();
-			for ( entt::entity entity : selectionContext.GetSelectedEntities() ) {
-				registry.get<Cyclone::Core::Component::Visible>( entity ) = static_cast<Cyclone::Core::Component::Visible>( false );
-				entityManager.UpdateEntity( entity, registry );
+			if ( ImGui::IsKeyChordPressed( ImGuiKey_H | ImGuiMod_Ctrl, ImGuiInputFlags_None, ImGuiKeyOwner_NoOwner ) && !selectionContext.GetSelectedEntities().empty() ) {
+				entityManager.BeginAction();
+				for ( entt::entity entity : selectionContext.GetSelectedEntities() ) {
+					registry.get<Cyclone::Core::Component::Visible>( entity ) = static_cast<Cyclone::Core::Component::Visible>( false );
+					entityManager.UpdateEntity( entity, registry );
+				}
+				entityManager.EndAction( registry );
 			}
-			entityManager.EndAction( registry );
 		}
 	}
 
