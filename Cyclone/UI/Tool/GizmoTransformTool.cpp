@@ -39,6 +39,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdatePerspective( Cyclone::Core::
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 
 	auto &entityManager = inLevelInterface->GetEntityManager();
+	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
 
 	auto &gizmoContext = inLevelInterface->GetGizmoCtx();
 
@@ -70,31 +71,9 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdatePerspective( Cyclone::Core::
 
 		ImGuizmo::PopID();
 	}
-}
-
-void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData, DrawType *inPrimitiveBatch )
-{
-	const auto &gridContext = inLevelInterface->GetGridCtx();
-	const auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
-	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
-
-	auto &entityManager = inLevelInterface->GetEntityManager();
-	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
-
-	auto &gizmoContext = inLevelInterface->GetGizmoCtx();
-
-	entt::entity selectedEntity = selectionContext.GetSelectedEntity();
-	const auto & selectedEntities = selectionContext.GetSelectedEntities();
-	entt::registry &registry = inLevelInterface->GetRegistry();
-
-	const DirectX::XMMATRIX viewMatrix = inViewportData.mViewMatrix;
-	const DirectX::XMMATRIX projMatrix = inViewportData.mProjMatrix;
 
 	ImGuizmo::PushID( static_cast<int>( selectedEntity ) );
 	if ( mIsSelected && inViewportData.mIsActive && ImGuizmo::IsUsing() && selectedEntity != entt::null ) {
-		inPrimitiveBatch->Begin();
-
-
 		if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
 			assert( gizmoContext.mActiveEntity == entt::null && "Active entity already set!" );
 
@@ -241,7 +220,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 			DirectX::XMMATRIX viewRotation = DirectX::XMMatrixRotationRollPitchYaw( static_cast<float>( perspectiveContext.mCameraPitch ), static_cast<float>( perspectiveContext.mCameraYaw ), 0.0f );
 			axisDir1 = Vector4D::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::g_XMIdentityR0, viewRotation ) );
 			axisDir2 = Vector4D::sFromXMVECTOR( DirectX::XMVector3Transform( DirectX::g_XMIdentityR1, viewRotation ) );
-			
+
 			Vector4D planeNormal = Vector4D::sCross3( axisDir1, axisDir2 );
 			double planeCoordW = -planeNormal.Dot3( entityOriginalPos );
 
@@ -296,45 +275,8 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 			registry.patch<Position>( entity, [perFrameDelta]( Position &inPosition ) { inPosition.mValue += perFrameDelta; } );
 		}
 		transformContext.UpdateOnDrag( perFrameDelta );
-		
-
-		if ( axisBitcount == 1 ) {
-			inPrimitiveBatch->DrawLine(
-				{ ( objPosNew - cameraP + axisDir1 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), 0.5 ), 1.0f ) },
-				{ ( objPosNew - cameraP - axisDir1 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), 0.5 ), 1.0f ) }
-			);
-		}
-		if ( axisBitcount == 2 ) {
-			inPrimitiveBatch->DrawLine(
-				{ ( objPosNew - cameraP + axisDir1 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), 0.5 ), 1.0f ) },
-				{ ( objPosNew - cameraP - axisDir1 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), 0.5 ), 1.0f ) }
-			);
-
-			inPrimitiveBatch->DrawLine(
-				{ ( objPosNew - cameraP + axisDir2 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), 0.5 ), 1.0f ) },
-				{ ( objPosNew - cameraP - axisDir2 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), 0.5 ), 1.0f ) }
-			);
-		}
-		if ( axisBitcount == 3 ) {
-			inPrimitiveBatch->DrawLine(
-				{ ( objPosNew - cameraP + Vector4D( gridContext.mWorldLimit * 2, 0, 0 ) ).ToXMVECTOR(), DirectX::XMVectorSet( 0.5f, 0.0f, 0.0f, 1.0f ) },
-				{ ( objPosNew - cameraP - Vector4D( gridContext.mWorldLimit * 2, 0, 0 ) ).ToXMVECTOR(), DirectX::XMVectorSet( 0.5f, 0.0f, 0.0f, 1.0f ) }
-			);
-
-			inPrimitiveBatch->DrawLine(
-				{ ( objPosNew - cameraP + Vector4D( 0, gridContext.mWorldLimit * 2, 0 ) ).ToXMVECTOR(), DirectX::XMVectorSet( 0.0f, 0.5f, 0.0f, 1.0f ) },
-				{ ( objPosNew - cameraP - Vector4D( 0, gridContext.mWorldLimit * 2, 0 ) ).ToXMVECTOR(), DirectX::XMVectorSet( 0.0f, 0.5f, 0.0f, 1.0f ) }
-			);
-
-			inPrimitiveBatch->DrawLine(
-				{ ( objPosNew - cameraP + Vector4D( 0, 0, gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSet( 0.0f, 0.0f, 0.5f, 1.0f ) },
-				{ ( objPosNew - cameraP - Vector4D( 0, 0, gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSet( 0.0f, 0.0f, 0.5f, 1.0f ) }
-			);
-		}
-
-		inPrimitiveBatch->End();
 	}
-	else if ( ImGui::IsMouseReleased( ImGuiMouseButton_Left ) && gizmoContext.mActiveEntity != entt::null ) {
+	else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) && gizmoContext.mActiveEntity != entt::null ) {
 		for ( const entt::entity entity : selectedEntities ) {
 			entityManager.UpdateEntity( entity, registry );
 		}
@@ -342,4 +284,25 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 		gizmoContext.Deactivate();
 	}
 	ImGuizmo::PopID();
+}
+
+void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData, DrawType *inPrimitiveBatch )
+{
+	const auto &gridContext = inLevelInterface->GetGridCtx();
+	const auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
+	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+
+	auto &entityManager = inLevelInterface->GetEntityManager();
+	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
+
+	auto &gizmoContext = inLevelInterface->GetGizmoCtx();
+
+	entt::entity selectedEntity = selectionContext.GetSelectedEntity();
+	const auto & selectedEntities = selectionContext.GetSelectedEntities();
+	entt::registry &registry = inLevelInterface->GetRegistry();
+
+	const DirectX::XMMATRIX viewMatrix = inViewportData.mViewMatrix;
+	const DirectX::XMMATRIX projMatrix = inViewportData.mProjMatrix;
+
+	
 }
