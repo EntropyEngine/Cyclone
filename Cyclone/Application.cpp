@@ -65,6 +65,10 @@ void Cyclone::Application::Initialize( HWND inWindow, int inWidth, int inHeight 
 	// Setup Platform/Renderer backends
 	ImGui_ImplWin32_Init( inWindow );
 	ImGui_ImplDX11_Init( mDevice.Get(), mDeviceContext.Get() );
+
+	ImGuizmo::GetStyle().Colors[ImGuizmo::COLOR::DIRECTION_X] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	ImGuizmo::GetStyle().Colors[ImGuizmo::COLOR::DIRECTION_Y] = { 0.0f, 1.0f, 0.0f, 1.0f };
+	ImGuizmo::GetStyle().Colors[ImGuizmo::COLOR::DIRECTION_Z] = { 0.0f, 0.0f, 1.0f, 1.0f };
 }
 
 void Cyclone::Application::Tick()

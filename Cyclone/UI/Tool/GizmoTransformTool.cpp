@@ -327,6 +327,39 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 		//	mouseDir.GetX(), mouseDir.GetY(), mouseDir.GetZ(),
 		//	reprojectedMousePos.x, reprojectedMousePos.y, reprojectedMousePos.z, reprojectedMousePos.w
 		//);
+		if ( axisBitcount == 1 ) {
+			inPrimitiveBatch->DrawLine(
+				{ ( objPosNew - cameraP + axisDir1 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), 0.5 ), 1.0f ) },
+				{ ( objPosNew - cameraP - axisDir1 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), 0.5 ), 1.0f ) }
+			);
+		}
+		if ( axisBitcount == 2 ) {
+			inPrimitiveBatch->DrawLine(
+				{ ( objPosNew - cameraP + axisDir1 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), 0.5 ), 1.0f ) },
+				{ ( objPosNew - cameraP - axisDir1 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), 0.5 ), 1.0f ) }
+			);
+
+			inPrimitiveBatch->DrawLine(
+				{ ( objPosNew - cameraP + axisDir2 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), 0.5 ), 1.0f ) },
+				{ ( objPosNew - cameraP - axisDir2 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), 0.5 ), 1.0f ) }
+			);
+		}
+		if ( axisBitcount == 3 ) {
+			inPrimitiveBatch->DrawLine(
+				{ ( objPosNew - cameraP + Vector4D( gridContext.mWorldLimit * 2, 0, 0 ) ).ToXMVECTOR(), DirectX::XMVectorSet( 0.5f, 0.0f, 0.0f, 1.0f ) },
+				{ ( objPosNew - cameraP - Vector4D( gridContext.mWorldLimit * 2, 0, 0 ) ).ToXMVECTOR(), DirectX::XMVectorSet( 0.5f, 0.0f, 0.0f, 1.0f ) }
+			);
+
+			inPrimitiveBatch->DrawLine(
+				{ ( objPosNew - cameraP + Vector4D( 0, gridContext.mWorldLimit * 2, 0 ) ).ToXMVECTOR(), DirectX::XMVectorSet( 0.0f, 0.5f, 0.0f, 1.0f ) },
+				{ ( objPosNew - cameraP - Vector4D( 0, gridContext.mWorldLimit * 2, 0 ) ).ToXMVECTOR(), DirectX::XMVectorSet( 0.0f, 0.5f, 0.0f, 1.0f ) }
+			);
+
+			inPrimitiveBatch->DrawLine(
+				{ ( objPosNew - cameraP + Vector4D( 0, 0, gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSet( 0.0f, 0.0f, 0.5f, 1.0f ) },
+				{ ( objPosNew - cameraP - Vector4D( 0, 0, gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSet( 0.0f, 0.0f, 0.5f, 1.0f ) }
+			);
+		}
 
 		inPrimitiveBatch->End();
 	}
