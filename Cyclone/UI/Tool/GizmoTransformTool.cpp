@@ -79,6 +79,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 
 	auto &entityManager = inLevelInterface->GetEntityManager();
+	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
 
 	auto &gizmoContext = inLevelInterface->GetGizmoCtx();
 
@@ -140,8 +141,6 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 		Vector4D axisMaskInv{ nullptr };
 		Vector4D mousePos{ nullptr };
 
-		size_t nGridlines = 1000;
-
 		int axisBitcount = std::popcount( gizmoContext.mCurrentAxis );
 
 		// Single axis transform
@@ -191,8 +190,6 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 			if ( !std::isfinite( flip ) ) {
 				mousePos = gizmoContext.mInitialMousePosition;
 			}
-
-			//DX::DrawGrid( inPrimitiveBatch, DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), static_cast<float>( nGridlines ) ), DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), static_cast<float>( nGridlines ) ), ( diffP2 + entityOriginalPos - cameraP ).ToXMVECTOR(), 2 * nGridlines, 2 * nGridlines, DirectX::Colors::Gray / 2 );
 		}
 		// Two axis transform
 		else if ( axisBitcount == 2 ) {
@@ -238,8 +235,6 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 			if ( !std::isfinite( flip ) ) {
 				mousePos = gizmoContext.mInitialMousePosition;
 			}
-
-			//DX::DrawGrid( inPrimitiveBatch, DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), static_cast<float>( nGridlines ) ), DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), static_cast<float>( nGridlines ) ), ( diffP2 + entityOriginalPos - cameraP ).ToXMVECTOR(), 2 * nGridlines, 2 * nGridlines, DirectX::Colors::Gray / 2 );
 		}
 		// Camera aligned transform
 		else if ( axisBitcount == 3 ) {
@@ -272,13 +267,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 			__assume( false );
 		}
 
-
-		DirectX::XMFLOAT3 mousePos3;
-		DirectX::XMStoreFloat3( &mousePos3, ( mousePos - cameraP ).ToXMVECTOR() );
-
 		Vector4D objPos = mousePos * axisMask + entityOriginalPos * axisMaskInv;
-		DirectX::XMFLOAT3 objPos3;
-		DirectX::XMStoreFloat3( &objPos3, ( objPos - cameraP ).ToXMVECTOR() );
 
 		if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
 			gizmoContext.mInitialMousePosition = objPos;
@@ -303,30 +292,12 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 
 		Vector4D perFrameDelta = objPosNew - registry.get<Position>( selectedEntity ).mValue;
 
-		DirectX::XMFLOAT3 objPosNew3;
-		DirectX::XMStoreFloat3( &objPosNew3, ( objPosNew - cameraP ).ToXMVECTOR() );
-
 		for ( const entt::entity entity : selectedEntities ) {
 			registry.patch<Position>( entity, [perFrameDelta]( Position &inPosition ) { inPosition.mValue += perFrameDelta; } );
 		}
+		transformContext.UpdateOnDrag( perFrameDelta );
+		
 
-		DirectX::XMFLOAT4 reprojectedMousePos;
-		DirectX::XMStoreFloat4( &reprojectedMousePos, DirectX::XMVector3TransformCoord( ( objPos - cameraP ).ToXMVECTOR(), viewProj ) );
-
-		//DX::DrawGrid( inPrimitiveBatch, DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), static_cast<float>( nGridlines ) ), DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), static_cast<float>( nGridlines ) ), ( entityOriginalPos - cameraP ).ToXMVECTOR(), 2 * nGridlines, 2 * nGridlines, DirectX::Colors::Gray / 2 );
-		//DX::Draw( inPrimitiveBatch, DirectX::BoundingBox( mousePos3, DirectX::XMFLOAT3( .1f, .1f, .1f ) ) );
-		//DX::Draw( inPrimitiveBatch, DirectX::BoundingBox( objPos3, DirectX::XMFLOAT3( .1f, .1f, .1f ) ) );
-		//DX::Draw( inPrimitiveBatch, DirectX::BoundingBox( objPosNew3, DirectX::XMFLOAT3( .1f, .1f, .1f ) ) );
-
-		//if ( inViewportData.mIsActive ) ImGui::SetTooltip(
-		//	"MouseClip=(%.2f, %.2f)\nMouse3D=(%.2f, %.2f, %.2f)\nMouseDir=(%.2f, %.2f, %.2f)\nreprojectedMousePos=(%.2f, %.2f, %.2f, %.2f)",
-		//	inViewportData.mWorldMouseU, inViewportData.mWorldMouseV,
-		//	mousePos.GetX(),
-		//	mousePos.GetY(),
-		//	mousePos.GetZ(),
-		//	mouseDir.GetX(), mouseDir.GetY(), mouseDir.GetZ(),
-		//	reprojectedMousePos.x, reprojectedMousePos.y, reprojectedMousePos.z, reprojectedMousePos.w
-		//);
 		if ( axisBitcount == 1 ) {
 			inPrimitiveBatch->DrawLine(
 				{ ( objPosNew - cameraP + axisDir1 * Vector4D::sReplicate( gridContext.mWorldLimit * 2 ) ).ToXMVECTOR(), DirectX::XMVectorSetW( DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), 0.5 ), 1.0f ) },
