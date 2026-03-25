@@ -222,6 +222,12 @@
     <ClInclude Include="ImGuizmo\ImGuizmo.h">
       <Filter>Common\ImGuizmo</Filter>
     </ClInclude>
+    <ClInclude Include="UI\Tool\PathSelectionTool.hpp">
+      <Filter>UI\Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Tool\MeshSelectionTool.hpp">
+      <Filter>UI\Tool</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -324,6 +330,12 @@
     </ClCompile>
     <ClCompile Include="ImGuizmo\ImGuizmo.cpp">
       <Filter>Common\ImGuizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Tool\PathSelectionTool.cpp">
+      <Filter>UI\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Tool\MeshSelectionTool.cpp">
+      <Filter>UI\Tool</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

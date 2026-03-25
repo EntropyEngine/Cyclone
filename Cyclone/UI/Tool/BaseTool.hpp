@@ -17,6 +17,19 @@ namespace Cyclone::Core {
 
 namespace Cyclone::UI::Tool
 {
+	enum class ECategory
+	{
+		Object,
+		EditPath,
+		EditMesh
+	};
+
+	inline constexpr const char* kCategoryNames[] = {
+		"Object",
+		"Path",
+		"Mesh"
+	};
+
 	enum class EDrawMode
 	{
 		Always,			///< Drawing is always enabled
@@ -33,6 +46,7 @@ namespace Cyclone::UI::Tool
 		virtual ~BaseTool() = default;
 
 		virtual const char *GetDebugName() const = 0;
+		virtual ECategory	GetCategory() const = 0;
 
 		virtual void		OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) = 0;
 		virtual void		OnDraw( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) = 0;

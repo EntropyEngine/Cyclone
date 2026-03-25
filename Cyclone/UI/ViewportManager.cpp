@@ -8,6 +8,8 @@
 #include "Cyclone/UI/Tool/SelectionTool.hpp"
 #include "Cyclone/UI/Tool/SelectionTransformTool.hpp"
 #include "Cyclone/UI/Tool/GizmoTransformTool.hpp"
+#include "Cyclone/UI/Tool/PathSelectionTool.hpp"
+#include "Cyclone/UI/Tool/MeshSelectionTool.hpp"
 
 // Cyclone components
 #include "Cyclone/Core/Component/EntityType.hpp"
@@ -61,13 +63,16 @@ Cyclone::UI::ViewportManager::ViewportManager()
 	mToolChanger.emplace_back( std::make_unique<Tool::SelectionTool>() );
 	mToolChanger.emplace_back( std::make_unique<Tool::SelectionTransformTool>() );
 	mToolChanger.emplace_back( std::make_unique<Tool::GizmoTransformTool>() );
+	mToolChanger.emplace_back( std::make_unique<Tool::PathSelectionTool>() );
+	mToolChanger.emplace_back( std::make_unique<Tool::MeshSelectionTool>() );
 
 	mToolChanger[0]->mIsSelected = true;
 	mToolChanger[1]->mIsSelected = true;
 	mToolChanger[2]->mIsSelected = false;
+	mToolChanger[3]->mIsSelected = false;
+	mToolChanger[4]->mIsSelected = false;
 
 	mToolChanger[0]->mTiedTool = mToolChanger[1].get();
-	//mToolChanger[1]->mTiedTool = mToolChanger[0].get();
 }
 
 void Cyclone::UI::ViewportManager::SetDevice( ID3D11Device3 *inDevice )
