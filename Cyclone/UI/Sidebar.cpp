@@ -45,13 +45,7 @@ void Cyclone::UI::Sidebar::Update( Cyclone::Core::LevelInterface *inLevelInterfa
 		ImGui::Dummy( {} );
 		for ( auto tool : category ) {
 			if ( ImGui::Selectable( tool->GetDebugName(), true, tool->mIsSelected ? ImGuiSelectableFlags_Highlight : 0, { buttonSize, buttonSize } ) ) {
-				for ( auto &otherTool : mToolChanger ) {
-					if ( otherTool.get() != tool && otherTool.get() != tool->mTiedTool ) {
-						otherTool->mIsSelected = false;
-					}
-					tool->mIsSelected = true;
-					if ( tool->mTiedTool ) tool->mTiedTool->mIsSelected = true;
-				}
+				SelectTool( tool );
 			}
 			ImGui::Dummy( {} );
 		}
@@ -60,4 +54,15 @@ void Cyclone::UI::Sidebar::Update( Cyclone::Core::LevelInterface *inLevelInterfa
 	ImGui::PopStyleVar();
 
 	ImGui::EndDisabled();
+}
+
+void Cyclone::UI::Sidebar::SelectTool( Tool::BaseTool *inTool )
+{
+	for ( auto &otherTool : mToolChanger ) {
+		if ( otherTool.get() != inTool && otherTool.get() != inTool->mTiedTool ) {
+			otherTool->mIsSelected = false;
+		}
+		inTool->mIsSelected = true;
+		if ( inTool->mTiedTool ) inTool->mTiedTool->mIsSelected = true;
+	}
 }

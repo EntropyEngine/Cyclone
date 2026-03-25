@@ -20,8 +20,9 @@ namespace Cyclone::UI
 		const std::span<std::unique_ptr<Tool::BaseTool>> GetTools() { return mToolChanger;  }
 
 	protected:
-		std::vector<std::unique_ptr<Tool::BaseTool>> mToolChanger;
+		void SelectTool( Tool::BaseTool *inTool );
 
+		std::vector<std::unique_ptr<Tool::BaseTool>> mToolChanger;
 		std::array<std::vector<Tool::BaseTool *>, static_cast<size_t>( Tool::ECategory::COUNT )> mToolCategories;
 	};
 }
