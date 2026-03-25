@@ -56,6 +56,9 @@
     <Filter Include="Rendering\Shader">
       <UniqueIdentifier>{7d5be832-f6a7-46a0-a586-9dc875f75ee3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common\ImGuizmo">
+      <UniqueIdentifier>{eacdb54d-9c6d-47af-b321-1d1d723aff5d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -216,6 +219,9 @@
     <ClInclude Include="Core\Tool\GizmoToolContext.hpp">
       <Filter>Core\Tool</Filter>
     </ClInclude>
+    <ClInclude Include="ImGuizmo\ImGuizmo.h">
+      <Filter>Common\ImGuizmo</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -315,6 +321,9 @@
     <ClCompile Include="DebugDraw.cpp" />
     <ClCompile Include="Core\Tool\GizmoToolContext.cpp">
       <Filter>Core\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGuizmo\ImGuizmo.cpp">
+      <Filter>Common\ImGuizmo</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

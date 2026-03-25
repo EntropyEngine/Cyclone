@@ -11,6 +11,9 @@
 #include <imgui_impl_dx11.h>
 #include <imgui_internal.h>
 
+// ImGuizmo
+#include <ImGuizmo/ImGuizmo.h>
+
 Cyclone::Application::Application() noexcept :
 	mWindow( nullptr ),
 	mOutputWidth( 1920 ),
@@ -114,6 +117,7 @@ void Cyclone::Application::Update( float inDeltaTime )
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
+	ImGuizmo::BeginFrame();
 
 	mMainUI->Update( inDeltaTime, mLevelInterface.get() );
 }

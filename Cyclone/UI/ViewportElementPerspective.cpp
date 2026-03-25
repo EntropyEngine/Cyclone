@@ -16,6 +16,9 @@
 // ImGui Includes
 #include <imgui_internal.h>
 
+// ImGuizmo
+#include <ImGuizmo/ImGuizmo.h>
+
 using Cyclone::Math::Vector4D;
 
 using Cyclone::Core::Component::EntityType;
@@ -57,7 +60,7 @@ void Cyclone::UI::ViewportElementPerspective::UpdateNavigation( float inDeltaTim
 
 	mViewportData.mIsActive = ImGui::GetCurrentContext()->ActiveIdWindow == ImGui::GetCurrentWindow() || ( ImGui::GetCurrentContext()->ActiveIdWindow == nullptr && isCanvasHovered );
 
-	if ( isActive && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) ) {
+	if ( isActive && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) && !ImGuizmo::IsUsingAny() ) {
 		perspectiveContext.mCameraPitch += io.MouseDelta.y * kMouseSensitivity;
 		perspectiveContext.mCameraYaw -= io.MouseDelta.x * kMouseSensitivity;
 
@@ -82,7 +85,7 @@ void Cyclone::UI::ViewportElementPerspective::UpdateNavigation( float inDeltaTim
 		}
 	}
 
-	if ( mViewportData.mIsActive ) {
+	if ( mViewportData.mIsActive && !ImGuizmo::IsUsingAny() ) {
 		float scroll = io.MouseWheel;
 		scroll *= kCameraDollySensitivity;
 		if ( scroll ) {

@@ -7,6 +7,9 @@
 // DX includes
 #include <DebugDraw.h>
 
+// ImGuizmo
+#include <ImGuizmo/ImGuizmo.h>
+
 // STL
 #include <bit>
 #include <format>
@@ -52,7 +55,20 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdatePerspective( Cyclone::Core::
 		Vector4D entityCurrentPosition = registry.get<Position>( selectedEntity ).mValue;
 		Vector4D entityCurrentPositionRel = entityCurrentPosition - cameraP;
 
-		
+		ImGuizmo::SetGizmoSizeClipSpace( 192.0f / std::max( inViewportData.mViewSize.x, inViewportData.mViewSize.y ) );
+
+		ImGuizmo::PushID( static_cast<int>( selectedEntity ) );
+		ImGuizmo::SetRect( inViewportData.mViewOrigin.x, inViewportData.mViewOrigin.y, inViewportData.mViewSize.x, inViewportData.mViewSize.y );
+		ImGuizmo::SetDrawlist( inViewportData.mDrawList );
+		ImGuizmo::SetOrthographic( false );
+		ImGuizmo::Enable( true );
+		ImGuizmo::AllowAxisFlip( false );
+
+		DirectX::XMMATRIX modelMatrix = DirectX::XMMatrixTranslationFromVector( entityCurrentPositionRel.ToXMVECTOR() );
+
+		ImGuizmo::Manipulate( reinterpret_cast<const float *>( &viewMatrix ), reinterpret_cast<const float *>( &projMatrix ), ImGuizmo::TRANSLATE, ImGuizmo::WORLD, reinterpret_cast<float *>( &modelMatrix ) );
+
+		ImGuizmo::PopID();
 	}
 }
 
@@ -73,16 +89,29 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 	const DirectX::XMMATRIX viewMatrix = inViewportData.mViewMatrix;
 	const DirectX::XMMATRIX projMatrix = inViewportData.mProjMatrix;
 
-	gizmoContext.mCurrentAxis = GizmoToolContext::ZAxis;
-	//gizmoContext.mCurrentAxis = GizmoToolContext::XAxis | GizmoToolContext::ZAxis;
-	//gizmoContext.mCurrentAxis = GizmoToolContext::XAxis | GizmoToolContext::YAxis | GizmoToolContext::ZAxis;
-
-	if ( mIsSelected && inViewportData.mIsActive && ImGui::IsMouseDown( ImGuiMouseButton_Left ) && selectedEntity != entt::null ) {
+	ImGuizmo::PushID( static_cast<int>( selectedEntity ) );
+	if ( mIsSelected && inViewportData.mIsActive && ImGuizmo::IsUsing() && selectedEntity != entt::null ) {
 		inPrimitiveBatch->Begin();
 
 
 		if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
 			assert( gizmoContext.mActiveEntity == entt::null && "Active entity already set!" );
+
+			gizmoContext.mCurrentAxis = 0;
+			ImGuizmo::MOVETYPE moveType = ImGuizmo::GetMoveType();
+
+			switch ( moveType ) {
+				case ImGuizmo::MT_MOVE_X: gizmoContext.mCurrentAxis = GizmoToolContext::XAxis; break;
+				case ImGuizmo::MT_MOVE_Y: gizmoContext.mCurrentAxis = GizmoToolContext::YAxis; break;
+				case ImGuizmo::MT_MOVE_Z: gizmoContext.mCurrentAxis = GizmoToolContext::ZAxis; break;
+				case ImGuizmo::MT_MOVE_YZ: gizmoContext.mCurrentAxis = GizmoToolContext::YAxis | GizmoToolContext::ZAxis; break;
+				case ImGuizmo::MT_MOVE_ZX: gizmoContext.mCurrentAxis = GizmoToolContext::XAxis | GizmoToolContext::ZAxis; break;
+				case ImGuizmo::MT_MOVE_XY: gizmoContext.mCurrentAxis = GizmoToolContext::XAxis | GizmoToolContext::YAxis; break;
+				case ImGuizmo::MT_MOVE_SCREEN: gizmoContext.mCurrentAxis = GizmoToolContext::XAxis | GizmoToolContext::YAxis | GizmoToolContext::ZAxis; break;
+				default:
+					assert( false );
+					__assume( false );
+			}
 
 			entityManager.BeginAction();
 
@@ -159,7 +188,11 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 				mousePos = planeIntersection2 - diffP2;
 			}
 
-			DX::DrawGrid( inPrimitiveBatch, DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), static_cast<float>( nGridlines ) ), DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), static_cast<float>( nGridlines ) ), ( diffP2 + entityOriginalPos - cameraP ).ToXMVECTOR(), 2 * nGridlines, 2 * nGridlines, DirectX::Colors::Gray / 2 );
+			if ( !std::isfinite( flip ) ) {
+				mousePos = gizmoContext.mInitialMousePosition;
+			}
+
+			//DX::DrawGrid( inPrimitiveBatch, DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), static_cast<float>( nGridlines ) ), DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), static_cast<float>( nGridlines ) ), ( diffP2 + entityOriginalPos - cameraP ).ToXMVECTOR(), 2 * nGridlines, 2 * nGridlines, DirectX::Colors::Gray / 2 );
 		}
 		// Two axis transform
 		else if ( axisBitcount == 2 ) {
@@ -202,7 +235,11 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 				mousePos = planeIntersection2 - diffP2;
 			}
 
-			DX::DrawGrid( inPrimitiveBatch, DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), static_cast<float>( nGridlines ) ), DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), static_cast<float>( nGridlines ) ), ( diffP2 + entityOriginalPos - cameraP ).ToXMVECTOR(), 2 * nGridlines, 2 * nGridlines, DirectX::Colors::Gray / 2 );
+			if ( !std::isfinite( flip ) ) {
+				mousePos = gizmoContext.mInitialMousePosition;
+			}
+
+			//DX::DrawGrid( inPrimitiveBatch, DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), static_cast<float>( nGridlines ) ), DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), static_cast<float>( nGridlines ) ), ( diffP2 + entityOriginalPos - cameraP ).ToXMVECTOR(), 2 * nGridlines, 2 * nGridlines, DirectX::Colors::Gray / 2 );
 		}
 		// Camera aligned transform
 		else if ( axisBitcount == 3 ) {
@@ -276,20 +313,20 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 		DirectX::XMFLOAT4 reprojectedMousePos;
 		DirectX::XMStoreFloat4( &reprojectedMousePos, DirectX::XMVector3TransformCoord( ( objPos - cameraP ).ToXMVECTOR(), viewProj ) );
 
-		DX::DrawGrid( inPrimitiveBatch, DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), static_cast<float>( nGridlines ) ), DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), static_cast<float>( nGridlines ) ), ( entityOriginalPos - cameraP ).ToXMVECTOR(), 2 * nGridlines, 2 * nGridlines, DirectX::Colors::Gray / 2 );
-		DX::Draw( inPrimitiveBatch, DirectX::BoundingBox( mousePos3, DirectX::XMFLOAT3( .1f, .1f, .1f ) ) );
-		DX::Draw( inPrimitiveBatch, DirectX::BoundingBox( objPos3, DirectX::XMFLOAT3( .1f, .1f, .1f ) ) );
-		DX::Draw( inPrimitiveBatch, DirectX::BoundingBox( objPosNew3, DirectX::XMFLOAT3( .1f, .1f, .1f ) ) );
+		//DX::DrawGrid( inPrimitiveBatch, DirectX::XMVectorScale( axisDir1.ToXMVECTOR(), static_cast<float>( nGridlines ) ), DirectX::XMVectorScale( axisDir2.ToXMVECTOR(), static_cast<float>( nGridlines ) ), ( entityOriginalPos - cameraP ).ToXMVECTOR(), 2 * nGridlines, 2 * nGridlines, DirectX::Colors::Gray / 2 );
+		//DX::Draw( inPrimitiveBatch, DirectX::BoundingBox( mousePos3, DirectX::XMFLOAT3( .1f, .1f, .1f ) ) );
+		//DX::Draw( inPrimitiveBatch, DirectX::BoundingBox( objPos3, DirectX::XMFLOAT3( .1f, .1f, .1f ) ) );
+		//DX::Draw( inPrimitiveBatch, DirectX::BoundingBox( objPosNew3, DirectX::XMFLOAT3( .1f, .1f, .1f ) ) );
 
-		if ( inViewportData.mIsActive ) ImGui::SetTooltip(
-			"MouseClip=(%.2f, %.2f)\nMouse3D=(%.2f, %.2f, %.2f)\nMouseDir=(%.2f, %.2f, %.2f)\nreprojectedMousePos=(%.2f, %.2f, %.2f, %.2f)",
-			inViewportData.mWorldMouseU, inViewportData.mWorldMouseV,
-			mousePos.GetX(),
-			mousePos.GetY(),
-			mousePos.GetZ(),
-			mouseDir.GetX(), mouseDir.GetY(), mouseDir.GetZ(),
-			reprojectedMousePos.x, reprojectedMousePos.y, reprojectedMousePos.z, reprojectedMousePos.w
-		);
+		//if ( inViewportData.mIsActive ) ImGui::SetTooltip(
+		//	"MouseClip=(%.2f, %.2f)\nMouse3D=(%.2f, %.2f, %.2f)\nMouseDir=(%.2f, %.2f, %.2f)\nreprojectedMousePos=(%.2f, %.2f, %.2f, %.2f)",
+		//	inViewportData.mWorldMouseU, inViewportData.mWorldMouseV,
+		//	mousePos.GetX(),
+		//	mousePos.GetY(),
+		//	mousePos.GetZ(),
+		//	mouseDir.GetX(), mouseDir.GetY(), mouseDir.GetZ(),
+		//	reprojectedMousePos.x, reprojectedMousePos.y, reprojectedMousePos.z, reprojectedMousePos.w
+		//);
 
 		inPrimitiveBatch->End();
 	}
@@ -300,4 +337,5 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::
 		entityManager.EndAction( registry );
 		gizmoContext.Deactivate();
 	}
+	ImGuizmo::PopID();
 }

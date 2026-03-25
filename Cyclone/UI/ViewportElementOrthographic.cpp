@@ -20,6 +20,9 @@
 // ImGui Includes
 #include <imgui_internal.h>
 
+// ImGuizmo
+#include <ImGuizmo/ImGuizmo.h>
+
 using Cyclone::Math::Vector4D;
 
 using Cyclone::Core::Component::EntityType;
@@ -141,13 +144,13 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDelt
 	ImGui::PopStyleVar( 2 );
 
 	// Middle click pan view
-	if ( ( isCanvasActive ) && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) ) {
+	if ( ( isCanvasActive ) && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) && !ImGuizmo::IsUsingAny() ) {
 		orthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisU>( io.MouseDelta.x * orthographicContext.mZoomScale2D );
 		orthographicContext.mCenter2D += Vector4D::sZeroSetValueByIndex<AxisV>( io.MouseDelta.y * orthographicContext.mZoomScale2D );
 	}
 
 	// Zoom view
-	if ( mViewportData.mIsActive && io.MouseWheel && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) ) {
+	if ( mViewportData.mIsActive && io.MouseWheel && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) && !ImGuizmo::IsUsingAny() ) {
 		int newZoomLevel = orthographicContext.mZoomLevel - ( ( io.MouseWheel > 0 ) - ( io.MouseWheel < 0 ) );
 		double newZoomScale2D = orthographicContext.sZoomLevelToScale( newZoomLevel );
 
