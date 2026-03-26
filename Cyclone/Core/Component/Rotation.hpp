@@ -4,8 +4,8 @@
 
 namespace Cyclone::Core::Component
 {
-	struct alignas( 32 ) Position
+	struct alignas( 16 ) Rotation
 	{
-		Cyclone::Math::Vector4D mValue;
+		DirectX::XMVECTOR mPitchYawRoll;
 	};
 }

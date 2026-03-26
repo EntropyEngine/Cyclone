@@ -152,6 +152,7 @@
     <ClInclude Include="Core\Component\EntityType.hpp" />
     <ClInclude Include="Core\Component\EpochNumber.hpp" />
     <ClInclude Include="Core\Component\Position.hpp" />
+    <ClInclude Include="Core\Component\Rotation.hpp" />
     <ClInclude Include="Core\Component\Selectable.hpp" />
     <ClInclude Include="Core\Component\Visible.hpp" />
     <ClInclude Include="Core\Editor\GridContext.hpp" />

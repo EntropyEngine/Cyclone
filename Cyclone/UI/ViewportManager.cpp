@@ -277,7 +277,7 @@ void Cyclone::UI::ViewportManager::UpdateDrawListAndSelectionBox( Cyclone::Core:
 
 		// Create bounding boxes for the entity AABB and the position handle
 		Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> entBox{ position.mValue + boundingBox.mValue.mCenter, boundingBox.mValue.mExtent };
-		Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> posBox{ position.mValue + boundingBox.mValue.mCenter, Cyclone::Math::Vector4D::sZero() };
+		Cyclone::Math::BoundingBox<Cyclone::Math::Vector4D> posBox{ position.mValue, Cyclone::Math::Vector4D::sZero() };
 
 		// If intersection append relevant draw tag
 		if ( topBox.Intersects( entBox ) || topBox.Intersects( posBox ) ) registry.emplace<ViewportTypeTraits<EViewportType::TopXZ>::DrawTag>( entity );
