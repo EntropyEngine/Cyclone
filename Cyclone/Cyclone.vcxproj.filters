@@ -237,6 +237,9 @@
     <ClInclude Include="UI\ObjectProperties.hpp">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Entity\PlayerSpawn.hpp">
+      <Filter>Core\Entity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -288,9 +291,6 @@
     <ClCompile Include="Core\LevelInterface.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Entity\PointDebug.cpp">
-      <Filter>Core\Entity</Filter>
-    </ClCompile>
     <ClCompile Include="UI\Outliner.cpp">
       <Filter>UI</Filter>
     </ClCompile>
@@ -305,9 +305,6 @@
     </ClCompile>
     <ClCompile Include="Core\Tool\SelectionToolContext.cpp">
       <Filter>Core\Tool</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Entity\InfoDebug.cpp">
-      <Filter>Core\Entity</Filter>
     </ClCompile>
     <ClCompile Include="UI\Tool\SelectionTransformTool.cpp">
       <Filter>UI\Tool</Filter>

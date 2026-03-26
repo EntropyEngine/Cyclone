@@ -22,25 +22,16 @@ void Cyclone::Core::LevelInterface::Initialize()
 
 	mEntityManager.BeginAction();
 
-	mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
-	mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 0.0, 2.0 } );
-	mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 0.0, 2.0, 0.0 } );
-	auto j = mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 2.0, 0.0, 0.0 } );
-
-	mEntityManager.EndAction( GetRegistry() );
-
-	mEntityManager.BeginAction();
+	mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 4.0, 0.0, 0.0 } );
+	mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 4.0, 0.0, 2.0 } );
+	mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 4.0, 2.0, 0.0 } );
 
 	mEntityManager.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 0.0, 0.0 } );
 	mEntityManager.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 0.0, 2.0 } );
 	mEntityManager.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 2.0, 0.0 } );
-	auto i = mEntityManager.CreateEntity( "info_debug"_hs, GetRegistry(), { -2.0, 0.0, 0.0 } );
 
-	mEntityManager.EndAction( GetRegistry() );
+	mEntityManager.CreateEntity( "player_spawn"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
 
-	mEntityManager.BeginAction();
-	mEntityManager.DeleteEntity( i, GetRegistry() );
-	mEntityManager.DeleteEntity( j, GetRegistry() );
 	mEntityManager.EndAction( GetRegistry() );
 
 	//mEntityManager.BeginAction();

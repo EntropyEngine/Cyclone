@@ -161,6 +161,7 @@
     <ClInclude Include="Core\EntityManager.hpp" />
     <ClInclude Include="Core\Entity\BaseEntity.hpp" />
     <ClInclude Include="Core\Entity\InfoDebug.hpp" />
+    <ClInclude Include="Core\Entity\PlayerSpawn.hpp" />
     <ClInclude Include="Core\Entity\PointDebug.hpp" />
     <ClInclude Include="Core\HistoryAction.hpp" />
     <ClInclude Include="Core\LevelInterface.hpp" />
@@ -210,8 +211,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\EntityManager.cpp" />
-    <ClCompile Include="Core\Entity\InfoDebug.cpp" />
-    <ClCompile Include="Core\Entity\PointDebug.cpp" />
     <ClCompile Include="Core\HistoryAction.cpp" />
     <ClCompile Include="Core\LevelInterface.cpp" />
     <ClCompile Include="Core\Level.cpp" />
