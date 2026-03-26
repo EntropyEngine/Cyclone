@@ -87,11 +87,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDelt
 
 	ImVec2 &viewSize = mViewportData.mViewSize;
 	ImVec2 &viewOrigin = mViewportData.mViewOrigin;
-
-	ImDrawList* drawList = mViewportData.mDrawList;
-	if ( mTargetMSAA->GetSampleCount() <= 1 ) {
-		drawList->Flags &= ~( ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedLinesUseTex | ImDrawListFlags_AntiAliasedFill );
-	}
+	ImDrawList *drawList = mViewportData.mDrawList;
 
 	ImGui::SetCursorPos( { 0, 0 } );
 	ImGui::Image( GetOrResizeSRV( static_cast<size_t>( viewSize.x ), static_cast<size_t>( viewSize.y ) ), viewSize );

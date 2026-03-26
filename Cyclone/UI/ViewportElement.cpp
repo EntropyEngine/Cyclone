@@ -53,6 +53,10 @@ void Cyclone::UI::ViewportElement::UpdateViewportData()
 	mViewportData.mViewOrigin = ImGui::GetCursorScreenPos();
 	mViewportData.mDrawList = ImGui::GetWindowDrawList();
 	mViewportData.mIsActive = false;
+
+	if ( mTargetMSAA->GetSampleCount() <= 1 ) {
+		mViewportData.mDrawList->Flags &= ~( ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedLinesUseTex | ImDrawListFlags_AntiAliasedFill );
+	}
 }
 
 ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetOrResizeSRV( size_t inWidth, size_t inHeight )
