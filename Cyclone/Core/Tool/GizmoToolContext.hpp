@@ -35,6 +35,26 @@ namespace Cyclone::Core::Tool
 			mInitialMousePosition = Cyclone::Math::Vector4D::sZero();
 		}
 
+		void GetSingleAxis( Cyclone::Math::Vector4D &outAxis ) const
+		{
+			outAxis = Cyclone::Math::Vector4D(
+				( mCurrentAxis & GizmoToolContext::XAxis ) ? 1.0 : 0.0,
+				( mCurrentAxis & GizmoToolContext::YAxis ) ? 1.0 : 0.0,
+				( mCurrentAxis & GizmoToolContext::ZAxis ) ? 1.0 : 0.0
+			);
+		}
+
+		void GetDualAxis( Cyclone::Math::Vector4D &outAxis1, Cyclone::Math::Vector4D &outAxis2 ) const
+		{
+			bool first = true;
+			for ( int i = 0; i < 3; ++i ) {
+				if ( mCurrentAxis & ( 1 << i ) ) {
+					( first ? outAxis1 : outAxis2 ) = Cyclone::Math::Vector4D::sZeroSetValueByIndex( i, 1.0 );
+					first = false;
+				}
+			}
+		}
+
 	protected:
 		// Current transform axis
 		// Current entity
