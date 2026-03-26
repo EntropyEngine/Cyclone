@@ -190,7 +190,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdateOrthographic( Cyclone::Core:
 		Vector4D entityCurrentPosition = registry.get<Position>( selectedEntity ).mValue;
 		Vector4D entityCurrentPositionRel = entityCurrentPosition - cameraP;
 
-		ImGuizmo::SetGizmoSizeClipSpace( 192.0f / std::max( inViewportData.mViewSize.x, inViewportData.mViewSize.y ) );
+		ImGuizmo::SetGizmoSizeClipSpace( 128.0f / std::max( inViewportData.mViewSize.x, inViewportData.mViewSize.y ) );
 
 		ImGuizmo::PushID( static_cast<int>( T ) );
 		ImGuizmo::SetRect( inViewportData.mViewOrigin.x, inViewportData.mViewOrigin.y, inViewportData.mViewSize.x, inViewportData.mViewSize.y );
@@ -271,9 +271,6 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdateOrthographic( Cyclone::Core:
 			output.mAxisMask = axisDir1 + axisDir2;
 			output.mAxisMaskInv = Vector4D::sReplicate( 1.0 ) - output.mAxisMask;
 		}
-		// Camera aligned transform
-		else if ( axisBitcount == 3 ) {
-		}
 		else {
 			assert( false );
 			__assume( false );
@@ -313,7 +310,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdatePerspective( Cyclone::Core::
 		Vector4D entityCurrentPosition = registry.get<Position>( selectedEntity ).mValue;
 		Vector4D entityCurrentPositionRel = entityCurrentPosition - cameraP;
 
-		ImGuizmo::SetGizmoSizeClipSpace( 192.0f / std::max( inViewportData.mViewSize.x, inViewportData.mViewSize.y ) );
+		ImGuizmo::SetGizmoSizeClipSpace( 128.0f / std::max( inViewportData.mViewSize.x, inViewportData.mViewSize.y ) );
 
 		ImGuizmo::PushID( static_cast<int>( EViewportType::Perspective ) );
 		ImGuizmo::SetRect( inViewportData.mViewOrigin.x, inViewportData.mViewOrigin.y, inViewportData.mViewSize.x, inViewportData.mViewSize.y );

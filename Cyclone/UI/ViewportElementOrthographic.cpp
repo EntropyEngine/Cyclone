@@ -119,23 +119,23 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDelt
 	const char *uStr = std::array{ "x", "y", "z" }[AxisU];
 	const char *vStr = std::array{ "x", "y", "z" }[AxisV];
 
-	ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
-	ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
-	if ( isCanvasHovered ) ImGui::SetTooltip(
-		"Mouse pos: (%.0f, %.0f)\n"
-		"Viewport abs pos: (%.0f, %.0f)\n"
-		"Viewport rel pos: (%.1f, %.1f)\n"
-		"World Pos: (%s=%.2f, %s=%.2f)\n"
-		"Snap Pos: (%s=%.2f, %s=%.2f)\n"
-		"Zoom Level: (%.3f)",
-		io.MousePos.x, io.MousePos.y,
-		viewportAbsMousePos.x, viewportAbsMousePos.y,
-		viewportRelMousePos.x, viewportRelMousePos.y,
-		uStr, worldMouseU, vStr, worldMouseV,
-		uStr, worldSnapU, vStr, worldSnapV,
-		orthographicContext.mZoomScale2D
-	);
-	ImGui::PopStyleVar( 2 );
+	//ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
+	//ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
+	//if ( isCanvasHovered ) ImGui::SetTooltip(
+	//	"Mouse pos: (%.0f, %.0f)\n"
+	//	"Viewport abs pos: (%.0f, %.0f)\n"
+	//	"Viewport rel pos: (%.1f, %.1f)\n"
+	//	"World Pos: (%s=%.2f, %s=%.2f)\n"
+	//	"Snap Pos: (%s=%.2f, %s=%.2f)\n"
+	//	"Zoom Level: (%.3f)",
+	//	io.MousePos.x, io.MousePos.y,
+	//	viewportAbsMousePos.x, viewportAbsMousePos.y,
+	//	viewportRelMousePos.x, viewportRelMousePos.y,
+	//	uStr, worldMouseU, vStr, worldMouseV,
+	//	uStr, worldSnapU, vStr, worldSnapV,
+	//	orthographicContext.mZoomScale2D
+	//);
+	//ImGui::PopStyleVar( 2 );
 
 	// Middle click pan view
 	if ( ( isCanvasActive ) && ImGui::IsMouseDragging( ImGuiMouseButton_Middle, 0.0f ) && !ImGui::IsMouseDragging( ImGuiMouseButton_Left, 0.0f ) && !ImGuizmo::IsUsingAny() ) {
