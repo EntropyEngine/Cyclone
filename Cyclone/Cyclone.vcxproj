@@ -151,6 +151,7 @@
     <ClInclude Include="Core\Component\EntityCategory.hpp" />
     <ClInclude Include="Core\Component\EntityType.hpp" />
     <ClInclude Include="Core\Component\EpochNumber.hpp" />
+    <ClInclude Include="Core\Component\LocalBounds.hpp" />
     <ClInclude Include="Core\Component\Position.hpp" />
     <ClInclude Include="Core\Component\Rotation.hpp" />
     <ClInclude Include="Core\Component\Selectable.hpp" />

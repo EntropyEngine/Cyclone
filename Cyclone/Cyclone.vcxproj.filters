@@ -240,6 +240,9 @@
     <ClInclude Include="Core\Entity\PlayerSpawn.hpp">
       <Filter>Core\Entity</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Component\LocalBounds.hpp">
+      <Filter>Core\Component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">

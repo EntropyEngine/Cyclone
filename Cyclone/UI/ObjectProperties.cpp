@@ -6,6 +6,7 @@
 
 // Cyclone Components
 #include "Cyclone/Core/Component/Rotation.hpp"
+#include "Cyclone/Core/Component/LocalBounds.hpp"
 
 using Cyclone::Math::Vector4D;
 using namespace Cyclone::Core::Component;
@@ -15,6 +16,8 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 	entt::registry &registry = inLevelInterface->GetRegistry();
 	auto &entityManager = inLevelInterface->GetEntityManager();
 
+	const auto &gridContext = inLevelInterface->GetGridCtx();
+
 	bool dirty = false;
 
 	Position &position = registry.get<Position>( inEntity );
@@ -22,9 +25,11 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 	position.mValue.Store( positionData );
 	ImGui::Text( "Position" );
 	ImGui::SameLine( 128.0f );
-	ImGui::InputScalarN( "##Position", ImGuiDataType_Double, positionData, 3, nullptr, nullptr, "%.2f" );
-	if ( ImGui::IsItemDeactivatedAfterEdit() ) {
+	ImGui::DragScalarN( "##Position", ImGuiDataType_Double, positionData, 3, 1.0f, nullptr, nullptr, "%.2f" );
+	if ( ImGui::IsItemEdited() ) {
 		position.mValue = Vector4D::sLoad( positionData ); // TODO: snapping?
+	}
+	if ( ImGui::IsItemDeactivatedAfterEdit() ) {
 		dirty = true;
 	}
 
@@ -33,12 +38,14 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 	rotationData.v = rotationData * ( 180.0f / DirectX::XM_PI );
 	ImGui::Text( "Rotation" );
 	ImGui::SameLine( 128.0f );
-	ImGui::InputScalarN( "##Rotation", ImGuiDataType_Float, rotationData.f, 3, nullptr, nullptr, "%.2f" );
-	if ( ImGui::IsItemDeactivatedAfterEdit() ) {
+	ImGui::DragScalarN( "##Rotation", ImGuiDataType_Float, rotationData.f, 3, 1.0f, nullptr, nullptr, "%.2f" );
+	if ( ImGui::IsItemEdited() ) {
 		rotation.mPitchYawRoll = rotationData * ( DirectX::XM_PI / 180.0f );
+		registry.get<LocalBounds>( inEntity ).UpdateBoundingBox( inEntity, registry );
+	}
+	if ( ImGui::IsItemDeactivatedAfterEdit() ) {
 		dirty = true;
 
-		// TODO: update bounding box
 	}
 
 	if ( dirty ) {

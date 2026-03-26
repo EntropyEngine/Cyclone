@@ -21,7 +21,7 @@ namespace Cyclone::Core::Entity
 		static constexpr entt::hashed_string kEntityType = "player_spawn"_hs;
 		static constexpr entt::hashed_string kEntityCategory = "player"_hs;
 
-		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<Cyclone::Core::Component::Position, Cyclone::Core::Component::Rotation, Cyclone::Core::Component::BoundingBox>>;
+		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<>>;
 
 		entt::entity Create( entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
 		{
@@ -35,7 +35,10 @@ namespace Cyclone::Core::Entity
 			inRegistry.emplace<Cyclone::Core::Component::Rotation>( entity, DirectX::g_XMZero );
 
 			// Attach default center and extents (25cm radius)
-			inRegistry.emplace<Cyclone::Core::Component::BoundingBox>( entity, Cyclone::Math::Vector4D( 0.0, 0.5, 0.0 ), Cyclone::Math::Vector4D::sReplicate( 0.5 ) );
+			auto& box = inRegistry.emplace<Cyclone::Core::Component::BoundingBox>( entity, Cyclone::Math::Vector4D( 0.0, 0.5, 0.0 ), Cyclone::Math::Vector4D::sReplicate( 0.5 ) );
+
+			// Attach corresponding local bounds
+			inRegistry.emplace<Cyclone::Core::Component::LocalBounds>( entity, box.mValue.mCenter.ToXMVECTOR(), DirectX::XMFLOAT3( 0.5, 0.5, 0.5 ), Cyclone::Core::Component::LocalBounds::EType::Radius ).UpdateBoundingBox( entity, inRegistry );
 
 			return entity;
 		}

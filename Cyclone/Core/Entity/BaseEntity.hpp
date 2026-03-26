@@ -5,11 +5,14 @@
 
 // Cyclone Compontents
 #include "Cyclone/Core/Component/Position.hpp"
+#include "Cyclone/Core/Component/Rotation.hpp"
+#include "Cyclone/Core/Component/BoundingBox.hpp"
 #include "Cyclone/Core/Component/EntityType.hpp"
 #include "Cyclone/Core/Component/EntityCategory.hpp"
 #include "Cyclone/Core/Component/Visible.hpp"
 #include "Cyclone/Core/Component/Selectable.hpp"
 #include "Cyclone/Core/Component/EpochNumber.hpp"
+#include "Cyclone/Core/Component/LocalBounds.hpp"
 
 namespace Cyclone::Core::Entity
 {
@@ -17,7 +20,7 @@ namespace Cyclone::Core::Entity
 	class BaseEntity
 	{
 	public:
-		using history_components = entt::type_list<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable>;
+		using history_components = entt::type_list<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable, Component::Position, Component::Rotation, Component::BoundingBox, Component::LocalBounds>;
 
 		static void sRegister( entt::meta_ctx &inMetaContext )
 		{
