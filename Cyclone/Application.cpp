@@ -59,6 +59,7 @@ void Cyclone::Application::Initialize( HWND inWindow, int inWidth, int inHeight 
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 	//io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	io.Fonts->AddFontFromFileTTF( "Assets/unispace.bold.otf", 13.0f );
 	io.Fonts->AddFontFromFileTTF( "Assets/unispace.regular.otf", 13.0f );
 	
