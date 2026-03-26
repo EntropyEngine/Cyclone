@@ -155,22 +155,15 @@ namespace
 void Cyclone::UI::Tool::GizmoTransformTool::OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
 {
 	switch ( inType ) {
-		case EViewportType::TopXZ: OnUpdate<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
-		case EViewportType::FrontXY: OnUpdate<EViewportType::FrontXY>( inLevelInterface, inViewportData ); break;
-		case EViewportType::SideYZ: OnUpdate<EViewportType::SideYZ>( inLevelInterface, inViewportData ); break;
+		case EViewportType::TopXZ: OnUpdateOrthographic<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
+		case EViewportType::FrontXY: OnUpdateOrthographic<EViewportType::FrontXY>( inLevelInterface, inViewportData ); break;
+		case EViewportType::SideYZ: OnUpdateOrthographic<EViewportType::SideYZ>( inLevelInterface, inViewportData ); break;
 		case EViewportType::Perspective: OnUpdatePerspective( inLevelInterface, inViewportData ); break;
 	}
 }
 
-void Cyclone::UI::Tool::GizmoTransformTool::OnRender( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData, DrawType *inPrimitiveBatch )
-{
-	switch ( inType ) {
-		case EViewportType::Perspective: OnRenderPerspective( inLevelInterface, inViewportData, inPrimitiveBatch ); break;
-	}
-}
-
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::Tool::GizmoTransformTool::OnUpdate( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
+void Cyclone::UI::Tool::GizmoTransformTool::OnUpdateOrthographic( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
 {
 	static constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	static constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
@@ -214,16 +207,96 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdate( Cyclone::Core::LevelInterf
 
 		ImGuizmo::PopID();
 	}
+
+	ImGuizmo::PushID( static_cast<int>( T ) );
+	if ( mIsSelected && inViewportData.mIsActive && ImGuizmo::IsUsing() && selectedEntity != entt::null ) {
+		if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
+			assert( gizmoContext.mActiveEntity == entt::null && "Active entity already set!" );
+
+			entityManager.BeginAction();
+
+			gizmoContext.mCurrentAxis = MoveAxisFromMoveType( ImGuizmo::GetMoveType() );
+			gizmoContext.mInitialEntityPosition = registry.get<Position>( selectedEntity ).mValue;
+			gizmoContext.mActiveEntity = selectedEntity;
+		}
+
+		assert( gizmoContext.mActiveEntity == selectedEntity && "Active entity missmatch!" );
+
+		Vector4D entityOriginalPos = gizmoContext.mInitialEntityPosition;
+
+
+		DirectX::XMMATRIX viewProj = DirectX::XMMatrixMultiply( viewMatrix, projMatrix );
+		DirectX::XMMATRIX viewProjInverse = DirectX::XMMatrixInverse( nullptr, viewProj );
+
+		ImGuiIO &io = ImGui::GetIO();
+
+		ImVec2 viewportAbsMousePos( io.MousePos.x - inViewportData.mViewOrigin.x, io.MousePos.y - inViewportData.mViewOrigin.y );
+		ImVec2 viewportRelMousePos( viewportAbsMousePos.x - inViewportData.mViewSize.x / 2.0f, viewportAbsMousePos.y - inViewportData.mViewSize.y / 2.0f );
+		float screenMouseU = viewportRelMousePos.x / ( inViewportData.mViewSize.x / 2.0f );
+		float screenMouseV = -viewportRelMousePos.y / ( inViewportData.mViewSize.y / 2.0f );
+
+		Vector4D cameraP = orthographicContext.mCenter2D;
+		Vector4D mousePosNear = Vector4D::sFromXMVECTOR( DirectX::XMVector3TransformCoord( DirectX::XMVectorSet( screenMouseU, screenMouseV, 0.0f, 0.0f ), viewProjInverse ) ) + cameraP;
+		Vector4D mousePosFar = Vector4D::sFromXMVECTOR( DirectX::XMVector3TransformCoord( DirectX::XMVectorSet( screenMouseU, screenMouseV, 0.99f, 0.0f ), viewProjInverse ) ) + cameraP;
+
+		TranslateInput input{
+			.mOriginalPos = entityOriginalPos,
+			.mCameraPos = cameraP,
+			.mMousePosNear = mousePosNear,
+			.mMousePosFar = mousePosFar
+		};
+
+		TranslateOutput output;
+		output.mMousePos = gizmoContext.mInitialMousePosition;
+
+		int axisBitcount = std::popcount( gizmoContext.mCurrentAxis );
+
+		// Always use screen space translation
+		Translate3( input, output, Vector4D::sZeroSetValueByIndex<AxisU>( 1.0f ), Vector4D::sZeroSetValueByIndex<AxisV>( 1.0f ) );
+
+		// Single axis transform
+		if ( axisBitcount == 1 ) {
+			Vector4D axisDir1{ nullptr };
+			gizmoContext.GetSingleAxis( axisDir1 );
+
+			output.mAxisMask = axisDir1;
+			output.mAxisMaskInv = Vector4D::sReplicate( 1.0 ) - output.mAxisMask;
+		}
+		// Two axis transform
+		else if ( axisBitcount == 2 ) {
+			Vector4D axisDir1{ nullptr };
+			Vector4D axisDir2{ nullptr };
+			gizmoContext.GetDualAxis( axisDir1, axisDir2 );
+
+			output.mAxisMask = axisDir1 + axisDir2;
+			output.mAxisMaskInv = Vector4D::sReplicate( 1.0 ) - output.mAxisMask;
+		}
+		// Camera aligned transform
+		else if ( axisBitcount == 3 ) {
+		}
+		else {
+			assert( false );
+			__assume( false );
+		}
+
+		UpdateTranslate( inLevelInterface, input, output );
+	}
+	else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) && gizmoContext.mActiveEntity != entt::null ) {
+		for ( const entt::entity entity : selectedEntities ) {
+			entityManager.UpdateEntity( entity, registry );
+		}
+		entityManager.EndAction( registry );
+		gizmoContext.Deactivate();
+	}
+	ImGuizmo::PopID();
 }
 
 void Cyclone::UI::Tool::GizmoTransformTool::OnUpdatePerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
 {
-	const auto &gridContext = inLevelInterface->GetGridCtx();
 	const auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 
 	auto &entityManager = inLevelInterface->GetEntityManager();
-	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
 
 	auto &gizmoContext = inLevelInterface->GetGizmoCtx();
 
@@ -261,10 +334,9 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdatePerspective( Cyclone::Core::
 		if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
 			assert( gizmoContext.mActiveEntity == entt::null && "Active entity already set!" );
 
-			gizmoContext.mCurrentAxis = MoveAxisFromMoveType( ImGuizmo::GetMoveType() );
-
 			entityManager.BeginAction();
 
+			gizmoContext.mCurrentAxis = MoveAxisFromMoveType( ImGuizmo::GetMoveType() );
 			gizmoContext.mInitialEntityPosition = registry.get<Position>( selectedEntity ).mValue;
 			gizmoContext.mActiveEntity = selectedEntity;
 		}
@@ -321,34 +393,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdatePerspective( Cyclone::Core::
 			__assume( false );
 		}
 
-		Vector4D objPos = output.mMousePos * output.mAxisMask + entityOriginalPos * output.mAxisMaskInv;
-
-		if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
-			gizmoContext.mInitialMousePosition = objPos;
-		}
-
-		Vector4D objPosDelta = objPos - gizmoContext.mInitialMousePosition;
-
-		Vector4D gridSize = Vector4D::sReplicate( gridContext.mGridSize );
-		Vector4D gridSizeInv = Vector4D::sReplicate( 1.0 / gridContext.mGridSize );
-
-		if ( gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ByGrid ) {
-			objPosDelta = objPosDelta * output.mAxisMaskInv + Vector4D::sRound( objPosDelta * gridSizeInv ) * gridSize * output.mAxisMask;
-		}
-
-		Vector4D objPosNew = objPosDelta + entityOriginalPos;
-		objPosNew = Vector4D::sClamp( objPosNew, Vector4D::sReplicate( -gridContext.mWorldLimit ), Vector4D::sReplicate( gridContext.mWorldLimit ) );
-
-		if ( gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ToGrid ) {
-			objPosNew = objPosNew * output.mAxisMaskInv + Vector4D::sRound( objPosNew * gridSizeInv ) * gridSize * output.mAxisMask;
-		}
-
-		Vector4D perFrameDelta = objPosNew - registry.get<Position>( selectedEntity ).mValue;
-
-		for ( const entt::entity entity : selectedEntities ) {
-			registry.patch<Position>( entity, [perFrameDelta]( Position &inPosition ) { inPosition.mValue += perFrameDelta; } );
-		}
-		transformContext.UpdateOnDrag( perFrameDelta );
+		UpdateTranslate( inLevelInterface, input, output );
 	}
 	else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) && gizmoContext.mActiveEntity != entt::null ) {
 		for ( const entt::entity entity : selectedEntities ) {
@@ -360,7 +405,46 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdatePerspective( Cyclone::Core::
 	ImGuizmo::PopID();
 }
 
-void Cyclone::UI::Tool::GizmoTransformTool::OnRenderPerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData, DrawType *inPrimitiveBatch )
+void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslate( Cyclone::Core::LevelInterface * inLevelInterface, const TranslateInput &inInput, const TranslateOutput &inOutput )
 {
-	
+	const auto &gridContext = inLevelInterface->GetGridCtx();
+	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+
+	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
+
+	auto &gizmoContext = inLevelInterface->GetGizmoCtx();
+
+	entt::entity selectedEntity = selectionContext.GetSelectedEntity();
+	const auto &selectedEntities = selectionContext.GetSelectedEntities();
+	entt::registry &registry = inLevelInterface->GetRegistry();
+
+	Vector4D objPos = inOutput.mMousePos * inOutput.mAxisMask + inInput.mOriginalPos * inOutput.mAxisMaskInv;
+
+	// If first frame of interactions, store initial position
+	if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
+		gizmoContext.mInitialMousePosition = objPos;
+	}
+
+	Vector4D objPosDelta = objPos - gizmoContext.mInitialMousePosition;
+
+	Vector4D gridSize = Vector4D::sReplicate( gridContext.mGridSize );
+	Vector4D gridSizeInv = Vector4D::sReplicate( 1.0 / gridContext.mGridSize );
+
+	if ( gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ByGrid ) {
+		objPosDelta = objPosDelta * inOutput.mAxisMaskInv + Vector4D::sRound( objPosDelta * gridSizeInv ) * gridSize * inOutput.mAxisMask;
+	}
+
+	Vector4D objPosNew = objPosDelta + inInput.mOriginalPos;
+	objPosNew = Vector4D::sClamp( objPosNew, Vector4D::sReplicate( -gridContext.mWorldLimit ), Vector4D::sReplicate( gridContext.mWorldLimit ) );
+
+	if ( gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ToGrid ) {
+		objPosNew = objPosNew * inOutput.mAxisMaskInv + Vector4D::sRound( objPosNew * gridSizeInv ) * gridSize * inOutput.mAxisMask;
+	}
+
+	Vector4D perFrameDelta = objPosNew - registry.get<Position>( selectedEntity ).mValue;
+
+	for ( const entt::entity entity : selectedEntities ) {
+		registry.patch<Position>( entity, [perFrameDelta]( Position &inPosition ) { inPosition.mValue += perFrameDelta; } );
+	}
+	transformContext.UpdateOnDrag( perFrameDelta );
 }

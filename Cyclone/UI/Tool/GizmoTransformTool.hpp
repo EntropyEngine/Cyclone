@@ -19,8 +19,8 @@ namespace Cyclone::UI::Tool
 		virtual ECategory	GetCategory() const override { return ECategory::Object; }
 
 		virtual void		OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override;
-		virtual void		OnDraw( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override {}
-		virtual void		OnRender( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData, DrawType *inPrimitiveBatch ) override;
+		virtual void		OnDraw( EViewportType, Cyclone::Core::LevelInterface *, const ViewportData & ) override {}
+		virtual void		OnRender( EViewportType, Cyclone::Core::LevelInterface *, const ViewportData &, DrawType * ) override {};
 
 		struct				TranslateInput
 		{
@@ -39,9 +39,10 @@ namespace Cyclone::UI::Tool
 
 	protected:
 		template<EViewportType T>
-		void				OnUpdate( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
+		void				OnUpdateOrthographic( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
 
 		void				OnUpdatePerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
-		void				OnRenderPerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData, DrawType *inPrimitiveBatch );
+
+		void				UpdateTranslate( Cyclone::Core::LevelInterface *inLevelInterface, const TranslateInput &inInput, const TranslateOutput &inOutput );
 	};
 }
