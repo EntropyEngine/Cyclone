@@ -25,6 +25,12 @@ namespace Cyclone::Core::Tool
 			ZAxis = 1 << 2,
 		};
 
+		enum class ETransformType
+		{
+			Translate,
+			Rotate
+		};
+
 		// void Activate() ????
 
 		void Deactivate()
@@ -61,10 +67,12 @@ namespace Cyclone::Core::Tool
 		// Entity original position
 		// Mouse original position
 
+		ETransformType			mTransformType = ETransformType::Rotate;
 		uint32_t				mCurrentAxis = ETransformAxis::None;
 		entt::entity			mActiveEntity = entt::null;
 		Cyclone::Math::Vector4D mInitialEntityPosition = Cyclone::Math::Vector4D::sZero();
 		Cyclone::Math::Vector4D mInitialMousePosition = Cyclone::Math::Vector4D::sZero();
+		DirectX::XMVECTOR		mInitialEntityRotation = DirectX::g_XMZero;
 
 	};
 }

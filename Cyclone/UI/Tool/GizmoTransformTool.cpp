@@ -4,6 +4,10 @@
 // Core includes
 #include "Cyclone/Core/LevelInterface.hpp"
 
+// Compontnts
+#include "Cyclone/Core/Component/Rotation.hpp"
+#include "Cyclone/Core/Component/LocalBounds.hpp"
+
 // DX includes
 #include <DebugDraw.h>
 
@@ -16,6 +20,8 @@
 
 using Cyclone::Math::Vector4D;
 using Cyclone::Core::Component::Position;
+using Cyclone::Core::Component::Rotation;
+using Cyclone::Core::Component::LocalBounds;
 using Cyclone::Core::Tool::GizmoToolContext;
 
 using TranslateInput = Cyclone::UI::Tool::GizmoTransformTool::TranslateInput;
@@ -39,6 +45,19 @@ namespace
 			case ImGuizmo::MT_MOVE_ZX: return GizmoToolContext::XAxis | GizmoToolContext::ZAxis;
 			case ImGuizmo::MT_MOVE_XY: return GizmoToolContext::XAxis | GizmoToolContext::YAxis;
 			case ImGuizmo::MT_MOVE_SCREEN: return GizmoToolContext::XAxis | GizmoToolContext::YAxis | GizmoToolContext::ZAxis;
+			default:
+				assert( false );
+				__assume( false );
+		}
+	}
+
+	uint32_t RotateAxisFromMoveType( ImGuizmo::MOVETYPE inMoveType )
+	{
+		switch ( inMoveType ) {
+			case ImGuizmo::MT_ROTATE_X: return GizmoToolContext::XAxis;
+			case ImGuizmo::MT_ROTATE_Y: return GizmoToolContext::YAxis;
+			case ImGuizmo::MT_ROTATE_Z: return GizmoToolContext::ZAxis;
+			case ImGuizmo::MT_ROTATE_SCREEN: return GizmoToolContext::XAxis | GizmoToolContext::YAxis | GizmoToolContext::ZAxis;
 			default:
 				assert( false );
 				__assume( false );
@@ -150,20 +169,64 @@ namespace
 			assert( false );
 		}
 	}
+
+	DirectX::XMVECTOR XM_CALLCONV QuatToPitchYawRoll( DirectX::XMVECTORF32 inQuat )
+	{
+		const float x = inQuat.f[0];
+		const float y = inQuat.f[1];
+		const float z = inQuat.f[2];
+		const float w = inQuat.f[3];
+
+		const float xx = x * x;
+		const float yy = y * y;
+		const float zz = z * z;
+
+		const float m31 = 2.f * x * z + 2.f * y * w;
+		const float m32 = 2.f * y * z - 2.f * x * w;
+		const float m33 = 1.f - 2.f * xx - 2.f * yy;
+
+		const float cy = sqrtf( m33 * m33 + m31 * m31 );
+		const float cx = atan2f( -m32, cy );
+		if (cy > 16.f * FLT_EPSILON)
+		{
+			const float m12 = 2.f * x * y + 2.f * z * w;
+			const float m22 = 1.f - 2.f * xx - 2.f * zz;
+
+			return DirectX::XMVectorSet( cx, atan2f( m31, m33 ), atan2f( m12, m22 ), 0.0f );
+		}
+		else
+		{
+			const float m11 = 1.f - 2.f * yy - 2.f * zz;
+			const float m21 = 2.f * x * y - 2.f * z * w;
+
+			return DirectX::XMVectorSet( cx, 0.f, atan2f( -m21, m11 ), 0.0f );
+		}
+	}
 }
 
 void Cyclone::UI::Tool::GizmoTransformTool::OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
 {
-	switch ( inType ) {
-		case EViewportType::TopXZ: OnUpdateOrthographic<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
-		case EViewportType::FrontXY: OnUpdateOrthographic<EViewportType::FrontXY>( inLevelInterface, inViewportData ); break;
-		case EViewportType::SideYZ: OnUpdateOrthographic<EViewportType::SideYZ>( inLevelInterface, inViewportData ); break;
-		case EViewportType::Perspective: OnUpdatePerspective( inLevelInterface, inViewportData ); break;
+	if ( inLevelInterface->GetGizmoCtx().mTransformType == GizmoToolContext::ETransformType::Translate ) {
+		switch ( inType ) {
+			case EViewportType::TopXZ: UpdateTranslateOrthographic<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
+			case EViewportType::FrontXY: UpdateTranslateOrthographic<EViewportType::FrontXY>( inLevelInterface, inViewportData ); break;
+			case EViewportType::SideYZ: UpdateTranslateOrthographic<EViewportType::SideYZ>( inLevelInterface, inViewportData ); break;
+			case EViewportType::Perspective: UpdateTranslatePerspective( inLevelInterface, inViewportData ); break;
+		}
+	}
+
+	if ( inLevelInterface->GetGizmoCtx().mTransformType == GizmoToolContext::ETransformType::Rotate ) {
+		switch ( inType ) {
+			case EViewportType::TopXZ: UpdateRotateOrthographic<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
+			case EViewportType::FrontXY: UpdateRotateOrthographic<EViewportType::FrontXY>( inLevelInterface, inViewportData ); break;
+			case EViewportType::SideYZ: UpdateRotateOrthographic<EViewportType::SideYZ>( inLevelInterface, inViewportData ); break;
+			case EViewportType::Perspective: UpdateRotatePerspective( inLevelInterface, inViewportData ); break;
+		}
 	}
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::Tool::GizmoTransformTool::OnUpdateOrthographic( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
+void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslateOrthographic( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
 {
 	static constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	static constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
@@ -288,7 +351,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdateOrthographic( Cyclone::Core:
 	ImGuizmo::PopID();
 }
 
-void Cyclone::UI::Tool::GizmoTransformTool::OnUpdatePerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
+void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslatePerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
 {
 	const auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
@@ -445,3 +508,83 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslate( Cyclone::Core::Leve
 	}
 	transformContext.UpdateOnDrag( perFrameDelta );
 }
+
+
+template<Cyclone::UI::EViewportType T>
+void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotateOrthographic( Cyclone::Core::LevelInterface * inLevelInterface, const ViewportData & inViewportData )
+{}
+
+void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotatePerspective( Cyclone::Core::LevelInterface * inLevelInterface, const ViewportData & inViewportData )
+{
+	const auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
+	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+
+	auto &entityManager = inLevelInterface->GetEntityManager();
+
+	auto &gizmoContext = inLevelInterface->GetGizmoCtx();
+
+	entt::entity selectedEntity = selectionContext.GetSelectedEntity();
+	const auto & selectedEntities = selectionContext.GetSelectedEntities();
+	entt::registry &registry = inLevelInterface->GetRegistry();
+
+	const DirectX::XMMATRIX viewMatrix = inViewportData.mViewMatrix;
+	const DirectX::XMMATRIX projMatrix = inViewportData.mProjMatrix;
+
+
+	if ( mIsSelected && selectedEntity != entt::null ) {
+		Vector4D cameraP = perspectiveContext.mCenter3D;
+		Vector4D entityCurrentPosition = registry.get<Position>( selectedEntity ).mValue;
+		Vector4D entityCurrentPositionRel = entityCurrentPosition - cameraP;
+
+		ImGuizmo::SetGizmoSizeClipSpace( 128.0f / std::max( inViewportData.mViewSize.x, inViewportData.mViewSize.y ) );
+
+		ImGuizmo::PushID( static_cast<int>( EViewportType::Perspective ) );
+		ImGuizmo::SetRect( inViewportData.mViewOrigin.x, inViewportData.mViewOrigin.y, inViewportData.mViewSize.x, inViewportData.mViewSize.y );
+		ImGuizmo::SetDrawlist( inViewportData.mDrawList );
+		ImGuizmo::SetOrthographic( false );
+		ImGuizmo::Enable( true );
+		ImGuizmo::AllowAxisFlip( false );
+
+		DirectX::XMMATRIX modelMatrix = DirectX::XMMatrixMultiply(
+			DirectX::XMMatrixRotationRollPitchYawFromVector( registry.get<Rotation>( selectedEntity ).mPitchYawRoll ),
+			DirectX::XMMatrixTranslationFromVector( entityCurrentPositionRel.ToXMVECTOR() )
+		);
+
+		ImGuizmo::Manipulate( reinterpret_cast<const float *>( &viewMatrix ), reinterpret_cast<const float *>( &projMatrix ), ImGuizmo::ROTATE, ImGuizmo::LOCAL, reinterpret_cast<float *>( &modelMatrix ) );
+
+
+		if ( inViewportData.mIsActive && ImGuizmo::IsUsing() ) {
+			if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
+				assert( gizmoContext.mActiveEntity == entt::null && "Active entity already set!" );
+
+				entityManager.BeginAction();
+
+				gizmoContext.mCurrentAxis = RotateAxisFromMoveType( ImGuizmo::GetMoveType() );
+				gizmoContext.mInitialEntityRotation = registry.get<Rotation>( selectedEntity ).mPitchYawRoll;
+				gizmoContext.mActiveEntity = selectedEntity;
+			}
+
+			DirectX::XMVECTORF32 rotationQuat;
+			DirectX::XMVECTORF32 scale;
+			DirectX::XMVECTORF32 translation;
+
+			DirectX::XMMatrixDecompose( &scale.v, &rotationQuat.v, &translation.v, modelMatrix );
+			//ImGuizmo::DecomposeMatrixToComponents( reinterpret_cast<float *>( &modelMatrix ), translation.f, rotation.f, scale.f );
+
+			// Quick and dirty
+			registry.get<Rotation>( selectedEntity ).mPitchYawRoll = QuatToPitchYawRoll( rotationQuat );
+			registry.get<LocalBounds>( selectedEntity ).UpdateBoundingBox( selectedEntity, registry );
+		}
+		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) && gizmoContext.mActiveEntity != entt::null ) {
+			for ( const entt::entity entity : selectedEntities ) {
+				entityManager.UpdateEntity( entity, registry );
+			}
+			entityManager.EndAction( registry );
+			gizmoContext.Deactivate();
+		}
+		ImGuizmo::PopID();
+	}
+}
+
+void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotate( Cyclone::Core::LevelInterface * inLevelInterface, const TranslateInput & inInput, const TranslateOutput & inOutput )
+{}

@@ -39,10 +39,13 @@ namespace Cyclone::UI::Tool
 
 	protected:
 		template<EViewportType T>
-		void				OnUpdateOrthographic( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
-
-		void				OnUpdatePerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
-
+		void				UpdateTranslateOrthographic( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
+		void				UpdateTranslatePerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
 		void				UpdateTranslate( Cyclone::Core::LevelInterface *inLevelInterface, const TranslateInput &inInput, const TranslateOutput &inOutput );
+
+		template<EViewportType T>
+		void				UpdateRotateOrthographic( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
+		void				UpdateRotatePerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
+		void				UpdateRotate( Cyclone::Core::LevelInterface *inLevelInterface, const TranslateInput &inInput, const TranslateOutput &inOutput );
 	};
 }
