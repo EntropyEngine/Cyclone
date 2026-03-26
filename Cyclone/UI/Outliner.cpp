@@ -82,7 +82,7 @@ namespace
 	{
 		ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
 		ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
-		if ( ImGui::BeginPopupContextItem() ) {
+		if ( ImGui::BeginPopupContextItem( "Tree Popup" ) ) {
 			if ( ImGui::Selectable( "Add children to selection" ) ) {
 				inEntityManager.BeginAction();
 				for ( const auto [entity, type] : inRegistry.view<const T>().each() ) {
@@ -103,6 +103,19 @@ namespace
 			ImGui::Separator();
 			if ( ImGui::Selectable( "Set all children Selectable" ) ) UpdateBoolPerPredicate<Selectable>( inRegistry, inEntityManager, inType, true );
 			if ( ImGui::Selectable( "Set all children Unselectable" ) ) UpdateBoolPerPredicate<Selectable>( inRegistry, inEntityManager, inType, false );
+			ImGui::EndPopup();
+		}
+		ImGui::PopStyleVar( 2 );
+	}
+
+	void EntityPopup( Cyclone::Core::EntityManager &inEntityManager, entt::entity inEntity )
+	{
+		ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
+		ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );
+		if ( ImGui::BeginPopupContextItem( "Entity Popup" ) ) {
+			if ( ImGui::Selectable( "Open Properties" ) ) {
+				inEntityManager.OpenEntityProperties( inEntity );
+			}
 			ImGui::EndPopup();
 		}
 		ImGui::PopStyleVar( 2 );
@@ -278,6 +291,8 @@ void Cyclone::UI::Outliner::OutlinerTreeUpdate( Cyclone::Core::LevelInterface *i
 									}
 									ImGui::PopStyleVar( 1 );
 
+									EntityPopup( entityManager, entity );
+
 									ImGui::TableSetColumnIndex( 1 );
 									if ( DrawTreeNodeCheckbox( style, "##V", static_cast<bool>( entityVisible ) ) ) UpdateBoolPerEntity( registry, entityManager, entity, entityVisible );
 
@@ -358,6 +373,8 @@ void Cyclone::UI::Outliner::SelectionListUpdate( Cyclone::Core::LevelInterface *
 					ImGui::TableSetColumnIndex( 1 );
 					ImGui::AlignTextToFramePadding();
 					ImGui::Text( Cyclone::Util::PrefixString( "", entity ) );
+
+					EntityPopup( entityManager, entity );
 
 					auto &entityVisible = view.get<Visible>( entity );
 					auto &entitySelectable = view.get<Selectable>( entity );

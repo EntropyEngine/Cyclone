@@ -10,6 +10,10 @@
 #include "Cyclone/UI/ViewportManager.hpp"
 #include "Cyclone/UI/Outliner.hpp"
 #include "Cyclone/UI/Toolbar.hpp"
+#include "Cyclone/UI/ObjectProperties.hpp"
+
+// Cyclone Utils
+#include "Cyclone/Util/String.hpp"
 
 // ImGui includes
 #include <imgui_internal.h>
@@ -118,8 +122,22 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	ImGui::End();
 	ImGui::PopStyleVar( 3 );
 
-	if ( auto &entityManager = inLevelInterface->GetEntityManager(); entityManager.CanAquireActionLock() ) {
-		auto &registry = inLevelInterface->GetRegistry();
+	auto &registry = inLevelInterface->GetRegistry();
+	auto &entityManager = inLevelInterface->GetEntityManager();
+
+	// Show object properties
+	for ( entt::entity entity : std::set( entityManager.GetOpenedProperties() ) )
+	{
+		bool isOpen = registry.all_of<Core::Component::EntityType>( entity );
+		ImGui::SetNextWindowSizeConstraints( { 360, 360 }, { FLT_MAX, FLT_MAX } );
+		if ( ImGui::Begin( Cyclone::Util::PrefixString( "Entity: ", entity ), &isOpen ) ) {
+			ObjectProperties().ShowWindow( inLevelInterface, entity );
+		}
+		ImGui::End();
+		if ( !isOpen ) entityManager.CloseEntityProperties( entity );
+	}
+
+	if ( entityManager.CanAquireActionLock() ) {
 		auto &selectionContext = inLevelInterface->GetSelectionCtx();
 
 		if ( ImGui::GetKeyOwner( ImGuiKey_F24 ) == ImGuiKeyOwner_NoOwner ) {

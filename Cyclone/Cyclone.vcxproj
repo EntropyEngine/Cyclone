@@ -185,6 +185,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Application.hpp" />
     <ClInclude Include="UI\MainUI.hpp" />
+    <ClInclude Include="UI\ObjectProperties.hpp" />
     <ClInclude Include="UI\Outliner.hpp" />
     <ClInclude Include="UI\Sidebar.hpp" />
     <ClInclude Include="UI\Toolbar.hpp" />
@@ -274,6 +275,7 @@
     <ClCompile Include="Rendering\Shader\WireframeBoxShader.cpp" />
     <ClCompile Include="RenderTexture.cpp" />
     <ClCompile Include="UI\MainUI.cpp" />
+    <ClCompile Include="UI\ObjectProperties.cpp" />
     <ClCompile Include="UI\Outliner.cpp" />
     <ClCompile Include="UI\Sidebar.cpp" />
     <ClCompile Include="UI\Toolbar.cpp" />

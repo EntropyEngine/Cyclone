@@ -64,6 +64,10 @@ namespace Cyclone::Core
 		Tool::SelectionToolContext & GetSelectionCtx()					{ return mSelectionTool; }
 		const Tool::SelectionToolContext & GetSelectionCtx() const		{ return mSelectionTool; }
 
+		const std::set<entt::entity> & GetOpenedProperties() const		{ return mOpenedProperties; }
+		void					OpenEntityProperties( entt::entity inEntity ) { mOpenedProperties.emplace( inEntity ); }
+		void					CloseEntityProperties( entt::entity inEntity ) { mOpenedProperties.erase( inEntity ); }
+
 	protected:
 		template<typename T>
 		void RegisterEntityClass();
@@ -98,5 +102,7 @@ namespace Cyclone::Core
 		std::unique_lock<std::mutex>		mUndoStackLock;
 
 		Tool::SelectionToolContext			mSelectionTool;
+
+		std::set<entt::entity>				mOpenedProperties;
 	};
 }

@@ -37,6 +37,9 @@ namespace Cyclone::Math
 		/// Loads an unaligned double[4] array into the vector
 		static Vector4D XM_CALLCONV sLoad( const double *inD4 ) { return _mm256_loadu_pd( inD4 ); }
 
+		/// Stores vector into an unaligned double[4] array
+		void Store( double *outD4 ) const { _mm256_storeu_pd( outD4, mVector ); }
+
 		template<size_t Axis> static Vector4D XM_CALLCONV sZeroSetValueByIndex( double inV );
 		template<> Vector4D XM_CALLCONV sZeroSetValueByIndex<0>( double inV ) { return Vector4D( inV, 0.0, 0.0, 0.0 ); }
 		template<> Vector4D XM_CALLCONV sZeroSetValueByIndex<1>( double inV ) { return Vector4D( 0.0, inV, 0.0, 0.0 ); }
