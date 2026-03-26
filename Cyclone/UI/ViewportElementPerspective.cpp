@@ -42,6 +42,11 @@ namespace
 
 void Cyclone::UI::ViewportElementPerspective::UpdateNavigation( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
+	ImDrawList* drawList = mViewportData.mDrawList;
+	if ( mTargetMSAA->GetSampleCount() <= 1 ) {
+		drawList->Flags &= ~( ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedLinesUseTex | ImDrawListFlags_AntiAliasedFill );
+	}
+
 	ImVec2 &viewSize = mViewportData.mViewSize;
 
 	auto &perspectiveContext = inLevelInterface->GetPerspectiveCtx();
