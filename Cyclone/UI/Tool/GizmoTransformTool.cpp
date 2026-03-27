@@ -592,11 +592,14 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotatePerspective( Cyclone::Co
 			for ( entt::entity entity : selectedEntities ) {
 				if ( entity != selectedEntity ) {
 					auto &currP = registry.get<Position>( entity );
+					auto &currR = registry.get<Rotation>( entity );
 
 					auto newc = DirectX::XMVector3TransformCoord( ( currP.mValue - gizmoContext.mInitialEntityPosition ).ToXMVECTOR(), DirectX::XMMatrixRotationQuaternion( deltaQuat ) );
 					currP.mValue += Vector4D::sFromXMVECTOR( newc ) - ( currP.mValue - gizmoContext.mInitialEntityPosition );
 
-					// TODO: ROTATOE
+					DirectX::XMVECTOR currRQ = DirectX::XMQuaternionRotationRollPitchYawFromVector( currR.mPitchYawRoll );
+					DirectX::XMVECTOR newRQ = DirectX::XMQuaternionMultiply( deltaQuat, currRQ );
+					currR.mPitchYawRoll = QuatToPitchYawRoll( { .v = newRQ } );
 				}
 			}
 		}
