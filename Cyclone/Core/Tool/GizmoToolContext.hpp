@@ -28,7 +28,8 @@ namespace Cyclone::Core::Tool
 		enum class ETransformType
 		{
 			Translate,
-			Rotate
+			Rotate,
+			COUNT
 		};
 
 		// void Activate() ????
