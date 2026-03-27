@@ -695,6 +695,8 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotatePerspective( Cyclone::Co
 					DirectX::XMVECTOR currRQ = DirectX::XMQuaternionRotationRollPitchYawFromVector( currR.mPitchYawRoll );
 					DirectX::XMVECTOR newRQ = DirectX::XMQuaternionMultiply( deltaQuat, currRQ );
 					currR.mPitchYawRoll = QuatToPitchYawRoll( { .v = newRQ } );
+
+					registry.get<LocalBounds>( entity ).UpdateBoundingBox( entity, registry );
 				}
 			}
 		}
