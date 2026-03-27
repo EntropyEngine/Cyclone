@@ -65,5 +65,9 @@ namespace Cyclone
 
 		std::unique_ptr<Cyclone::UI::MainUI>			mMainUI;
 		std::unique_ptr<Cyclone::Core::LevelInterface>	mLevelInterface;
+
+		float											mClearTimer{ 0.0f };
+		int												mMaxIndexCount{ 0 };
+		int												mMaxVertexCount{ 0 };
 	};
 }

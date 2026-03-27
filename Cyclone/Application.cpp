@@ -112,14 +112,6 @@ void Cyclone::Application::GetDefaultSize( int &outWidth, int &outHeight ) const
 
 void Cyclone::Application::Update( float inDeltaTime )
 {
-	if ( ImGui::GetFrameCount() % 120 == 0 ) {
-		ImGui_ImplDX11_InvalidateDeviceObjects();
-		ImGuiContext *g = ImGui::GetCurrentContext();
-		for ( ImGuiWindow* window : g->Windows ) {
-			ImGui::GcCompactTransientWindowBuffers( window );
-		}
-		g->GcCompactAll = true;
-	}
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
@@ -145,6 +137,31 @@ void Cyclone::Application::Render()
 	}
 
 	Present();
+
+	ImDrawData *imguiDrawData = ImGui::GetDrawData();
+
+	mMaxIndexCount = std::max( mMaxIndexCount, imguiDrawData->TotalIdxCount );
+	mMaxVertexCount = std::max( mMaxVertexCount, imguiDrawData->TotalVtxCount );
+
+	float indexRatio = mMaxIndexCount / static_cast<float>( imguiDrawData->TotalIdxCount );
+	float vertexRatio = mMaxVertexCount / static_cast<float>( imguiDrawData->TotalVtxCount );
+
+	mClearTimer += ImGui::GetIO().DeltaTime * std::max( indexRatio, vertexRatio );
+
+	if ( mClearTimer > 30 ) {
+		mMaxIndexCount = 0;
+		mMaxVertexCount = 0;
+		mClearTimer = 0;
+
+		ImGui_ImplDX11_InvalidateDeviceObjects();
+		ImGuiContext *g = ImGui::GetCurrentContext();
+		for ( ImGuiWindow* window : g->Windows ) {
+			ImGui::GcCompactTransientWindowBuffers( window );
+		}
+		g->GcCompactAll = true;
+
+		OutputDebugStringA( "Cleared buffers\n" );
+	}
 }
 
 void Cyclone::Application::Clear()
