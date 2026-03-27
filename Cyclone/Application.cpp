@@ -70,6 +70,7 @@ void Cyclone::Application::Initialize( HWND inWindow, int inWidth, int inHeight 
 	ImGuizmo::GetStyle().Colors[ImGuizmo::COLOR::DIRECTION_X] = { 1.0f, 0.0f, 0.0f, 1.0f };
 	ImGuizmo::GetStyle().Colors[ImGuizmo::COLOR::DIRECTION_Y] = { 0.0f, 1.0f, 0.0f, 1.0f };
 	ImGuizmo::GetStyle().Colors[ImGuizmo::COLOR::DIRECTION_Z] = { 0.0f, 0.0f, 1.0f, 1.0f };
+	ImGuizmo::GetStyle().RotationLineThickness = 3.0f;
 }
 
 void Cyclone::Application::Tick()

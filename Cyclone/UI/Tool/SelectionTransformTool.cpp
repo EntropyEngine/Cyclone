@@ -151,6 +151,7 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnDraw( Cyclone::Core::Le
 	const float offsetY = inViewportData.mViewSize.y / 2.0f + inViewportData.mViewOrigin.y;
 
 	ImDrawList *drawList = inViewportData.mDrawList;
+	drawList->ChannelsSetCurrent( 1 );
 
 	if ( !selectedEntities.empty() ) {
 		Vector4D selectionBoxMinRebased = transformContext.GetSelectionMin() - orthographicContext.mCenter2D;

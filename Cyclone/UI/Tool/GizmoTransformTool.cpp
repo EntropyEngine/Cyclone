@@ -6,6 +6,7 @@
 
 // Compontnts
 #include "Cyclone/Core/Component/Rotation.hpp"
+#include "Cyclone/Core/Component/BoundingBox.hpp"
 #include "Cyclone/Core/Component/LocalBounds.hpp"
 
 // DX includes
@@ -20,6 +21,7 @@
 
 using Cyclone::Math::Vector4D;
 using Cyclone::Core::Component::Position;
+using Cyclone::Core::Component::BoundingBox;
 using Cyclone::Core::Component::Rotation;
 using Cyclone::Core::Component::LocalBounds;
 using Cyclone::Core::Tool::GizmoToolContext;
@@ -206,21 +208,24 @@ namespace
 
 void Cyclone::UI::Tool::GizmoTransformTool::OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
 {
-	if ( inLevelInterface->GetGizmoCtx().mTransformType == GizmoToolContext::ETransformType::Translate ) {
-		switch ( inType ) {
-			case EViewportType::TopXZ: UpdateTranslateOrthographic<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
-			case EViewportType::FrontXY: UpdateTranslateOrthographic<EViewportType::FrontXY>( inLevelInterface, inViewportData ); break;
-			case EViewportType::SideYZ: UpdateTranslateOrthographic<EViewportType::SideYZ>( inLevelInterface, inViewportData ); break;
-			case EViewportType::Perspective: UpdateTranslatePerspective( inLevelInterface, inViewportData ); break;
+	if ( mIsSelected ) {
+		inViewportData.mDrawList->ChannelsSetCurrent( 3 );
+		if ( inLevelInterface->GetGizmoCtx().mTransformType == GizmoToolContext::ETransformType::Translate ) {
+			switch ( inType ) {
+				case EViewportType::TopXZ: UpdateTranslateOrthographic<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
+				case EViewportType::FrontXY: UpdateTranslateOrthographic<EViewportType::FrontXY>( inLevelInterface, inViewportData ); break;
+				case EViewportType::SideYZ: UpdateTranslateOrthographic<EViewportType::SideYZ>( inLevelInterface, inViewportData ); break;
+				case EViewportType::Perspective: UpdateTranslatePerspective( inLevelInterface, inViewportData ); break;
+			}
 		}
-	}
 
-	if ( inLevelInterface->GetGizmoCtx().mTransformType == GizmoToolContext::ETransformType::Rotate ) {
-		switch ( inType ) {
-			case EViewportType::TopXZ: UpdateRotateOrthographic<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
-			case EViewportType::FrontXY: UpdateRotateOrthographic<EViewportType::FrontXY>( inLevelInterface, inViewportData ); break;
-			case EViewportType::SideYZ: UpdateRotateOrthographic<EViewportType::SideYZ>( inLevelInterface, inViewportData ); break;
-			case EViewportType::Perspective: UpdateRotatePerspective( inLevelInterface, inViewportData ); break;
+		if ( inLevelInterface->GetGizmoCtx().mTransformType == GizmoToolContext::ETransformType::Rotate ) {
+			switch ( inType ) {
+				case EViewportType::TopXZ: UpdateRotateOrthographic<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
+				case EViewportType::FrontXY: UpdateRotateOrthographic<EViewportType::FrontXY>( inLevelInterface, inViewportData ); break;
+				case EViewportType::SideYZ: UpdateRotateOrthographic<EViewportType::SideYZ>( inLevelInterface, inViewportData ); break;
+				case EViewportType::Perspective: UpdateRotatePerspective( inLevelInterface, inViewportData ); break;
+			}
 		}
 	}
 }
@@ -255,7 +260,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslateOrthographic( Cyclone
 
 		ImGuizmo::SetGizmoSizeClipSpace( 128.0f / std::max( inViewportData.mViewSize.x, inViewportData.mViewSize.y ) );
 
-		ImGuizmo::PushID( static_cast<int>( T ) );
+		ImGuizmo::PushID( GetTypedID<T>( selectedEntity, ImGuizmo::MT_MOVE_X ) );
 		ImGuizmo::SetRect( inViewportData.mViewOrigin.x, inViewportData.mViewOrigin.y, inViewportData.mViewSize.x, inViewportData.mViewSize.y );
 		ImGuizmo::SetDrawlist( inViewportData.mDrawList );
 		ImGuizmo::SetOrthographic( true );
@@ -271,7 +276,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslateOrthographic( Cyclone
 		ImGuizmo::PopID();
 	}
 
-	ImGuizmo::PushID( static_cast<int>( T ) );
+	ImGuizmo::PushID( GetTypedID<T>( selectedEntity, ImGuizmo::MT_MOVE_X ) );
 	if ( mIsSelected && inViewportData.mIsActive && ImGuizmo::IsUsing() && selectedEntity != entt::null ) {
 		if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
 			assert( gizmoContext.mActiveEntity == entt::null && "Active entity already set!" );
@@ -375,7 +380,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslatePerspective( Cyclone:
 
 		ImGuizmo::SetGizmoSizeClipSpace( 128.0f / std::max( inViewportData.mViewSize.x, inViewportData.mViewSize.y ) );
 
-		ImGuizmo::PushID( static_cast<int>( EViewportType::Perspective ) );
+		ImGuizmo::PushID( GetTypedID<EViewportType::Perspective>( selectedEntity, ImGuizmo::MT_MOVE_X ) );
 		ImGuizmo::SetRect( inViewportData.mViewOrigin.x, inViewportData.mViewOrigin.y, inViewportData.mViewSize.x, inViewportData.mViewSize.y );
 		ImGuizmo::SetDrawlist( inViewportData.mDrawList );
 		ImGuizmo::SetOrthographic( false );
@@ -388,8 +393,8 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslatePerspective( Cyclone:
 
 		ImGuizmo::PopID();
 	}
-
-	ImGuizmo::PushID( static_cast<int>( EViewportType::Perspective ) );
+	
+	ImGuizmo::PushID( GetTypedID<EViewportType::Perspective>( selectedEntity, ImGuizmo::MT_MOVE_X ) );
 	if ( mIsSelected && inViewportData.mIsActive && ImGuizmo::IsUsing() && selectedEntity != entt::null ) {
 		if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
 			assert( gizmoContext.mActiveEntity == entt::null && "Active entity already set!" );
@@ -538,7 +543,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotatePerspective( Cyclone::Co
 
 		ImGuizmo::SetGizmoSizeClipSpace( 128.0f / std::max( inViewportData.mViewSize.x, inViewportData.mViewSize.y ) );
 
-		ImGuizmo::PushID( static_cast<int>( EViewportType::Perspective ) );
+		ImGuizmo::PushID( GetTypedID<EViewportType::Perspective>( selectedEntity, ImGuizmo::MT_ROTATE_X ) );
 		ImGuizmo::SetRect( inViewportData.mViewOrigin.x, inViewportData.mViewOrigin.y, inViewportData.mViewSize.x, inViewportData.mViewSize.y );
 		ImGuizmo::SetDrawlist( inViewportData.mDrawList );
 		ImGuizmo::SetOrthographic( false );
@@ -585,21 +590,10 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotatePerspective( Cyclone::Co
 
 					auto newc = DirectX::XMVector3TransformCoord( ( currP.mValue - gizmoContext.mInitialEntityPosition ).ToXMVECTOR(), DirectX::XMMatrixRotationQuaternion( deltaQuat ) );
 					currP.mValue += Vector4D::sFromXMVECTOR( newc ) - ( currP.mValue - gizmoContext.mInitialEntityPosition );
+
+					// TODO: ROTATOE
 				}
 			}
-
-			DirectX::XMVECTORF32 row0 = { .v = modelMatrix.r[0] };
-			DirectX::XMVECTORF32 row1 = { .v = modelMatrix.r[1] };
-			DirectX::XMVECTORF32 row2 = { .v = modelMatrix.r[2] };
-			DirectX::XMVECTORF32 row3 = { .v = modelMatrix.r[3] };
-
-			ImGui::SetTooltip(
-				"[%.2f, %.2f, %.2f, %.2f]\n[%.2f, %.2f, %.2f, %.2f]\n[%.2f, %.2f, %.2f, %.2f]\n[%.2f, %.2f, %.2f, %.2f]",
-				row0.f[0], row0.f[1], row0.f[2], row0.f[3],
-				row1.f[0], row1.f[1], row1.f[2], row1.f[3],
-				row2.f[0], row2.f[1], row2.f[2], row2.f[3],
-				row3.f[0], row3.f[1], row3.f[2], row3.f[3]
-			);
 		}
 		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) && gizmoContext.mActiveEntity != entt::null ) {
 			for ( const entt::entity entity : selectedEntities ) {

@@ -6,6 +6,9 @@
 // Cyclone Math
 #include "Cyclone/Math/Vector.hpp"
 
+// STL
+#include <bit>
+
 namespace Cyclone::Core {
 	class LevelInterface;
 }
@@ -19,7 +22,7 @@ namespace Cyclone::UI::Tool
 		virtual ECategory	GetCategory() const override { return ECategory::Object; }
 
 		virtual void		OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override;
-		virtual void		OnDraw( EViewportType, Cyclone::Core::LevelInterface *, const ViewportData & ) override {}
+		virtual void		OnDraw( EViewportType, Cyclone::Core::LevelInterface *, const ViewportData & ) override {};
 		virtual void		OnRender( EViewportType, Cyclone::Core::LevelInterface *, const ViewportData &, DrawType * ) override {};
 
 		struct				TranslateInput
@@ -47,5 +50,12 @@ namespace Cyclone::UI::Tool
 		void				UpdateRotateOrthographic( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
 		void				UpdateRotatePerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
 		void				UpdateRotate( Cyclone::Core::LevelInterface *inLevelInterface, const TranslateInput &inInput, const TranslateOutput &inOutput );
+
+		template<EViewportType T>
+		int					GetTypedID( entt::entity inEntity, int prefix )
+		{
+			static constexpr int shift = std::popcount( entt::entt_traits<entt::entity>::entity_mask );
+			return ( static_cast<int>( T ) << shift ) + ( prefix << ( shift + 2 ) ) + static_cast<int>( inEntity );
+		}
 	};
 }

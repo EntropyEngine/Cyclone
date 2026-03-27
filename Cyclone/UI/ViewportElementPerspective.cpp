@@ -120,6 +120,8 @@ void Cyclone::UI::ViewportElementPerspective::DrawGizmos( float inDeltaTime, Cyc
 	for ( auto &tool : inTools ) {
 		tool->OnDraw( EViewportType::Perspective, inLevelInterface, mViewportData );
 	}
+
+	mViewportData.mDrawList->ChannelsMerge();
 }
 
 void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )

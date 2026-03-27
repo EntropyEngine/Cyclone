@@ -57,6 +57,10 @@ void Cyclone::UI::ViewportElement::UpdateViewportData()
 	if ( mTargetMSAA->GetSampleCount() <= 1 ) {
 		mViewportData.mDrawList->Flags &= ~( ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedLinesUseTex | ImDrawListFlags_AntiAliasedFill );
 	}
+
+	// Split channels into 4 planes
+	mViewportData.mDrawList->ChannelsSplit( 4 );
+	mViewportData.mDrawList->ChannelsSetCurrent( 0 );
 }
 
 ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetOrResizeSRV( size_t inWidth, size_t inHeight )

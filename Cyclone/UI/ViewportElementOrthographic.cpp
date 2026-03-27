@@ -191,6 +191,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawGizmos( float inDeltaTime,
 	for ( auto &tool : inTools ) {
 		tool->OnDraw( T, inLevelInterface, mViewportData );
 	}
+
+	mViewportData.mDrawList->ChannelsMerge();
 }
 
 template<Cyclone::UI::EViewportType T>
@@ -338,10 +340,6 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::L
 	ImVec2 inViewSize = mViewportData.mViewSize;
 	ImVec2 inViewOrigin = mViewportData.mViewOrigin;
 
-	// Split channels into 3 planes
-	drawList->ChannelsSplit( 3 );
-	drawList->ChannelsSetCurrent( 0 );
-
 	// Get smaller font for debug text
 	ImGuiIO &io = ImGui::GetIO();
 	ImFont* narrowFont = io.Fonts->Fonts[1];
@@ -420,8 +418,6 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawEntities( Cyclone::Core::L
 		//	registry.emplace<ViewportTypeTraits<T>::DrawTag>( entity );
 		//}
 	}
-
-	drawList->ChannelsMerge();
 }
 
 template class Cyclone::UI::ViewportElementOrthographic<Cyclone::UI::EViewportType::TopXZ>;

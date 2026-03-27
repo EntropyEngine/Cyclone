@@ -67,7 +67,7 @@ namespace Cyclone::Core::Tool
 		// Entity original position
 		// Mouse original position
 
-		ETransformType			mTransformType = ETransformType::Rotate;
+		ETransformType			mTransformType = ETransformType::Translate;
 		uint32_t				mCurrentAxis = ETransformAxis::None;
 		entt::entity			mActiveEntity = entt::null;
 		Cyclone::Math::Vector4D mInitialEntityPosition = Cyclone::Math::Vector4D::sZero();
