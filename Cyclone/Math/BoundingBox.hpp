@@ -36,7 +36,7 @@ namespace Cyclone::Math
 			const T maxB = inRhs.mCenter + inRhs.mExtent;
 
 			const auto disjoint = T::sBitwiseOr( T::sGreater( minA, maxB ), T::sGreater( minB, maxA ) );
-			return !( T::sAnyTrue( disjoint ) );
+			return !( T::sAnyTrue3( disjoint ) );
 		}
 	};
 }

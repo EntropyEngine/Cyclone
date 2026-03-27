@@ -115,6 +115,7 @@ namespace Cyclone::Math
 
 		static Vector4D XM_CALLCONV sBitwiseOr( Vector4D inLhs, Vector4D inRhs ) { return _mm256_or_pd( inLhs, inRhs ); } /// @note returns bitmask
 		static bool XM_CALLCONV sAnyTrue( Vector4D inV ) { return _mm256_movemask_pd( inV ) != 0x0; }
+		static bool XM_CALLCONV sAnyTrue3( Vector4D inV ) { return ( _mm256_movemask_pd( inV ) & 0b111 ) != 0x0; }
 		/// @}
 
 		/// @name Dot Products

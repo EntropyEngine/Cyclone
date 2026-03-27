@@ -560,6 +560,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotatePerspective( Cyclone::Co
 				entityManager.BeginAction();
 
 				gizmoContext.mCurrentAxis = RotateAxisFromMoveType( ImGuizmo::GetMoveType() );
+				gizmoContext.mInitialEntityPosition = registry.get<Position>( selectedEntity ).mValue;
 				gizmoContext.mInitialEntityRotation = registry.get<Rotation>( selectedEntity ).mPitchYawRoll;
 				gizmoContext.mActiveEntity = selectedEntity;
 			}
@@ -569,11 +570,36 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotatePerspective( Cyclone::Co
 			DirectX::XMVECTORF32 translation;
 
 			DirectX::XMMatrixDecompose( &scale.v, &rotationQuat.v, &translation.v, modelMatrix );
-			//ImGuizmo::DecomposeMatrixToComponents( reinterpret_cast<float *>( &modelMatrix ), translation.f, rotation.f, scale.f );
 
-			// Quick and dirty
+			DirectX::XMVECTOR newQuat = rotationQuat;
+			DirectX::XMVECTOR origQuat = DirectX::XMQuaternionRotationRollPitchYawFromVector( registry.get<Rotation>( selectedEntity ).mPitchYawRoll );
+
+			DirectX::XMVECTOR deltaQuat = DirectX::XMQuaternionMultiply( DirectX::XMQuaternionInverse( origQuat ), newQuat );
+
 			registry.get<Rotation>( selectedEntity ).mPitchYawRoll = QuatToPitchYawRoll( rotationQuat );
 			registry.get<LocalBounds>( selectedEntity ).UpdateBoundingBox( selectedEntity, registry );
+
+			for ( entt::entity entity : selectedEntities ) {
+				if ( entity != selectedEntity ) {
+					auto &currP = registry.get<Position>( entity );
+
+					auto newc = DirectX::XMVector3TransformCoord( ( currP.mValue - gizmoContext.mInitialEntityPosition ).ToXMVECTOR(), DirectX::XMMatrixRotationQuaternion( deltaQuat ) );
+					currP.mValue += Vector4D::sFromXMVECTOR( newc ) - ( currP.mValue - gizmoContext.mInitialEntityPosition );
+				}
+			}
+
+			DirectX::XMVECTORF32 row0 = { .v = modelMatrix.r[0] };
+			DirectX::XMVECTORF32 row1 = { .v = modelMatrix.r[1] };
+			DirectX::XMVECTORF32 row2 = { .v = modelMatrix.r[2] };
+			DirectX::XMVECTORF32 row3 = { .v = modelMatrix.r[3] };
+
+			ImGui::SetTooltip(
+				"[%.2f, %.2f, %.2f, %.2f]\n[%.2f, %.2f, %.2f, %.2f]\n[%.2f, %.2f, %.2f, %.2f]\n[%.2f, %.2f, %.2f, %.2f]",
+				row0.f[0], row0.f[1], row0.f[2], row0.f[3],
+				row1.f[0], row1.f[1], row1.f[2], row1.f[3],
+				row2.f[0], row2.f[1], row2.f[2], row2.f[3],
+				row3.f[0], row3.f[1], row3.f[2], row3.f[3]
+			);
 		}
 		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) && gizmoContext.mActiveEntity != entt::null ) {
 			for ( const entt::entity entity : selectedEntities ) {
