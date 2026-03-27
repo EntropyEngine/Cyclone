@@ -602,6 +602,8 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotateOrthographic( Cyclone::C
 					DirectX::XMVECTOR currRQ = DirectX::XMQuaternionRotationRollPitchYawFromVector( currR.mPitchYawRoll );
 					DirectX::XMVECTOR newRQ = DirectX::XMQuaternionMultiply( deltaQuat, currRQ );
 					currR.mPitchYawRoll = DirectX::XMVectorScale( DirectX::XMVectorRound( DirectX::XMVectorScale( QuatToPitchYawRoll( { .v = newRQ } ), ( 180.0f / DirectX::XM_PI ) / 15 ) ), 15 * ( DirectX::XM_PI / 180.0f ) );
+
+					registry.get<LocalBounds>( entity ).UpdateBoundingBox( entity, registry );
 				}
 			}
 		}

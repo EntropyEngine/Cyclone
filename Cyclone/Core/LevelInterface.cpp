@@ -34,13 +34,20 @@ void Cyclone::Core::LevelInterface::Initialize()
 
 	mEntityManager.EndAction( GetRegistry() );
 
-	//mEntityManager.BeginAction();
-	//for ( int x = 0; x < 128; ++x ) {
-	//	for ( int y = 0; y < 128; ++y ) {
-	//		mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 2.0, 0.0, 2.0 } );
-	//	}
-	//}
-	//mEntityManager.EndAction( GetRegistry() );
+	mEntityManager.BeginAction();
+
+#ifdef _DEBUG
+	int nent = 32;
+#else
+	int nent = 128;
+#endif
+
+	for ( int x = 0; x < nent; ++x ) {
+		for ( int y = 0; y < nent; ++y ) {
+			mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 2.0, 0.0, 2.0 } );
+		}
+	}
+	mEntityManager.EndAction( GetRegistry() );
 }
 
 void Cyclone::Core::LevelInterface::SetDevice( ID3D11Device3 *inDevice )
