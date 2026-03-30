@@ -59,8 +59,6 @@ Cyclone::UI::ViewportManager::ViewportManager()
 	mViewportTop = std::make_unique<ViewportElementOrthographic<EViewportType::TopXZ>>( rtvFormat, dsvFormat, clearColor, mAntialiasingEnabled );
 	mViewportFront = std::make_unique<ViewportElementOrthographic<EViewportType::FrontXY>>( rtvFormat, dsvFormat, clearColor, mAntialiasingEnabled );
 	mViewportSide = std::make_unique<ViewportElementOrthographic<EViewportType::SideYZ>>( rtvFormat, dsvFormat, clearColor, mAntialiasingEnabled );
-
-	mSidebar.Init();
 }
 
 void Cyclone::UI::ViewportManager::SetDevice( ID3D11Device3 *inDevice )
@@ -78,12 +76,7 @@ void Cyclone::UI::ViewportManager::MenuBarUpdate()
 	if ( ImGui::MenuItem( "Autosize Viewports", "Ctrl+A" ) ) mShouldAutosize = true;
 }
 
-void Cyclone::UI::ViewportManager::SideBarUpdate( Cyclone::Core::LevelInterface *inLevelInterface )
-{
-	mSidebar.Update( inLevelInterface );
-}
-
-void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
 {
 	ImGuiWindowFlags viewportFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking;
 	ImVec2 viewSizePerspective, viewSizeTop, viewSizeFront, viewSizeSide;
@@ -169,25 +162,25 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	{
 		ImGui::SetNextWindowSizeConstraints( viewSizePerspective, viewSizePerspective );
 		if ( ImGui::BeginChild( "PerspectiveView", viewSizePerspective ) ) {
-			mViewportPerspective->UpdateTools( inDeltaTime, inLevelInterface, mSidebar.GetTools() );
+			mViewportPerspective->UpdateTools( inDeltaTime, inLevelInterface, inTools );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeTop, viewSizeTop );
 		if ( ImGui::BeginChild( "TopView", viewSizeTop ) ) {
-			mViewportTop->UpdateTools( inDeltaTime, inLevelInterface, mSidebar.GetTools() );
+			mViewportTop->UpdateTools( inDeltaTime, inLevelInterface, inTools );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeFront, viewSizeFront );
 		if ( ImGui::BeginChild( "FrontView", viewSizeFront ) ) {
-			mViewportFront->UpdateTools( inDeltaTime, inLevelInterface, mSidebar.GetTools() );
+			mViewportFront->UpdateTools( inDeltaTime, inLevelInterface, inTools );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeSide, viewSizeSide );
 		if ( ImGui::BeginChild( "SideView", viewSizeSide ) ) {
-			mViewportSide->UpdateTools( inDeltaTime, inLevelInterface, mSidebar.GetTools() );
+			mViewportSide->UpdateTools( inDeltaTime, inLevelInterface, inTools );
 		}
 		ImGui::EndChild();
 	}
@@ -196,40 +189,40 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 	{
 		ImGui::SetNextWindowSizeConstraints( viewSizePerspective, viewSizePerspective );
 		if ( ImGui::BeginChild( "PerspectiveView", viewSizePerspective ) ) {
-			mViewportPerspective->DrawGizmos( inDeltaTime, inLevelInterface, mSidebar.GetTools() );
+			mViewportPerspective->DrawGizmos( inDeltaTime, inLevelInterface, inTools );
 			DrawViewportOverlay( "Perspective" );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeTop, viewSizeTop );
 		if ( ImGui::BeginChild( "TopView", viewSizeTop ) ) {
-			mViewportTop->DrawGizmos( inDeltaTime, inLevelInterface, mSidebar.GetTools() );
+			mViewportTop->DrawGizmos( inDeltaTime, inLevelInterface, inTools );
 			DrawViewportOverlay( "Top (X/Z)" );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeFront, viewSizeFront );
 		if ( ImGui::BeginChild( "FrontView", viewSizeFront ) ) {
-			mViewportFront->DrawGizmos( inDeltaTime, inLevelInterface, mSidebar.GetTools() );
+			mViewportFront->DrawGizmos( inDeltaTime, inLevelInterface, inTools );
 			DrawViewportOverlay( "Front (X/Y)" );
 		}
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowSizeConstraints( viewSizeSide, viewSizeSide );
 		if ( ImGui::BeginChild( "SideView", viewSizeSide ) ) {
-			mViewportSide->DrawGizmos( inDeltaTime, inLevelInterface, mSidebar.GetTools() );
+			mViewportSide->DrawGizmos( inDeltaTime, inLevelInterface, inTools );
 			DrawViewportOverlay( "Side (Y/Z)" );
 		}
 		ImGui::EndChild();
 	}
 }
 
-void Cyclone::UI::ViewportManager::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::ViewportManager::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
 {
-	mViewportPerspective->Render( inDeviceContext, inLevelInterface, mSidebar.GetTools() );
-	mViewportTop->Render( inDeviceContext, inLevelInterface, mSidebar.GetTools() );
-	mViewportFront->Render( inDeviceContext, inLevelInterface, mSidebar.GetTools() );
-	mViewportSide->Render( inDeviceContext, inLevelInterface, mSidebar.GetTools() );
+	mViewportPerspective->Render( inDeviceContext, inLevelInterface, inTools );
+	mViewportTop->Render( inDeviceContext, inLevelInterface, inTools );
+	mViewportFront->Render( inDeviceContext, inLevelInterface, inTools );
+	mViewportSide->Render( inDeviceContext, inLevelInterface, inTools );
 }
 
 void Cyclone::UI::ViewportManager::ToggleAntialiasing( bool inEnabled )

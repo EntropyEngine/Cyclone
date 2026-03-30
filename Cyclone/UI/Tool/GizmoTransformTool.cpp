@@ -228,12 +228,12 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdate( EViewportType inType, Cycl
 				case EViewportType::Perspective: UpdateRotatePerspective( inLevelInterface, inViewportData ); break;
 			}
 		}
-
-		// TODO: ADD SHORTCUT METHODS
-		if ( inLevelInterface->GetEntityManager().CanAquireActionLock() && inViewportData.mIsActive ) {
-			if ( ImGui::IsKeyChordPressed( ImGuiKey_Tab ) ) inLevelInterface->GetGizmoCtx().mTransformType = static_cast<GizmoToolContext::ETransformType>( ( static_cast<int>( inLevelInterface->GetGizmoCtx().mTransformType ) + 1 ) % static_cast<int>( GizmoToolContext::ETransformType::COUNT ) );
-		}
 	}
+}
+
+void Cyclone::UI::Tool::GizmoTransformTool::OnShortcut( Cyclone::Core::LevelInterface * inLevelInterface )
+{
+	if ( ImGui::IsKeyChordPressed( ImGuiKey_Tab ) ) inLevelInterface->GetGizmoCtx().mTransformType = static_cast<GizmoToolContext::ETransformType>( ( static_cast<int>( inLevelInterface->GetGizmoCtx().mTransformType ) + 1 ) % static_cast<int>( GizmoToolContext::ETransformType::COUNT ) );
 }
 
 template<Cyclone::UI::EViewportType T>

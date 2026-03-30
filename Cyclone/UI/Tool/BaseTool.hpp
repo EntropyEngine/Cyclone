@@ -31,6 +31,13 @@ namespace Cyclone::UI::Tool
 		"Mesh"
 	};
 
+	enum class ESelectMode
+	{
+		ToggleInCategory,	///< Can be toggled on or off, will deselect tools in other categories
+		SelectInCategory,	///< Can be selected in a category, will deselect tools in other categories and other non-toggleable tools in this category
+		UniqueInCategory,	///< Cab be selected in a category, will deselect all other tools
+	};
+
 	enum class EDrawMode
 	{
 		Always,			///< Drawing is always enabled

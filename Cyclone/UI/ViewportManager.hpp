@@ -28,9 +28,8 @@ namespace Cyclone::UI
 		void SetDevice( ID3D11Device3 *inDevice );
 
 		void MenuBarUpdate();
-		void SideBarUpdate( Cyclone::Core::LevelInterface *inLevelInterface );
-		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface );
-		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface );
+		void Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools );
+		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools );
 
 		void ResizeViewports() { mShouldAutosize = true; }
 		void ToggleAntialiasing( bool inEnabled );

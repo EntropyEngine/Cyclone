@@ -22,6 +22,7 @@ namespace Cyclone::UI::Tool
 		virtual ECategory	GetCategory() const override { return ECategory::Object; }
 
 		virtual void		OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override;
+		virtual void		OnShortcut( Cyclone::Core::LevelInterface *inLevelInterface ) override;
 
 		struct				TranslateInput
 		{

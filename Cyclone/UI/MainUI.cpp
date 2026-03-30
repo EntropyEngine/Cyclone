@@ -10,6 +10,7 @@
 #include "Cyclone/UI/ViewportManager.hpp"
 #include "Cyclone/UI/Outliner.hpp"
 #include "Cyclone/UI/Toolbar.hpp"
+#include "Cyclone/UI/Sidebar.hpp"
 #include "Cyclone/UI/ObjectProperties.hpp"
 
 // Cyclone Utils
@@ -33,6 +34,8 @@ void Cyclone::UI::MainUI::Initialize()
 	mViewportManager = std::make_unique<Cyclone::UI::ViewportManager>();
 	mOutliner = std::make_unique<Cyclone::UI::Outliner>();
 	mToolbar = std::make_unique<Cyclone::UI::Toolbar>();
+	mSidebar = std::make_unique<Cyclone::UI::Sidebar>();
+	mSidebar->Init();
 }
 
 void Cyclone::UI::MainUI::SetDevice( ID3D11Device3 *inDevice )
@@ -94,7 +97,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	ImGui::SetNextWindowPos( { viewport->WorkPos.x, viewport->WorkPos.y + kToolbarHeight } );
 	ImGui::SetNextWindowSize( { kSidebarWidth, viewport->WorkSize.y - kToolbarHeight } );
 	if ( ImGui::Begin( "SideBar", nullptr, windowFlags ) ) {
-		mViewportManager->SideBarUpdate( inLevelInterface );
+		mSidebar->Update( inLevelInterface );
 	}
 	ImGui::End();
 
@@ -105,7 +108,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f } );
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowBorderSize, 0.0f );
 	if ( ImGui::Begin( "MainWindow", nullptr, windowFlags | ImGuiWindowFlags_NoDecoration ) ) {
-		mViewportManager->Update( inDeltaTime, inLevelInterface );
+		mViewportManager->Update( inDeltaTime, inLevelInterface, mSidebar->GetTools() );
 	}
 	ImGui::End();
 	ImGui::PopStyleVar( 3 );
@@ -162,6 +165,10 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 				}
 				entityManager.EndAction( registry );
 			}
+
+			for ( const auto &tool : mSidebar->GetTools() ) {
+				tool->OnShortcut( inLevelInterface );
+			}
 		}
 	}
 
@@ -172,5 +179,5 @@ void Cyclone::UI::MainUI::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone
 {
 	if ( ImGui::GetFrameCount() <= 1 ) return;
 
-	mViewportManager->Render( inDeviceContext, inLevelInterface );
+	mViewportManager->Render( inDeviceContext, inLevelInterface, mSidebar->GetTools() );
 }
