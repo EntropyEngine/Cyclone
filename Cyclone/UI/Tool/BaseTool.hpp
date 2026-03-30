@@ -49,9 +49,13 @@ namespace Cyclone::UI::Tool
 		virtual const char *GetDebugName() const = 0;
 		virtual ECategory	GetCategory() const = 0;
 
-		virtual void		OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) = 0;
-		virtual void		OnDraw( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) = 0;
-		virtual void		OnRender( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData, DrawType *inPrimitiveBatch ) = 0;
+	#pragma warning(push)
+	#pragma warning(disable: 4100)
+		virtual void		OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) {};
+		virtual void		OnDraw( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) {};
+		virtual void		OnRender( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData, DrawType *inPrimitiveBatch ) {};
+		virtual void		OnShortcut( Cyclone::Core::LevelInterface *inLevelInterface ) {}
+	#pragma warning(pop)
 
 		// TODO
 		// TODO: MUST ADD "DISABLE NAVIGATION WHILE UPDATING" FLAG!!!

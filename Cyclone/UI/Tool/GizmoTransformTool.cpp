@@ -210,6 +210,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::OnUpdate( EViewportType inType, Cycl
 {
 	if ( mIsSelected ) {
 		inViewportData.mDrawList->ChannelsSetCurrent( 3 );
+
 		if ( inLevelInterface->GetGizmoCtx().mTransformType == GizmoToolContext::ETransformType::Translate ) {
 			switch ( inType ) {
 				case EViewportType::TopXZ: UpdateTranslateOrthographic<EViewportType::TopXZ>( inLevelInterface, inViewportData ); break;
@@ -241,12 +242,10 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslateOrthographic( Cyclone
 	static constexpr size_t AxisU = ViewportTypeTraits<T>::AxisU;
 	static constexpr size_t AxisV = ViewportTypeTraits<T>::AxisV;
 
-	const auto &gridContext = inLevelInterface->GetGridCtx();
 	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 
 	auto &entityManager = inLevelInterface->GetEntityManager();
-	auto &transformContext = inLevelInterface->GetSelectionTransformCtx();
 
 	auto &gizmoContext = inLevelInterface->GetGizmoCtx();
 
@@ -713,6 +712,4 @@ void XM_CALLCONV Cyclone::UI::Tool::GizmoTransformTool::UpdateRotate( Cyclone::C
 			registry.get<LocalBounds>( entity ).UpdateBoundingBox( entity, registry );
 		}
 	}
-
-	__m128 a;
 }

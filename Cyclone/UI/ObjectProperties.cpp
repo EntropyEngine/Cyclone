@@ -16,8 +16,6 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 	entt::registry &registry = inLevelInterface->GetRegistry();
 	auto &entityManager = inLevelInterface->GetEntityManager();
 
-	const auto &gridContext = inLevelInterface->GetGridCtx();
-
 	bool dirty = false;
 
 	Position &position = registry.get<Position>( inEntity );

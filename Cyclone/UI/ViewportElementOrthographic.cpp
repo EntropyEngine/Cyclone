@@ -116,8 +116,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDelt
 	double worldSnapU = std::round( worldMouseU / gridContext.mGridSize ) * gridContext.mGridSize;
 	double worldSnapV = std::round( worldMouseV / gridContext.mGridSize ) * gridContext.mGridSize;
 
-	const char *uStr = std::array{ "x", "y", "z" }[AxisU];
-	const char *vStr = std::array{ "x", "y", "z" }[AxisV];
+	//const char *uStr = std::array{ "x", "y", "z" }[AxisU];
+	//const char *vStr = std::array{ "x", "y", "z" }[AxisV];
 
 	//ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImGuiStyle().WindowPadding );
 	//ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImGuiStyle().ItemSpacing );

@@ -57,12 +57,12 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 		Vector4D selectionBoxMaxRebased = transformContext.GetSelectionMax() - orthographicContext.mCenter2D;
 
 		ImVec2 selectedBoxMax;
-		selectedBoxMax.x = offsetX - static_cast<float>( selectionBoxMinRebased.Get<AxisU>() ) * invZoom;
-		selectedBoxMax.y = offsetY - static_cast<float>( selectionBoxMinRebased.Get<AxisV>() ) * invZoom;
+		selectedBoxMax.x = offsetX - static_cast<float>( selectionBoxMinRebased.Get<AxisU>() * invZoom );
+		selectedBoxMax.y = offsetY - static_cast<float>( selectionBoxMinRebased.Get<AxisV>() * invZoom );
 
 		ImVec2 selectedBoxMin;
-		selectedBoxMin.x = offsetX - static_cast<float>( selectionBoxMaxRebased.Get<AxisU>() ) * invZoom;
-		selectedBoxMin.y = offsetY - static_cast<float>( selectionBoxMaxRebased.Get<AxisV>() ) * invZoom;
+		selectedBoxMin.x = offsetX - static_cast<float>( selectionBoxMaxRebased.Get<AxisU>() * invZoom );
+		selectedBoxMin.y = offsetY - static_cast<float>( selectionBoxMaxRebased.Get<AxisV>() * invZoom );
 
 		ImGui::SetCursorPos( { selectedBoxMin.x - inViewportData.mViewOrigin.x, selectedBoxMin.y - inViewportData.mViewOrigin.y } );
 		ImGui::SetNextItemAllowOverlap();
@@ -158,12 +158,12 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnDraw( Cyclone::Core::Le
 		Vector4D selectionBoxMaxRebased = transformContext.GetSelectionMax() - orthographicContext.mCenter2D;
 
 		ImVec2 selectedBoxMax;
-		selectedBoxMax.x = offsetX - static_cast<float>( selectionBoxMinRebased.Get<AxisU>() ) * invZoom;
-		selectedBoxMax.y = offsetY - static_cast<float>( selectionBoxMinRebased.Get<AxisV>() ) * invZoom;
+		selectedBoxMax.x = offsetX - static_cast<float>( selectionBoxMinRebased.Get<AxisU>() * invZoom );
+		selectedBoxMax.y = offsetY - static_cast<float>( selectionBoxMinRebased.Get<AxisV>() * invZoom );
 
 		ImVec2 selectedBoxMin;
-		selectedBoxMin.x = offsetX - static_cast<float>( selectionBoxMaxRebased.Get<AxisU>() ) * invZoom;
-		selectedBoxMin.y = offsetY - static_cast<float>( selectionBoxMaxRebased.Get<AxisV>() ) * invZoom;
+		selectedBoxMin.x = offsetX - static_cast<float>( selectionBoxMaxRebased.Get<AxisU>() * invZoom );
+		selectedBoxMin.y = offsetY - static_cast<float>( selectionBoxMaxRebased.Get<AxisV>() * invZoom );
 
 		if ( selectedBoxMin.x > selectedBoxMax.x ) return;
 		if ( selectedBoxMin.y > selectedBoxMax.y ) return;
