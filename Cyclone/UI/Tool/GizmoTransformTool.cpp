@@ -559,7 +559,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotateOrthographic( Cyclone::C
 			DirectX::XMMatrixTranslationFromVector( entityCurrentPositionRel.ToXMVECTOR() )
 		);
 
-		ImGuizmo::OPERATION rotateOp[3] = {ImGuizmo::ROTATE_X, ImGuizmo::ROTATE_Y, ImGuizmo::ROTATE_Z};
+		ImGuizmo::OPERATION rotateOp[3] = {ImGuizmo::ROTATE_X, ImGuizmo::ROTATE_Y, ImGuizmo::ROTATE_Z };
 
 		float snap = 1;
 		ImGuizmo::Manipulate( reinterpret_cast<const float *>( &viewMatrix ), reinterpret_cast<const float *>( &projMatrix ), rotateOp[AxisW], ImGuizmo::WORLD, reinterpret_cast<float *>( &modelMatrix ), nullptr, &snap );
@@ -577,35 +577,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotateOrthographic( Cyclone::C
 				gizmoContext.mActiveEntity = selectedEntity;
 			}
 
-			DirectX::XMVECTORF32 rotationQuat;
-			DirectX::XMVECTORF32 scale;
-			DirectX::XMVECTORF32 translation;
-
-			DirectX::XMMatrixDecompose( &scale.v, &rotationQuat.v, &translation.v, modelMatrix );
-
-			DirectX::XMVECTOR newQuat = rotationQuat;
-			DirectX::XMVECTOR origQuat = DirectX::XMQuaternionRotationRollPitchYawFromVector( registry.get<Rotation>( selectedEntity ).mPitchYawRoll );
-
-			DirectX::XMVECTOR deltaQuat = DirectX::XMQuaternionMultiply( DirectX::XMQuaternionInverse( origQuat ), newQuat );
-
-			registry.get<Rotation>( selectedEntity ).mPitchYawRoll = DirectX::XMVectorScale( DirectX::XMVectorRound( DirectX::XMVectorScale( QuatToPitchYawRoll( rotationQuat ), ( 180.0f / DirectX::XM_PI ) / 1 ) ), 1 * ( DirectX::XM_PI / 180.0f ) );
-			registry.get<LocalBounds>( selectedEntity ).UpdateBoundingBox( selectedEntity, registry );
-
-			for ( entt::entity entity : selectedEntities ) {
-				if ( entity != selectedEntity ) {
-					auto &currP = registry.get<Position>( entity );
-					auto &currR = registry.get<Rotation>( entity );
-
-					auto newc = DirectX::XMVector3TransformCoord( ( currP.mValue - gizmoContext.mInitialEntityPosition ).ToXMVECTOR(), DirectX::XMMatrixRotationQuaternion( deltaQuat ) );
-					currP.mValue += Vector4D::sFromXMVECTOR( newc ) - ( currP.mValue - gizmoContext.mInitialEntityPosition );
-
-					DirectX::XMVECTOR currRQ = DirectX::XMQuaternionRotationRollPitchYawFromVector( currR.mPitchYawRoll );
-					DirectX::XMVECTOR newRQ = DirectX::XMQuaternionMultiply( deltaQuat, currRQ );
-					currR.mPitchYawRoll = DirectX::XMVectorScale( DirectX::XMVectorRound( DirectX::XMVectorScale( QuatToPitchYawRoll( { .v = newRQ } ), ( 180.0f / DirectX::XM_PI ) / 15 ) ), 15 * ( DirectX::XM_PI / 180.0f ) );
-
-					registry.get<LocalBounds>( entity ).UpdateBoundingBox( entity, registry );
-				}
-			}
+			UpdateRotate( inLevelInterface, modelMatrix );
 		}
 		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) && gizmoContext.mActiveEntity != entt::null ) {
 			for ( const entt::entity entity : selectedEntities ) {
@@ -670,35 +642,7 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotatePerspective( Cyclone::Co
 				gizmoContext.mActiveEntity = selectedEntity;
 			}
 
-			DirectX::XMVECTORF32 rotationQuat;
-			DirectX::XMVECTORF32 scale;
-			DirectX::XMVECTORF32 translation;
-
-			DirectX::XMMatrixDecompose( &scale.v, &rotationQuat.v, &translation.v, modelMatrix );
-
-			DirectX::XMVECTOR newQuat = rotationQuat;
-			DirectX::XMVECTOR origQuat = DirectX::XMQuaternionRotationRollPitchYawFromVector( registry.get<Rotation>( selectedEntity ).mPitchYawRoll );
-
-			DirectX::XMVECTOR deltaQuat = DirectX::XMQuaternionMultiply( DirectX::XMQuaternionInverse( origQuat ), newQuat );
-
-			registry.get<Rotation>( selectedEntity ).mPitchYawRoll = QuatToPitchYawRoll( rotationQuat );
-			registry.get<LocalBounds>( selectedEntity ).UpdateBoundingBox( selectedEntity, registry );
-
-			for ( entt::entity entity : selectedEntities ) {
-				if ( entity != selectedEntity ) {
-					auto &currP = registry.get<Position>( entity );
-					auto &currR = registry.get<Rotation>( entity );
-
-					auto newc = DirectX::XMVector3TransformCoord( ( currP.mValue - gizmoContext.mInitialEntityPosition ).ToXMVECTOR(), DirectX::XMMatrixRotationQuaternion( deltaQuat ) );
-					currP.mValue += Vector4D::sFromXMVECTOR( newc ) - ( currP.mValue - gizmoContext.mInitialEntityPosition );
-
-					DirectX::XMVECTOR currRQ = DirectX::XMQuaternionRotationRollPitchYawFromVector( currR.mPitchYawRoll );
-					DirectX::XMVECTOR newRQ = DirectX::XMQuaternionMultiply( deltaQuat, currRQ );
-					currR.mPitchYawRoll = QuatToPitchYawRoll( { .v = newRQ } );
-
-					registry.get<LocalBounds>( entity ).UpdateBoundingBox( entity, registry );
-				}
-			}
+			UpdateRotate( inLevelInterface, modelMatrix );
 		}
 		else if ( !ImGui::IsMouseDown( ImGuiMouseButton_Left ) && gizmoContext.mActiveEntity != entt::null ) {
 			for ( const entt::entity entity : selectedEntities ) {
@@ -711,5 +655,64 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotatePerspective( Cyclone::Co
 	}
 }
 
-void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotate( Cyclone::Core::LevelInterface * inLevelInterface, const TranslateInput & inInput, const TranslateOutput & inOutput )
-{}
+void XM_CALLCONV Cyclone::UI::Tool::GizmoTransformTool::UpdateRotate( Cyclone::Core::LevelInterface *inLevelInterface, DirectX::FXMMATRIX inModelMatrix )
+{
+	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	auto &gizmoContext = inLevelInterface->GetGizmoCtx();
+	entt::registry &registry = inLevelInterface->GetRegistry();
+
+	entt::entity selectedEntity = selectionContext.GetSelectedEntity();
+	const auto & selectedEntities = selectionContext.GetSelectedEntities();
+
+	DirectX::XMVECTORF32 rotationQuat;
+	DirectX::XMVECTORF32 scale;
+	DirectX::XMVECTORF32 translation;
+
+	DirectX::XMMatrixDecompose( &scale.v, &rotationQuat.v, &translation.v, inModelMatrix );
+
+	DirectX::XMVECTOR newQuat = rotationQuat;
+	DirectX::XMVECTOR origQuat = DirectX::XMQuaternionRotationRollPitchYawFromVector( registry.get<Rotation>( selectedEntity ).mPitchYawRoll );
+
+	DirectX::XMVECTOR deltaQuat = DirectX::XMQuaternionMultiply( DirectX::XMQuaternionInverse( origQuat ), newQuat );
+
+	registry.get<Rotation>( selectedEntity ).mPitchYawRoll = QuatToPitchYawRoll( rotationQuat );
+	registry.get<LocalBounds>( selectedEntity ).UpdateBoundingBox( selectedEntity, registry );
+
+	DirectX::XMMATRIX deltaMatrix = DirectX::XMMatrixRotationQuaternion( deltaQuat );
+
+	Vector4D M0 = Vector4D::sFromXMVECTOR( deltaMatrix.r[0] );
+	Vector4D M1 = Vector4D::sFromXMVECTOR( deltaMatrix.r[1] );
+	Vector4D M2 = Vector4D::sFromXMVECTOR( deltaMatrix.r[2] );
+	Vector4D M3 = Vector4D::sFromXMVECTOR( deltaMatrix.r[3] );
+
+	for ( entt::entity entity : selectedEntities ) {
+		if ( entity != selectedEntity ) {
+			auto &currP = registry.get<Position>( entity );
+			auto &currR = registry.get<Rotation>( entity );
+
+			Vector4D deltaP = currP.mValue - gizmoContext.mInitialEntityPosition;
+			Vector4D deltaPX = _mm256_permute4x64_pd( deltaP, _MM_SHUFFLE( 0, 0, 0, 0 ) );
+			Vector4D deltaPY = _mm256_permute4x64_pd( deltaP, _MM_SHUFFLE( 1, 1, 1, 1 ) );
+			Vector4D deltaPZ = _mm256_permute4x64_pd( deltaP, _MM_SHUFFLE( 2, 2, 2, 2 ) );
+
+			Vector4D deltaPResult = _mm256_fmadd_pd( deltaPZ, M2, M3 );
+			deltaPResult = _mm256_fmadd_pd( deltaPY, M1, deltaPResult );
+			deltaPResult = _mm256_fmadd_pd( deltaPX, M0, deltaPResult );
+
+			assert( deltaPResult.GetW() == 1.0 );
+			//Vector4D deltaPResultW = _mm256_permute4x64_pd( deltaPResult, _MM_SHUFFLE( 3, 3, 3, 3 ) );
+			//Vector4D newc = deltaPResult / deltaPResultW;
+			//currP.mValue += newc - deltaP;
+
+			currP.mValue += deltaPResult - deltaP;
+
+			DirectX::XMVECTOR currRQ = DirectX::XMQuaternionRotationRollPitchYawFromVector( currR.mPitchYawRoll );
+			DirectX::XMVECTOR newRQ = DirectX::XMQuaternionMultiply( deltaQuat, currRQ );
+			currR.mPitchYawRoll = QuatToPitchYawRoll( { .v = newRQ } );
+
+			registry.get<LocalBounds>( entity ).UpdateBoundingBox( entity, registry );
+		}
+	}
+
+	__m128 a;
+}

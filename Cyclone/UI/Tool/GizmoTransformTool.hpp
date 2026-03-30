@@ -49,7 +49,7 @@ namespace Cyclone::UI::Tool
 		template<EViewportType T>
 		void				UpdateRotateOrthographic( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
 		void				UpdateRotatePerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
-		void				UpdateRotate( Cyclone::Core::LevelInterface *inLevelInterface, const TranslateInput &inInput, const TranslateOutput &inOutput );
+		void XM_CALLCONV	UpdateRotate( Cyclone::Core::LevelInterface *inLevelInterface, DirectX::FXMMATRIX modelMatrix );
 
 		template<EViewportType T>
 		int					GetTypedID( entt::entity inEntity, int prefix )
