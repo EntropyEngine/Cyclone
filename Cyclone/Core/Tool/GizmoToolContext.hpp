@@ -75,7 +75,6 @@ namespace Cyclone::Core::Tool
 
 		ETransformType			mTransformType = ETransformType::Translate;
 		uint32_t				mCurrentAxis = ETransformAxis::None;
-
-
+		bool					mIsLocal = true;
 	};
 }

@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Cyclone/UI/Tool/GizmoTransformTool.hpp"
 
+// Math
+#include "Cyclone/Math/Matrix.hpp"
+
 // Core includes
 #include "Cyclone/Core/LevelInterface.hpp"
 
@@ -20,6 +23,7 @@
 #include <format>
 
 using Cyclone::Math::Vector4D;
+using Cyclone::Math::Matrix44D;
 using Cyclone::Core::Component::Position;
 using Cyclone::Core::Component::BoundingBox;
 using Cyclone::Core::Component::Rotation;
@@ -680,10 +684,7 @@ void XM_CALLCONV Cyclone::UI::Tool::GizmoTransformTool::UpdateRotate( Cyclone::C
 
 	DirectX::XMMATRIX deltaMatrix = DirectX::XMMatrixRotationQuaternion( deltaQuat );
 
-	Vector4D M0 = Vector4D::sFromXMVECTOR( deltaMatrix.r[0] );
-	Vector4D M1 = Vector4D::sFromXMVECTOR( deltaMatrix.r[1] );
-	Vector4D M2 = Vector4D::sFromXMVECTOR( deltaMatrix.r[2] );
-	Vector4D M3 = Vector4D::sFromXMVECTOR( deltaMatrix.r[3] );
+	Matrix44D deltaMatrixD = Matrix44D::sFromXMMATRIX( deltaMatrix );
 
 	for ( entt::entity entity : selectedEntities ) {
 		if ( entity != selectedEntity ) {
@@ -691,18 +692,7 @@ void XM_CALLCONV Cyclone::UI::Tool::GizmoTransformTool::UpdateRotate( Cyclone::C
 			auto &currR = registry.get<Rotation>( entity );
 
 			Vector4D deltaP = currP.mValue - gizmoContext.mInitialEntityPosition;
-			Vector4D deltaPX = _mm256_permute4x64_pd( deltaP, _MM_SHUFFLE( 0, 0, 0, 0 ) );
-			Vector4D deltaPY = _mm256_permute4x64_pd( deltaP, _MM_SHUFFLE( 1, 1, 1, 1 ) );
-			Vector4D deltaPZ = _mm256_permute4x64_pd( deltaP, _MM_SHUFFLE( 2, 2, 2, 2 ) );
-
-			Vector4D deltaPResult = _mm256_fmadd_pd( deltaPZ, M2, M3 );
-			deltaPResult = _mm256_fmadd_pd( deltaPY, M1, deltaPResult );
-			deltaPResult = _mm256_fmadd_pd( deltaPX, M0, deltaPResult );
-
-			assert( deltaPResult.GetW() == 1.0 );
-			//Vector4D deltaPResultW = _mm256_permute4x64_pd( deltaPResult, _MM_SHUFFLE( 3, 3, 3, 3 ) );
-			//Vector4D newc = deltaPResult / deltaPResultW;
-			//currP.mValue += newc - deltaP;
+			Vector4D deltaPResult = deltaMatrixD.TransformCoord3Unit( deltaP );
 
 			currP.mValue += deltaPResult - deltaP;
 

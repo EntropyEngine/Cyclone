@@ -243,6 +243,9 @@
     <ClInclude Include="Core\Component\LocalBounds.hpp">
       <Filter>Core\Component</Filter>
     </ClInclude>
+    <ClInclude Include="Math\Matrix.hpp">
+      <Filter>Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
