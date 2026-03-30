@@ -561,7 +561,8 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateRotateOrthographic( Cyclone::C
 		ImGuizmo::OPERATION rotateOp[3] = {ImGuizmo::ROTATE_X, ImGuizmo::ROTATE_Y, ImGuizmo::ROTATE_Z };
 
 		float snap = 1;
-		ImGuizmo::Manipulate( reinterpret_cast<const float *>( &viewMatrix ), reinterpret_cast<const float *>( &projMatrix ), rotateOp[AxisW], ImGuizmo::WORLD, reinterpret_cast<float *>( &modelMatrix ), nullptr, &snap );
+		//ImGuizmo::Manipulate( reinterpret_cast<const float *>( &viewMatrix ), reinterpret_cast<const float *>( &projMatrix ), rotateOp[AxisW], ImGuizmo::WORLD, reinterpret_cast<float *>( &modelMatrix ), nullptr, &snap );
+		ImGuizmo::Manipulate( reinterpret_cast<const float *>( &viewMatrix ), reinterpret_cast<const float *>( &projMatrix ), ImGuizmo::ROTATE, ImGuizmo::LOCAL, reinterpret_cast<float *>( &modelMatrix ), nullptr, &snap );
 
 
 		if ( inViewportData.mIsActive && ImGuizmo::IsUsing() ) {
