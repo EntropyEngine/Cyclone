@@ -14,6 +14,7 @@ namespace Cyclone::UI::Tool
 	public:
 		virtual const char *GetDebugName() const override { return "Mesh\nSel"; }
 		virtual ECategory	GetCategory() const override { return ECategory::EditMesh; }
+		virtual ESelectMode	GetSelectMode() const override { return ESelectMode::SelectInCategory; }
 
 	protected:
 	};

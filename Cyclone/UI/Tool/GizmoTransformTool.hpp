@@ -20,6 +20,7 @@ namespace Cyclone::UI::Tool
 	public:
 		virtual const char *GetDebugName() const override { return "Gizmo"; }
 		virtual ECategory	GetCategory() const override { return ECategory::Object; }
+		virtual ESelectMode	GetSelectMode() const override { return ESelectMode::SelectInCategory; }
 
 		virtual void		OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override;
 		virtual void		OnShortcut( Cyclone::Core::LevelInterface *inLevelInterface ) override;

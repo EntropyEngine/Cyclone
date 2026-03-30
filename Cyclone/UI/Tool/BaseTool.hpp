@@ -55,6 +55,7 @@ namespace Cyclone::UI::Tool
 
 		virtual const char *GetDebugName() const = 0;
 		virtual ECategory	GetCategory() const = 0;
+		virtual ESelectMode GetSelectMode() const = 0;
 
 	#pragma warning(push)
 	#pragma warning(disable: 4100)
@@ -69,9 +70,8 @@ namespace Cyclone::UI::Tool
 		// TODO
 
 	public:
-		BaseTool *			mTiedTool;
-		bool				mIsSelected;	///< Is the tool currently selected
-		bool				mIsActive;		///< Is the tool currently updating
-		bool				mIsDrawing;		///< Is the tool currently outputting draw calls
+		bool				mIsSelected{ false };	///< Is the tool currently selected
+		bool				mIsActive{ false };		///< Is the tool currently updating
+		bool				mIsDrawing{ false };	///< Is the tool currently outputting draw calls
 	};
 }

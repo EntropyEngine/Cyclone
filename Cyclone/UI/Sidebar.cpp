@@ -21,11 +21,6 @@ void Cyclone::UI::Sidebar::Init()
 
 	mToolChanger[0]->mIsSelected = true;
 	mToolChanger[1]->mIsSelected = true;
-	mToolChanger[2]->mIsSelected = false;
-	mToolChanger[3]->mIsSelected = false;
-	mToolChanger[4]->mIsSelected = false;
-
-	mToolChanger[0]->mTiedTool = mToolChanger[1].get();
 
 	for ( auto &tool : mToolChanger ) {
 		mToolCategories[static_cast<size_t>( tool->GetCategory() )].push_back( tool.get() );
@@ -58,11 +53,33 @@ void Cyclone::UI::Sidebar::Update( Cyclone::Core::LevelInterface *inLevelInterfa
 
 void Cyclone::UI::Sidebar::SelectTool( Tool::BaseTool *inTool )
 {
-	for ( auto &otherTool : mToolChanger ) {
-		if ( otherTool.get() != inTool && otherTool.get() != inTool->mTiedTool ) {
-			otherTool->mIsSelected = false;
+	for ( auto &tool : mToolChanger ) {
+		if ( tool->GetCategory() != inTool->GetCategory() ) tool->mIsSelected = false;
+	}
+
+	auto &category = mToolCategories[static_cast<size_t>( inTool->GetCategory() )];
+
+	switch ( inTool->GetSelectMode() ) {
+		case Tool::ESelectMode::ToggleInCategory: {
+			for ( auto &tool : category ) {
+				if ( tool->GetSelectMode() == Tool::ESelectMode::UniqueInCategory ) tool->mIsSelected = false;
+			}
+			inTool->mIsSelected ^= true;
+			break;
 		}
-		inTool->mIsSelected = true;
-		if ( inTool->mTiedTool ) inTool->mTiedTool->mIsSelected = true;
+		case Tool::ESelectMode::SelectInCategory: {
+			for ( auto &tool : category ) {
+				if ( tool->GetSelectMode() != Tool::ESelectMode::ToggleInCategory ) tool->mIsSelected = false;
+			}
+			inTool->mIsSelected = true;
+			break;
+		}
+		case Tool::ESelectMode::UniqueInCategory: {
+			for ( auto &tool : category ) {
+				tool->mIsSelected = false;
+			}
+			inTool->mIsSelected = true;
+			break;
+		}	
 	}
 }

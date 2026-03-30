@@ -14,6 +14,9 @@
 // ImGui Includes
 #include <imgui_internal.h>
 
+// ImGuizmo
+#include <ImGuizmo/ImGuizmo.h>
+
 void Cyclone::UI::Tool::SelectionTool::OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData )
 {
 	switch ( inType ) {
@@ -29,7 +32,7 @@ void Cyclone::UI::Tool::SelectionTool::OnUpdate( Cyclone::Core::LevelInterface *
 	ImGuiIO &io = ImGui::GetIO();
 
 	const bool isLeftClickShort = ( ImGui::IsMouseReleased( 0, inViewportData.mCanvasID ) || ImGui::IsMouseReleased( 0, ImGuiKeyOwner_NoOwner ) ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
-	if ( !inViewportData.mIsActive || !isLeftClickShort ) return;
+	if ( !inViewportData.mIsActive || !isLeftClickShort || ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() ) return;
 
 	auto &entityManager = inLevelInterface->GetEntityManager();
 	if ( !entityManager.CanAquireActionLock() ) return;
