@@ -276,5 +276,6 @@ void Cyclone::UI::ViewportManager::UpdateDrawListAndSelectionBox( Cyclone::Core:
 		if ( topBox.Intersects( entBox ) || topBox.Intersects( posBox ) ) registry.emplace<ViewportTypeTraits<EViewportType::TopXZ>::DrawTag>( entity );
 		if ( frontBox.Intersects( entBox ) || frontBox.Intersects( posBox ) ) registry.emplace<ViewportTypeTraits<EViewportType::FrontXY>::DrawTag>( entity );
 		if ( sideBox.Intersects( entBox ) || sideBox.Intersects( posBox ) ) registry.emplace<ViewportTypeTraits<EViewportType::SideYZ>::DrawTag>( entity );
+		if ( true ) registry.emplace<ViewportTypeTraits<EViewportType::Perspective>::DrawTag>( entity );
 	}
 }

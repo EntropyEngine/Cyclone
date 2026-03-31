@@ -269,9 +269,14 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 	// Switch to depth buffer
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
 
-	// Call all tool renders with depth enables
-	for ( auto &tool : inTools ) {
-		tool->OnRender( T, inLevelInterface, mViewportData, mWireframeGridBatch.get() );
+	// Call all tool renders with depth enabled
+	{
+		mWireframeGridBatch->Begin();
+		for ( auto &tool : inTools ) {
+			tool->OnRender( T, inLevelInterface, mViewportData, mWireframeGridBatch.get() );
+		}
+		mWireframeGridBatch->End();
+
 	}
 
 	// Render paths
@@ -321,6 +326,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 		}
 	}
 
+	// Render bounding boxes
 	{
 		mWireframeBoxShader->Apply( inDeviceContext );
 		mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );

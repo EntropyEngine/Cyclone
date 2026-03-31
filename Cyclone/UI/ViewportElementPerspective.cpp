@@ -135,6 +135,8 @@ void Cyclone::UI::ViewportElementPerspective::DrawGizmos( float inDeltaTime, Cyc
 
 void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
 {
+	using DrawTag = ViewportTypeTraits<EViewportType::Perspective>::DrawTag;
+
 	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
 	const auto &entityManager = inLevelInterface->GetEntityManager();
 
@@ -180,11 +182,6 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 	// Switch to depth buffer
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
-
-	// Call all tool renders with depth enabled
-	for ( auto &tool : inTools ) {
-		tool->OnRender( EViewportType::Perspective, inLevelInterface, mViewportData, mWireframeGridBatch.get() );
-	}
 
 	// Render paths
 	{
@@ -234,13 +231,24 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 		}
 	}
 
+	// Call all tool renders with depth enabled
+	{
+		mWireframeGridBatch->Begin();
+		for ( auto &tool : inTools ) {
+			tool->OnRender( EViewportType::Perspective, inLevelInterface, mViewportData, mWireframeGridBatch.get() );
+		}
+		mWireframeGridBatch->End();
+
+	}
+
+	// Render bounding boxes
 	{
 		mWireframeBoxShader->Apply( inDeviceContext );
 		mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
 		mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
 
 		{
-			auto view = cregistry.view<EntityType, Position, BoundingBox, entt::tag<"is_visible"_hs>>( entt::exclude<entt::tag<"is_selected"_hs>> );
+			auto view = cregistry.view<EntityType, Position, BoundingBox, DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>> );
 			//view.use<BoundingBox>();
 			for ( const entt::entity entity : view ) {
 				const auto &entityType = view.get<EntityType>( entity );
@@ -262,7 +270,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 		inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
 
 		{
-			auto view = cregistry.view<Position, BoundingBox, entt::tag<"is_visible"_hs>, entt::tag<"is_selected"_hs>>();
+			auto view = cregistry.view<Position, BoundingBox, DrawTag, entt::tag<"is_selected"_hs>>();
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
 			for ( const entt::entity entity : view ) {

@@ -197,6 +197,7 @@
     <ClInclude Include="UI\Tool\BaseTool.hpp" />
     <ClInclude Include="UI\Tool\GizmoTransformTool.hpp" />
     <ClInclude Include="UI\Tool\MeshSelectionTool.hpp" />
+    <ClInclude Include="UI\Tool\PathActiveTool.hpp" />
     <ClInclude Include="UI\Tool\PathSelectionTool.hpp" />
     <ClInclude Include="UI\Tool\SelectionTool.hpp" />
     <ClInclude Include="UI\Tool\SelectionTransformTool.hpp" />
@@ -284,6 +285,7 @@
     <ClCompile Include="UI\Toolbar.cpp" />
     <ClCompile Include="UI\Tool\GizmoTransformTool.cpp" />
     <ClCompile Include="UI\Tool\MeshSelectionTool.cpp" />
+    <ClCompile Include="UI\Tool\PathActiveTool.cpp" />
     <ClCompile Include="UI\Tool\PathSelectionTool.cpp" />
     <ClCompile Include="UI\Tool\SelectionTool.cpp" />
     <ClCompile Include="UI\Tool\SelectionTransformTool.cpp" />

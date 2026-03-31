@@ -8,7 +8,10 @@
 #include "Cyclone/UI/Tool/SelectionTool.hpp"
 #include "Cyclone/UI/Tool/SelectionTransformTool.hpp"
 #include "Cyclone/UI/Tool/GizmoTransformTool.hpp"
+
+#include "Cyclone/UI/Tool/PathActiveTool.hpp"
 #include "Cyclone/UI/Tool/PathSelectionTool.hpp"
+
 #include "Cyclone/UI/Tool/MeshSelectionTool.hpp"
 
 void Cyclone::UI::Sidebar::Init()
@@ -16,7 +19,10 @@ void Cyclone::UI::Sidebar::Init()
 	mToolChanger.emplace_back( std::make_unique<Tool::SelectionTool>() );
 	mToolChanger.emplace_back( std::make_unique<Tool::SelectionTransformTool>() );
 	mToolChanger.emplace_back( std::make_unique<Tool::GizmoTransformTool>() );
+
+	mToolChanger.emplace_back( std::make_unique<Tool::PathActiveTool>() );
 	mToolChanger.emplace_back( std::make_unique<Tool::PathSelectionTool>() );
+
 	mToolChanger.emplace_back( std::make_unique<Tool::MeshSelectionTool>() );
 
 	mToolChanger[0]->mIsSelected = true;
@@ -62,6 +68,7 @@ void Cyclone::UI::Sidebar::SelectTool( Tool::BaseTool *inTool )
 	switch ( inTool->GetSelectMode() ) {
 		case Tool::ESelectMode::ToggleInCategory: {
 			for ( auto &tool : category ) {
+				if ( tool->GetSelectMode() == Tool::ESelectMode::ActiveInCategory ) tool->mIsSelected = true;
 				if ( tool->GetSelectMode() == Tool::ESelectMode::UniqueInCategory ) tool->mIsSelected = false;
 			}
 			inTool->mIsSelected ^= true;
@@ -69,17 +76,23 @@ void Cyclone::UI::Sidebar::SelectTool( Tool::BaseTool *inTool )
 		}
 		case Tool::ESelectMode::SelectInCategory: {
 			for ( auto &tool : category ) {
-				if ( tool->GetSelectMode() != Tool::ESelectMode::ToggleInCategory ) tool->mIsSelected = false;
+				if ( tool->GetSelectMode() == Tool::ESelectMode::ActiveInCategory ) tool->mIsSelected = true;
+				else if ( tool->GetSelectMode() != Tool::ESelectMode::ToggleInCategory ) tool->mIsSelected = false;
 			}
 			inTool->mIsSelected = true;
 			break;
 		}
 		case Tool::ESelectMode::UniqueInCategory: {
 			for ( auto &tool : category ) {
-				tool->mIsSelected = false;
+				if ( tool->GetSelectMode() == Tool::ESelectMode::ActiveInCategory ) tool->mIsSelected = true;
+				else																tool->mIsSelected = false;
 			}
 			inTool->mIsSelected = true;
 			break;
 		}	
+		case Tool::ESelectMode::ActiveInCategory: {
+			inTool->mIsSelected = true;
+			break;
+		}
 	}
 }

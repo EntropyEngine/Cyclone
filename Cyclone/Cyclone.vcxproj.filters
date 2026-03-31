@@ -215,7 +215,6 @@
     <ClInclude Include="UI\Tool\GizmoTransformTool.hpp">
       <Filter>UI\Tool</Filter>
     </ClInclude>
-    <ClInclude Include="DebugDraw.h" />
     <ClInclude Include="Core\Tool\GizmoToolContext.hpp">
       <Filter>Core\Tool</Filter>
     </ClInclude>
@@ -251,6 +250,12 @@
     </ClInclude>
     <ClInclude Include="Core\Component\Path.hpp">
       <Filter>Core\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\Tool\PathActiveTool.hpp">
+      <Filter>UI\Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugDraw.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -342,7 +347,6 @@
     <ClCompile Include="UI\Tool\GizmoTransformTool.cpp">
       <Filter>UI\Tool</Filter>
     </ClCompile>
-    <ClCompile Include="DebugDraw.cpp" />
     <ClCompile Include="Core\Tool\GizmoToolContext.cpp">
       <Filter>Core\Tool</Filter>
     </ClCompile>
@@ -360,6 +364,12 @@
     </ClCompile>
     <ClCompile Include="UI\ObjectProperties.cpp">
       <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Tool\PathActiveTool.cpp">
+      <Filter>UI\Tool</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugDraw.cpp">
+      <Filter>Common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
