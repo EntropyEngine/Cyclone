@@ -12,7 +12,10 @@ namespace Cyclone::Core::Component
 
 		struct Segment
 		{
-			Cyclone::Math::Vector4D mControlPoints[4];
+			Cyclone::Math::Vector4D mP0;
+			Cyclone::Math::Vector4D mP1;
+			Cyclone::Math::Vector4D mP2;
+			Cyclone::Math::Vector4D mP3;
 		};
 
 		std::vector<Segment> mPathSegments;

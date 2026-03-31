@@ -66,7 +66,7 @@ inline void Cyclone::UI::Tool::SelectionTransformTool::OnUpdate( Cyclone::Core::
 
 		ImGui::SetCursorPos( { selectedBoxMin.x - inViewportData.mViewOrigin.x, selectedBoxMin.y - inViewportData.mViewOrigin.y } );
 		ImGui::SetNextItemAllowOverlap();
-		ImGui::InvisibleButton( "Selection", { selectedBoxMax.x - selectedBoxMin.x, selectedBoxMax.y - selectedBoxMin.y }, ImGuiButtonFlags_MouseButtonLeft );
+		ImGui::InvisibleButton( "Selection", { std::max( selectedBoxMax.x - selectedBoxMin.x, 0.5f ), std::max( selectedBoxMax.y - selectedBoxMin.y, 0.5f ) }, ImGuiButtonFlags_MouseButtonLeft );
 		const bool isLongClick = io.MouseDownDuration[0] > io.MouseDoubleClickTime;
 		const bool isSelectionHovered = ImGui::IsItemHovered();
 		const bool isSelectionActive = ImGui::IsItemActive();

@@ -35,15 +35,23 @@ namespace Cyclone::Core::Entity
 			// Attach a Rotation component
 			inRegistry.emplace<Cyclone::Core::Component::Rotation>( entity, DirectX::g_XMZero );
 
-			// Attach default center and extents (25cm radius)
+			// Attach empty BB and local bounds
 			inRegistry.emplace<Cyclone::Core::Component::BoundingBox>( entity, Cyclone::Math::Vector4D::sZero(), Cyclone::Math::Vector4D::sZero() );
-
-			// Attach corresponding local bounds
-			inRegistry.emplace<Cyclone::Core::Component::LocalBounds>( entity, DirectX::g_XMZero, DirectX::XMFLOAT3( 0.25, 0.25, 0.25 ), Cyclone::Core::Component::LocalBounds::EType::Radius ).UpdateBoundingBox( entity, inRegistry );
+			Component::LocalBounds &localBounds = inRegistry.emplace<Cyclone::Core::Component::LocalBounds>( entity, DirectX::g_XMZero, DirectX::XMFLOAT3(), Cyclone::Core::Component::LocalBounds::EType::Path );
 
 			// Attach path tag and data
 			inRegistry.emplace<Component::PathTag>( entity );
-			inRegistry.emplace<Component::PathData>( entity );
+			Component::PathData &pathData = inRegistry.emplace<Component::PathData>( entity );
+
+			pathData.mPathSegments.emplace_back(
+				Cyclone::Math::Vector4D( 0.0, 0.0, 0.0 ),
+				Cyclone::Math::Vector4D( 0.0, 0.0, 1.0 / 3.0 ),
+				Cyclone::Math::Vector4D( 0.0, 0.0, 2.0 / 3.0 ),
+				Cyclone::Math::Vector4D( 0.0, 0.0, 3.0 / 3.0 )
+			);
+
+			localBounds.UpdateCenterExtent( entity, inRegistry );
+			localBounds.UpdateBoundingBox( entity, inRegistry );
 
 			return entity;
 		}

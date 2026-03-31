@@ -510,8 +510,13 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslate( Cyclone::Core::Leve
 	const auto &selectedEntities = selectionContext.GetSelectedEntities();
 	entt::registry &registry = inLevelInterface->GetRegistry();
 
-	//Vector4D objPos = inOutput.mMousePos * inOutput.mAxisMask + inInput.mOriginalPos * inOutput.mAxisMaskInv;
-	Vector4D objPos = inOutput.mMousePos + inInput.mOriginalPos;
+	Vector4D objPos{ nullptr };
+	if ( IS_LOCAL ) {
+		objPos = inOutput.mMousePos + inInput.mOriginalPos;
+	}
+	else {
+		objPos = inOutput.mMousePos * inOutput.mAxisMask + inInput.mOriginalPos * inOutput.mAxisMaskInv;
+	}
 
 	// If first frame of interactions, store initial position
 	if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
