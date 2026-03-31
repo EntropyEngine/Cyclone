@@ -9,13 +9,15 @@
 #include "Cyclone/Core/Component/Position.hpp"
 #include "Cyclone/Core/Component/BoundingBox.hpp"
 #include "Cyclone/Core/Component/Visible.hpp"
+#include "Cyclone/Core/Component/Rotation.hpp"
+#include "Cyclone/Core/Component/Path.hpp"
 
 // Cyclone utils
 #include "Cyclone/Util/Render.hpp"
 #include "Cyclone/Util/String.hpp"
 
-// STL Includes
-#include <format>
+// Cyclone math
+#include "Cyclone/Math/Matrix.hpp"
 
 // ImGui Includes
 #include <imgui_internal.h>
@@ -24,10 +26,14 @@
 #include <ImGuizmo/ImGuizmo.h>
 
 using Cyclone::Math::Vector4D;
+using Cyclone::Math::Matrix44D;
 
 using Cyclone::Core::Component::EntityType;
 using Cyclone::Core::Component::Position;
+using Cyclone::Core::Component::Rotation;
 using Cyclone::Core::Component::BoundingBox;
+using Cyclone::Core::Component::PathTag;
+using Cyclone::Core::Component::PathData;
 
 namespace
 {
@@ -201,6 +207,14 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 	constexpr size_t AxisU = ViewportElementOrthographic::AxisU;
 	constexpr size_t AxisV = ViewportElementOrthographic::AxisV;
 
+	const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+	const auto &entityManager = inLevelInterface->GetEntityManager();
+
+	const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
+	const std::set<entt::entity> &selectedEntities = selectionContext.GetSelectedEntities();
+
+	const entt::registry &cregistry = inLevelInterface->GetRegistry();
+
 	const auto &gridContext = inLevelInterface->GetGridCtx();
 	const auto &orthographicContext = inLevelInterface->GetOrthographicCtx();
 
@@ -260,20 +274,60 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 		tool->OnRender( T, inLevelInterface, mViewportData, mWireframeGridBatch.get() );
 	}
 
+	// Render paths
+	{
+		{
+			mWireframeGridBatch->Begin();
+
+			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, PathData, entt::tag<"is_visible"_hs>>();
+			//view.use<BoundingBox>();
+			for ( const entt::entity entity : view ) {
+				const auto &entityType = view.get<EntityType>( entity );
+				const auto &position = view.get<Position>( entity ).mValue;
+				const auto &rotation = view.get<Rotation>( entity ).mPitchYawRoll;
+				const auto &pathData = view.get<PathData>( entity );
+
+				Matrix44D rotmat = Matrix44D::sFromXMMATRIX( DirectX::XMMatrixRotationRollPitchYawFromVector( rotation ) );
+				Vector4D rebasedEntityPosition = ( position - orthographicContext.mCenter2D );
+
+				uint32_t entityColorU32;
+				if ( entity == selectedEntity ) {
+					entityColorU32 = Cyclone::Util::ColorU32( 255, 255, 0, 255 );
+				}
+				else if ( selectedEntities.contains( entity ) ) {
+					entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
+				}
+				else {
+					entityColorU32 = entityManager.GetEntityTypeColor( entityType );
+				}
+				DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
+
+				std::vector<DirectX::VertexPositionColor> linePoints( pathData.mPathSegments.size() * 65 );
+				for ( size_t s = 0; s < pathData.mPathSegments.size(); ++s ) {
+					for ( size_t i = 0; i <= 64; ++i ) {
+						DirectX::XMStoreFloat3( &linePoints[s * 64 + i].position, ( rotmat.TransformCoord3Unit( pathData.mPathSegments[s].GetPoint( static_cast<double>( i ) / 64 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
+						DirectX::XMStoreFloat4( &linePoints[s * 64 + i].color, entityColorV );
+					}
+				}
+
+				mWireframeGridBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePoints.data(), linePoints.size() );
+
+				// TODO
+				// Draw the path
+				// TODO
+			}
+
+			mWireframeGridBatch->End();
+		}
+	}
+
 	{
 		mWireframeBoxShader->Apply( inDeviceContext );
 		mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
 		mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
 
-		const auto &selectionContext = inLevelInterface->GetSelectionCtx();
-		const auto &entityManager = inLevelInterface->GetEntityManager();
-
-		const entt::entity selectedEntity = selectionContext.GetSelectedEntity();
-
-		// Iterate over all entities
-		entt::registry &registry = inLevelInterface->GetRegistry();
 		{
-			auto view = registry.view<EntityType, Position, BoundingBox, ViewportTypeTraits<T>::DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>> );
+			auto view = cregistry.view<EntityType, Position, BoundingBox, ViewportTypeTraits<T>::DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>> );
 			//view.use<BoundingBox>();
 			for ( const entt::entity entity : view ) {
 				const auto &entityType = view.get<EntityType>( entity );
@@ -295,7 +349,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 		inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
 
 		{
-			auto view = registry.view<Position, BoundingBox, ViewportTypeTraits<T>::DrawTag, entt::tag<"is_selected"_hs>>();
+			auto view = cregistry.view<Position, BoundingBox, ViewportTypeTraits<T>::DrawTag, entt::tag<"is_selected"_hs>>();
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
 			for ( const entt::entity entity : view ) {

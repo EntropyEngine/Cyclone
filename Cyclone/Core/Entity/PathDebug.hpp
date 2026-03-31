@@ -45,12 +45,11 @@ namespace Cyclone::Core::Entity
 
 			pathData.mPathSegments.emplace_back(
 				Cyclone::Math::Vector4D( 0.0, 0.0, 0.0 ),
-				Cyclone::Math::Vector4D( 0.0, 0.0, 1.0 / 3.0 ),
-				Cyclone::Math::Vector4D( 0.0, 0.0, 2.0 / 3.0 ),
-				Cyclone::Math::Vector4D( 0.0, 0.0, 3.0 / 3.0 )
+				Cyclone::Math::Vector4D( 0.0, 0.0, 1.0 ),
+				Cyclone::Math::Vector4D( 1.0, 1.0, 2.0 ),
+				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 )
 			);
 
-			localBounds.UpdateCenterExtent( entity, inRegistry );
 			localBounds.UpdateBoundingBox( entity, inRegistry );
 
 			return entity;
