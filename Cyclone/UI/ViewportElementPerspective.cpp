@@ -7,8 +7,10 @@
 // Cyclone components
 #include "Cyclone/Core/Component/EntityType.hpp"
 #include "Cyclone/Core/Component/Position.hpp"
+#include "Cyclone/Core/Component/Rotation.hpp"
 #include "Cyclone/Core/Component/BoundingBox.hpp"
 #include "Cyclone/Core/Component/Visible.hpp"
+#include "Cyclone/Core/Component/Path.hpp"
 
 // Cyclone utils
 #include "Cyclone/Util/Render.hpp"
@@ -23,7 +25,9 @@ using Cyclone::Math::Vector4D;
 
 using Cyclone::Core::Component::EntityType;
 using Cyclone::Core::Component::Position;
+using Cyclone::Core::Component::Rotation;
 using Cyclone::Core::Component::BoundingBox;
+using Cyclone::Core::Component::PathTag;
 
 namespace
 {
@@ -164,10 +168,36 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 	// Switch to depth buffer
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
 
-	// Call all tool renders with depth enables
+	// Call all tool renders with depth enabled
 	for ( auto &tool : inTools ) {
 		tool->OnRender( EViewportType::Perspective, inLevelInterface, mViewportData, mWireframeGridBatch.get() );
-	}	
+	}
+
+	{
+		const auto &selectionContext = inLevelInterface->GetSelectionCtx();
+		const auto &entityManager = inLevelInterface->GetEntityManager();
+
+		// Iterate over all entities
+		const entt::registry &cregistry = inLevelInterface->GetRegistry();
+		{
+			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, entt::tag<"is_visible"_hs>>();
+			//view.use<BoundingBox>();
+			for ( const entt::entity entity : view ) {
+				const auto &entityType = view.get<EntityType>( entity );
+				const auto &position = view.get<Position>( entity ).mValue;
+				const auto &rotation = view.get<Rotation>( entity ).mPitchYawRoll;
+
+				uint32_t entityColorU32 = entityManager.GetEntityTypeColor( entityType );
+				DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
+
+				Vector4D rebasedEntityPosition = ( position - perspectiveContext.mCenter3D );
+				
+				// TODO
+				// Draw the path
+				// TODO
+			}
+		}
+	}
 
 	{
 		mWireframeBoxShader->Apply( inDeviceContext );

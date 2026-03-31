@@ -22,17 +22,12 @@ namespace Cyclone::Core::Entity
 		static constexpr entt::hashed_string kEntityType = "path_debug"_hs;
 		static constexpr entt::hashed_string kEntityCategory = "path"_hs;
 
-		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<Component::PathTag>>;
+		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<Component::PathTag, Component::PathData>>;
 
 		entt::entity Create( entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
 		{
 			// Allocates in the entity storage of the registry
 			entt::entity entity = BaseEntity::sCreate( inRegistry );
-
-			constexpr auto size = entt::size_of_v<Component::PathTag>;
-
-			// Attach path tag
-			inRegistry.emplace<Component::PathTag>( entity );
 
 			// Attach a Position component
 			inRegistry.emplace<Cyclone::Core::Component::Position>( entity, inPosition );
@@ -45,6 +40,10 @@ namespace Cyclone::Core::Entity
 
 			// Attach corresponding local bounds
 			inRegistry.emplace<Cyclone::Core::Component::LocalBounds>( entity, DirectX::g_XMZero, DirectX::XMFLOAT3( 0.25, 0.25, 0.25 ), Cyclone::Core::Component::LocalBounds::EType::Radius ).UpdateBoundingBox( entity, inRegistry );
+
+			// Attach path tag and data
+			inRegistry.emplace<Component::PathTag>( entity );
+			inRegistry.emplace<Component::PathData>( entity );
 
 			return entity;
 		}

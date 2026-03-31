@@ -6,8 +6,15 @@ namespace Cyclone::Core::Component
 {
 	using PathTag = entt::tag<"path_tag"_hs>;
 
-	struct PathSomething
+	struct PathData
 	{
-		
+		PathData() = default;
+
+		struct Segment
+		{
+			Cyclone::Math::Vector4D mControlPoints[4];
+		};
+
+		std::vector<Segment> mPathSegments;
 	};
 }
