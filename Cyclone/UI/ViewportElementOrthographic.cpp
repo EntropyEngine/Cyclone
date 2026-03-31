@@ -204,6 +204,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawGizmos( float inDeltaTime,
 template<Cyclone::UI::EViewportType T>
 void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
 {
+	using DrawTag = ViewportTypeTraits<T>::DrawTag;
+
 	constexpr size_t AxisU = ViewportElementOrthographic::AxisU;
 	constexpr size_t AxisV = ViewportElementOrthographic::AxisV;
 
@@ -274,7 +276,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 		{
 			mWireframeGridBatch->Begin();
 
-			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, PathData, entt::tag<"is_visible"_hs>>();
+			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, PathData, DrawTag>();
 			//view.use<BoundingBox>();
 			for ( const entt::entity entity : view ) {
 				const auto &entityType = view.get<EntityType>( entity );
@@ -328,7 +330,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 	}
 
-	// Render bounding boxes
+	// Render bounding boxes (excluding paths)
 	{
 		inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mCommonStates->Wireframe() : mWireframeRSS.Get() );
 		//inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mToolRSS_MSAA.Get() : mToolRSS_NOAA.Get() );
@@ -338,7 +340,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 		mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
 
 		{
-			auto view = cregistry.view<EntityType, Position, BoundingBox, ViewportTypeTraits<T>::DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>> );
+			auto view = cregistry.view<EntityType, Position, BoundingBox, DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>, PathTag> );
 			//view.use<BoundingBox>();
 			for ( const entt::entity entity : view ) {
 				const auto &entityType = view.get<EntityType>( entity );
@@ -360,7 +362,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 		inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
 
 		{
-			auto view = cregistry.view<Position, BoundingBox, ViewportTypeTraits<T>::DrawTag, entt::tag<"is_selected"_hs>>();
+			auto view = cregistry.view<Position, BoundingBox, DrawTag, entt::tag<"is_selected"_hs>>( entt::exclude<PathTag> );
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
 			for ( const entt::entity entity : view ) {
@@ -376,7 +378,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 			}
 
 			entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 255, 0, 255 ) );
-			if ( selectedEntity != entt::null ) {
+			if ( view.contains( selectedEntity ) ) {
 				const auto &position = view.get<Position>( selectedEntity ).mValue;
 				const auto &boundingBox = view.get<BoundingBox>( selectedEntity ).mValue;
 

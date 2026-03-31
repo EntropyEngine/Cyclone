@@ -243,7 +243,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 	}
 
-	// Render bounding boxes
+	// Render bounding boxes (excluding paths)
 	{
 		inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mCommonStates->Wireframe() : mWireframeRSS.Get() );
 		//inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mToolRSS_MSAA.Get() : mToolRSS_NOAA.Get() );
@@ -253,7 +253,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 		mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
 
 		{
-			auto view = cregistry.view<EntityType, Position, BoundingBox, DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>> );
+			auto view = cregistry.view<EntityType, Position, BoundingBox, DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>, PathTag> );
 			//view.use<BoundingBox>();
 			for ( const entt::entity entity : view ) {
 				const auto &entityType = view.get<EntityType>( entity );
@@ -275,7 +275,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 		inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
 
 		{
-			auto view = cregistry.view<Position, BoundingBox, DrawTag, entt::tag<"is_selected"_hs>>();
+			auto view = cregistry.view<Position, BoundingBox, DrawTag, entt::tag<"is_selected"_hs>>( entt::exclude<PathTag> );
 
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
 			for ( const entt::entity entity : view ) {
@@ -291,7 +291,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 			}
 
 			entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 255, 0, 255 ) );
-			if ( selectedEntity != entt::null ) {
+			if ( view.contains( selectedEntity ) ) {
 				const auto &position = view.get<Position>( selectedEntity ).mValue;
 				const auto &boundingBox = view.get<BoundingBox>( selectedEntity ).mValue;
 
