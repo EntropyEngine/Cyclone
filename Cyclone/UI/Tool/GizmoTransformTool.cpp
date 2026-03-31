@@ -33,6 +33,8 @@ using Cyclone::Core::Tool::GizmoToolContext;
 using TranslateInput = Cyclone::UI::Tool::GizmoTransformTool::TranslateInput;
 using TranslateOutput = Cyclone::UI::Tool::GizmoTransformTool::TranslateOutput;
 
+const bool IS_LOCAL = false;
+
 namespace
 {
 	ImGuizmo::OPERATION TranslationOpFromAxis( size_t inAxis )
@@ -111,6 +113,9 @@ namespace
 		else if ( std::isfinite( flip ) ) {
 			ioOutput.mMousePos = planeIntersection;
 		}
+
+		Vector4D deltaM = ioOutput.mMousePos - inInput.mOriginalPos;
+		ioOutput.mMousePos = inInput.mOriginalPos + inAxis1 * Vector4D::sReplicate( inAxis1.Dot3( deltaM ) );
 	}
 
 	void XM_CALLCONV Translate2( const TranslateInput &inInput, TranslateOutput &ioOutput, Vector4D inAxis1, Vector4D inAxis2 )
@@ -118,12 +123,12 @@ namespace
 		ioOutput.mAxisMask = inAxis1 + inAxis2;
 		ioOutput.mAxisMaskInv = Vector4D::sReplicate( 1.0 ) - ioOutput.mAxisMask;
 
-		Vector4D cameraProjectedP = inInput.mCameraPos * ioOutput.mAxisMask + inInput.mOriginalPos * ioOutput.mAxisMaskInv;
-		Vector4D diffP = ( inInput.mCameraPos - cameraProjectedP );
-		Vector4D diffP2 = diffP + diffP;
-
 		Vector4D planeNormal = Vector4D::sCross3( inAxis1, inAxis2 );
 		double planeCoordW = -planeNormal.Dot3( inInput.mOriginalPos );
+
+		Vector4D cameraProjectedP = inInput.mCameraPos - planeNormal * Vector4D::sReplicate( inInput.mCameraPos.Dot3( planeNormal ) - planeCoordW );
+		Vector4D diffP = ( inInput.mCameraPos - cameraProjectedP );
+		Vector4D diffP2 = diffP + diffP;
 
 		Vector4D mouseDelta = inInput.mMousePosFar - inInput.mMousePosNear;
 
@@ -395,9 +400,12 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslatePerspective( Cyclone:
 		ImGuizmo::Enable( true );
 		ImGuizmo::AllowAxisFlip( false );
 
-		DirectX::XMMATRIX modelMatrix = DirectX::XMMatrixTranslationFromVector( entityCurrentPositionRel.ToXMVECTOR() );
+		DirectX::XMMATRIX modelMatrix = DirectX::XMMatrixMultiply(
+			DirectX::XMMatrixRotationRollPitchYawFromVector( registry.get<Rotation>( selectedEntity ).mPitchYawRoll ),
+			DirectX::XMMatrixTranslationFromVector( entityCurrentPositionRel.ToXMVECTOR() )
+		);
 
-		ImGuizmo::Manipulate( reinterpret_cast<const float *>( &viewMatrix ), reinterpret_cast<const float *>( &projMatrix ), ImGuizmo::TRANSLATE, ImGuizmo::WORLD, reinterpret_cast<float *>( &modelMatrix ) );
+		ImGuizmo::Manipulate( reinterpret_cast<const float *>( &viewMatrix ), reinterpret_cast<const float *>( &projMatrix ), ImGuizmo::TRANSLATE, IS_LOCAL ? ImGuizmo::LOCAL : ImGuizmo::WORLD, reinterpret_cast<float *>( &modelMatrix ) );
 
 		ImGuizmo::PopID();
 	}
@@ -443,6 +451,11 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslatePerspective( Cyclone:
 			Vector4D axisDir1{ nullptr };
 			gizmoContext.GetSingleAxis( axisDir1 );
 
+			if ( IS_LOCAL ) {
+				Matrix44D mat = Matrix44D::sFromXMMATRIX( DirectX::XMMatrixRotationRollPitchYawFromVector( registry.get<Rotation>( selectedEntity ).mPitchYawRoll ) );
+				axisDir1 = mat.TransformCoord3Unit( axisDir1 );
+			}
+
 			Translate1( input, output, axisDir1 );
 		}
 		// Two axis transform
@@ -450,6 +463,12 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslatePerspective( Cyclone:
 			Vector4D axisDir1{ nullptr };
 			Vector4D axisDir2{ nullptr };
 			gizmoContext.GetDualAxis( axisDir1, axisDir2 );
+
+			if ( IS_LOCAL ) {
+				Matrix44D mat = Matrix44D::sFromXMMATRIX( DirectX::XMMatrixRotationRollPitchYawFromVector( registry.get<Rotation>( selectedEntity ).mPitchYawRoll ) );
+				axisDir1 = mat.TransformCoord3Unit( axisDir1 );
+				axisDir2 = mat.TransformCoord3Unit( axisDir2 );
+			}
 
 			Translate2( input, output, axisDir1, axisDir2 );
 		}
@@ -491,7 +510,8 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslate( Cyclone::Core::Leve
 	const auto &selectedEntities = selectionContext.GetSelectedEntities();
 	entt::registry &registry = inLevelInterface->GetRegistry();
 
-	Vector4D objPos = inOutput.mMousePos * inOutput.mAxisMask + inInput.mOriginalPos * inOutput.mAxisMaskInv;
+	//Vector4D objPos = inOutput.mMousePos * inOutput.mAxisMask + inInput.mOriginalPos * inOutput.mAxisMaskInv;
+	Vector4D objPos = inOutput.mMousePos + inInput.mOriginalPos;
 
 	// If first frame of interactions, store initial position
 	if ( ImGui::IsMouseClicked( ImGuiMouseButton_Left ) ) {
@@ -504,14 +524,25 @@ void Cyclone::UI::Tool::GizmoTransformTool::UpdateTranslate( Cyclone::Core::Leve
 	Vector4D gridSizeInv = Vector4D::sReplicate( 1.0 / gridContext.mGridSize );
 
 	if ( gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ByGrid ) {
-		objPosDelta = objPosDelta * inOutput.mAxisMaskInv + Vector4D::sRound( objPosDelta * gridSizeInv ) * gridSize * inOutput.mAxisMask;
+		if ( IS_LOCAL ) {
+			assert( false );
+		}
+		else {
+			objPosDelta = objPosDelta * inOutput.mAxisMaskInv + Vector4D::sRound( objPosDelta * gridSizeInv ) * gridSize * inOutput.mAxisMask;
+		}
 	}
 
 	Vector4D objPosNew = objPosDelta + inInput.mOriginalPos;
 	objPosNew = Vector4D::sClamp( objPosNew, Vector4D::sReplicate( -gridContext.mWorldLimit ), Vector4D::sReplicate( gridContext.mWorldLimit ) );
 
 	if ( gridContext.mSnapType == Cyclone::Core::Editor::GridContext::ESnapType::ToGrid ) {
-		objPosNew = objPosNew * inOutput.mAxisMaskInv + Vector4D::sRound( objPosNew * gridSizeInv ) * gridSize * inOutput.mAxisMask;
+		if ( IS_LOCAL ) {
+			//objPosNew = Vector4D::sRound( objPosNew * gridSizeInv ) * gridSize;
+			assert( false );
+		}
+		else {
+			objPosNew = objPosNew * inOutput.mAxisMaskInv + Vector4D::sRound( objPosNew * gridSizeInv ) * gridSize * inOutput.mAxisMask;
+		}
 	}
 
 	Vector4D perFrameDelta = objPosNew - registry.get<Position>( selectedEntity ).mValue;
