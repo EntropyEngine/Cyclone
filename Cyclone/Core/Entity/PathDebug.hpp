@@ -50,6 +50,13 @@ namespace Cyclone::Core::Entity
 				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 )
 			);
 
+			pathData.mPathSegments.emplace_back(
+				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ),
+				Cyclone::Math::Vector4D( 1.0, 1.0, 4.0 ),
+				Cyclone::Math::Vector4D( 1.0, 1.0, 5.0 ),
+				Cyclone::Math::Vector4D( 1.0, 1.0, 6.0 )
+			);
+
 			localBounds.UpdateBoundingBox( entity, inRegistry );
 
 			return entity;

@@ -16,5 +16,13 @@ namespace Cyclone::UI
 
 		DirectX::XMMATRIX mViewMatrix;
 		DirectX::XMMATRIX mProjMatrix;
+
+		ImVec2 ClipToScreen( const ImVec2 &inClip ) const
+		{
+			return {
+				inClip.x * ( mViewSize.x / 2.0f ) + ( mViewSize.x / 2.0f ) + mViewOrigin.x,
+				-inClip.y * ( mViewSize.y / 2.0f ) + ( mViewSize.y / 2.0f ) + mViewOrigin.y
+			};
+		}
 	};
 }

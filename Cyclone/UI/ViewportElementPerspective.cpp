@@ -215,8 +215,8 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 				std::vector<DirectX::VertexPositionColor> linePoints( pathData.mPathSegments.size() * 65 );
 				for ( size_t s = 0; s < pathData.mPathSegments.size(); ++s ) {
 					for ( size_t i = 0; i <= 64; ++i ) {
-						DirectX::XMStoreFloat3( &linePoints[s * 64 + i].position, ( rotmat.TransformCoord3Unit( pathData.mPathSegments[s].GetPoint( static_cast<double>( i ) / 64 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
-						DirectX::XMStoreFloat4( &linePoints[s * 64 + i].color, entityColorV );
+						DirectX::XMStoreFloat3( &linePoints[s * 65 + i].position, ( rotmat.TransformCoord3Unit( pathData.mPathSegments[s].GetPoint( static_cast<double>( i ) / 64 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
+						DirectX::XMStoreFloat4( &linePoints[s * 65 + i].color, entityColorV );
 					}
 				}
 
@@ -233,6 +233,8 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 	// Call all tool renders with depth enabled
 	{
+		inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mToolRSS_MSAA.Get() : mToolRSS_NOAA.Get() );
+
 		mWireframeGridBatch->Begin();
 		for ( auto &tool : inTools ) {
 			tool->OnRender( EViewportType::Perspective, inLevelInterface, mViewportData, mWireframeGridBatch.get() );
@@ -243,6 +245,9 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 
 	// Render bounding boxes
 	{
+		inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mCommonStates->Wireframe() : mWireframeRSS.Get() );
+		//inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mToolRSS_MSAA.Get() : mToolRSS_NOAA.Get() );
+
 		mWireframeBoxShader->Apply( inDeviceContext );
 		mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
 		mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );

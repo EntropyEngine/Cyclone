@@ -36,6 +36,14 @@ void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 *inDevice )
 	rssDesc.FrontCounterClockwise = TRUE;
 	DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mWireframeRSS.ReleaseAndGetAddressOf() ) );
 
+	rssDesc.DepthBias = -1;
+	rssDesc.MultisampleEnable = TRUE;
+	DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mToolRSS_MSAA.ReleaseAndGetAddressOf() ) );
+
+	rssDesc.DepthBias = -1;
+	rssDesc.MultisampleEnable = FALSE;
+	DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mToolRSS_NOAA.ReleaseAndGetAddressOf() ) );
+
 	mCommonStates = std::make_unique<DirectX::CommonStates>( inDevice );
 
 	mWireframeGridEffect = std::make_unique<DirectX::BasicEffect>( inDevice );
