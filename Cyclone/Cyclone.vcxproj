@@ -152,6 +152,7 @@
     <ClInclude Include="Core\Component\EntityType.hpp" />
     <ClInclude Include="Core\Component\EpochNumber.hpp" />
     <ClInclude Include="Core\Component\LocalBounds.hpp" />
+    <ClInclude Include="Core\Component\Path.hpp" />
     <ClInclude Include="Core\Component\Position.hpp" />
     <ClInclude Include="Core\Component\Rotation.hpp" />
     <ClInclude Include="Core\Component\Selectable.hpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="Core\EntityManager.hpp" />
     <ClInclude Include="Core\Entity\BaseEntity.hpp" />
     <ClInclude Include="Core\Entity\InfoDebug.hpp" />
+    <ClInclude Include="Core\Entity\PathDebug.hpp" />
     <ClInclude Include="Core\Entity\PlayerSpawn.hpp" />
     <ClInclude Include="Core\Entity\PointDebug.hpp" />
     <ClInclude Include="Core\HistoryAction.hpp" />

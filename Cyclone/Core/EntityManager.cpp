@@ -5,6 +5,7 @@
 #include "Cyclone/Core/Entity/PointDebug.hpp"
 #include "Cyclone/Core/Entity/InfoDebug.hpp"
 #include "Cyclone/Core/Entity/PlayerSpawn.hpp"
+#include "Cyclone/Core/Entity/PathDebug.hpp"
 
 using Cyclone::Util::HashPair;
 
@@ -27,6 +28,7 @@ constexpr uint32_t GetDebugColor()
 			case "light"_hs.value():	return {};
 			case "logic"_hs.value():	return {};
 			case "npc"_hs.value():		return {};
+			case "path"_hs.value():		return Cyclone::Util::ColorU32( 0x70, 0x18, 0xFF );
 			case "player"_hs.value():	return Cyclone::Util::ColorU32( 0x00, 0xFF, 0x00 );
 			case "point"_hs.value():	return Cyclone::Util::ColorU32( 0xDD, 0x18, 0xDD );
 			case "prop"_hs.value():		return {};
@@ -54,6 +56,7 @@ void Cyclone::Core::EntityManager::Register()
 	RegisterEntityClass<Entity::PointDebug>();
 	RegisterEntityClass<Entity::InfoDebug>();
 	RegisterEntityClass<Entity::PlayerSpawn>();
+	RegisterEntityClass<Entity::PathDebug>();
 	
 	// Sort lists into entity order
 	mEntityTypeNameMap.Sort();

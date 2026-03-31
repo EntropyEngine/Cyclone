@@ -20,6 +20,7 @@ void Cyclone::Core::LevelInterface::Initialize()
 
 	GetSelectionCtx().ClearSelection();
 
+	/*
 	mEntityManager.BeginAction();
 
 	mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 4.0, 0.0, 0.0 } );
@@ -47,6 +48,11 @@ void Cyclone::Core::LevelInterface::Initialize()
 			mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 2.0, 0.0, 2.0 } );
 		}
 	}
+	mEntityManager.EndAction( GetRegistry() );
+	*/
+
+	mEntityManager.BeginAction();
+	mEntityManager.CreateEntity( "path_debug"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
 	mEntityManager.EndAction( GetRegistry() );
 }
 

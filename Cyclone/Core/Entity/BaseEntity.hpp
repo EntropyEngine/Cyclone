@@ -87,9 +87,14 @@ namespace Cyclone::Core::Entity
 			template<typename T>
 			void operator()( const entt::registry &inRegistry, entt::registry &inHistoryRegistry, entt::entity inEntity ) const
 			{
-				// TODO: is the copy by value required, or can copy by reference be used?
-				const T copy = inRegistry.get<T>( inEntity );
-				inHistoryRegistry.emplace_or_replace<T>( inEntity, copy );
+				if constexpr ( std::is_empty_v<T> ) {
+					inHistoryRegistry.emplace_or_replace<T>( inEntity );
+				}
+				else {
+					// TODO: is the copy by value required, or can copy by reference be used?
+					const T copy = inRegistry.get<T>( inEntity );
+					inHistoryRegistry.emplace_or_replace<T>( inEntity, copy );
+				}
 			}
 		};
 
@@ -98,9 +103,14 @@ namespace Cyclone::Core::Entity
 			template<typename T>
 			void operator()( entt::registry &inRegistry, entt::entity inSrc, entt::entity inDst ) const
 			{
-				// TODO: is the copy by value required, or can copy by reference be used?
-				const T copy = inRegistry.get<T>( inSrc );
-				inRegistry.emplace<T>( inDst, copy );
+				if constexpr ( std::is_empty_v<T> ) {
+					inRegistry.emplace_or_replace<T>( inDst );
+				}
+				else {
+					// TODO: is the copy by value required, or can copy by reference be used?
+					const T copy = inRegistry.get<T>( inSrc );
+					inRegistry.emplace<T>( inDst, copy );
+				}
 			}
 		};
 	};
