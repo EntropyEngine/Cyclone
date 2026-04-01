@@ -25,8 +25,22 @@ namespace Cyclone::Core::Component
 
 		enum EExtrusionType : uint8_t
 		{
-			ImplictNormal = 1 << 0,
-			ImplictBitangent = 1 << 1,
+			NormalExplicit		= ( 1 << 0 ),
+			NormalAligned		= ( 2 << 0 ),
+			NormalTilt			= ( 3 << 0 ),
+
+			BitangentExplicit	= ( 1 << 2 ),
+			BitangentAligned	= ( 2 << 2 ),
+			BitangentTilt		= ( 3 << 2 ),
+
+			Explicit			= NormalExplicit | BitangentExplicit,
+			Aligned				= NormalAligned | BitangentAligned,
+			Tilt				= NormalTilt | BitangentTilt,
+
+			TYPE_MASK			= ( 0b11 << 0 ),
+			TYPE_SHIFT			= ( 1 << 2 ),
+			NORMAL_MASK			= TYPE_MASK,
+			BITANGENT_MASK		= TYPE_MASK << 2,
 		};
 
 		struct Segment
@@ -135,6 +149,56 @@ namespace Cyclone::Core::Component
 		DirectX::XMVECTOR XM_CALLCONV InterpolateNormal( size_t root, float u ) const
 		{
 			return DirectX::XMVectorLerp( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal, u );
+		}
+
+		Cyclone::Math::Vector4D XM_CALLCONV InterpolateUVW( size_t root, float u, float v, float w ) const
+		{
+			using Cyclone::Math::Vector4D;
+
+			Vector4D p = Interpolate( root, u );
+
+			Vector4D t = Vector4D::sFromXMVECTOR( Differentiate( root, u ) ).GetNorm3();
+
+			Vector4D normalExpl = Vector4D::sFromXMVECTOR( InterpolateNormal( root, u ) ).GetNorm3(); // NormalExplict
+			Vector4D bitangentExpl = Vector4D::sFromXMVECTOR( InterpolateBitangent( root, u ) ).GetNorm3(); // BitangentExplicit
+
+			Vector4D normalImpl = Vector4D::sCross3( t, bitangentExpl ).GetNorm3(); // NormalTilt
+			Vector4D bitangentImpl = -Vector4D::sCross3( t, normalExpl ).GetNorm3(); // BitangentAligned
+
+			Vector4D normalImpl2 = Vector4D::sCross3( t, bitangentImpl ).GetNorm3(); // NormalAligned
+			Vector4D bitangentImpl2 = -Vector4D::sCross3( t, normalImpl ).GetNorm3(); // BitangentTilt
+
+			assert( std::abs( normalExpl.Dot3( bitangentExpl ) ) < 0.1e-7 );
+			assert( std::abs( normalImpl.Dot3( bitangentImpl2 ) ) < 0.1e-7 );
+			assert( std::abs( normalImpl2.Dot3( bitangentImpl ) ) < 0.1e-7 );
+
+			Vector4D normal{ nullptr };
+			Vector4D bitangent{ nullptr };
+
+			switch ( mExtrusionTypes[root] & NORMAL_MASK ) {
+				case NormalExplicit: normal = normalExpl; break;
+				case NormalAligned:  normal = normalImpl2; break;
+				case NormalTilt:	 normal = normalImpl; break;
+				default:
+					assert( false );
+					__assume( false );
+			}
+
+			switch ( mExtrusionTypes[root] & BITANGENT_MASK ) {
+				case BitangentExplicit:	bitangent = bitangentExpl; break;
+				case BitangentAligned:	bitangent = bitangentImpl; break;
+				case BitangentTilt:		bitangent = bitangentImpl2; break;
+				default:
+					assert( false );
+					__assume( false );
+			}
+
+			assert( std::abs( normal.Dot3( bitangent ) ) < 0.1e-7 );
+			if ( mExtrusionTypes[root] != Explicit ) {
+				assert( std::abs( normal.Dot3( t ) ) < 0.1e-7 );
+			}
+
+			return p + bitangent * Vector4D::sReplicate( v ) + normal * Vector4D::sReplicate( w );
 		}
 	};
 }

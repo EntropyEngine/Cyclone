@@ -215,8 +215,22 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 				std::vector<DirectX::VertexPositionColor> linePoints( ( pathData.mKnots.size() - 1 ) * 65 );
 				for ( size_t s = 0; s + 1 < pathData.mKnots.size(); ++s ) {
 					for ( size_t i = 0; i <= 64; ++i ) {
-						DirectX::XMStoreFloat3( &linePoints[s * 65 + i].position, ( rotmat.TransformCoord3Unit( pathData.Interpolate( s, static_cast<float>( i ) / 64 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
+						float u = static_cast<float>( i ) / 64;
+						DirectX::XMStoreFloat3( &linePoints[s * 65 + i].position, ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
 						DirectX::XMStoreFloat4( &linePoints[s * 65 + i].color, entityColorV );
+
+						if ( i % 4 == 0 ) {
+							DirectX::XMVECTOR A = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR();
+							DirectX::XMVECTOR B = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR();
+							DirectX::XMVECTOR C = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, 0.1 ) ) + rebasedEntityPosition ).ToXMVECTOR();
+							DirectX::XMVECTOR D = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, 0.1 ) ) + rebasedEntityPosition ).ToXMVECTOR();
+
+							mWireframeGridBatch->DrawLine( { A, entityColorV }, { B, entityColorV } );
+							mWireframeGridBatch->DrawLine( { B, entityColorV }, { C, entityColorV } );
+							mWireframeGridBatch->DrawLine( { C, entityColorV }, { D, entityColorV } );
+							mWireframeGridBatch->DrawLine( { D, entityColorV }, { A, entityColorV } );
+						}
+
 					}
 				}
 

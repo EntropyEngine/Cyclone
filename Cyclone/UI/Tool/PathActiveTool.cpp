@@ -110,23 +110,27 @@ void Cyclone::UI::Tool::PathActiveTool::OnDraw( Cyclone::Core::LevelInterface *i
 				break;
 			}
 
+			continue;
+
 			for ( double u = 0.0; u <= 1.0; u += 1.0 / 16 ) {
 				Vector4D p = pathData.Interpolate( s, u );
 
 				Vector4D t = Vector4D::sFromXMVECTOR( pathData.Differentiate( s, u ) ).GetNorm3();
 
-				Vector4D bitangentExpl = Vector4D::sFromXMVECTOR( pathData.InterpolateBitangent( s, u ) ).GetNorm3();
-				Vector4D normalExpl = Vector4D::sFromXMVECTOR( pathData.InterpolateNormal( s, u ) ).GetNorm3();
+				Vector4D normalExpl = Vector4D::sFromXMVECTOR( pathData.InterpolateNormal( s, u ) ).GetNorm3(); // NormalExplict
+				Vector4D bitangentExpl = Vector4D::sFromXMVECTOR( pathData.InterpolateBitangent( s, u ) ).GetNorm3(); // BitangentExplicit
 
-				Vector4D normalImpl = Vector4D::sCross3( t, bitangentExpl ).GetNorm3();
-				Vector4D bitangentImpl2 = -Vector4D::sCross3( t, normalImpl ).GetNorm3();
+				Vector4D normalImpl = Vector4D::sCross3( t, bitangentExpl ).GetNorm3(); // NormalTilt
+				Vector4D bitangentImpl = -Vector4D::sCross3( t, normalExpl ).GetNorm3(); // BitangentAligned
 
-				Vector4D bitangentImpl = -Vector4D::sCross3( t, normalExpl ).GetNorm3();
-				Vector4D normalImpl2 = Vector4D::sCross3( t, bitangentImpl ).GetNorm3();
+				Vector4D normalImpl2 = Vector4D::sCross3( t, bitangentImpl ).GetNorm3(); // NormalAligned
+				Vector4D bitangentImpl2 = -Vector4D::sCross3( t, normalImpl ).GetNorm3(); // BitangentTilt
 
+				double dot00 = normalExpl.Dot3( bitangentExpl );
 				double dot12 = normalImpl.Dot3( bitangentImpl2 );
 				double dot21 = normalImpl2.Dot3( bitangentImpl );
 
+				assert( std::abs( dot00 ) < 0.1e-7 );
 				assert( std::abs( dot12 ) < 0.1e-7 );
 				assert( std::abs( dot21 ) < 0.1e-7 );
 
@@ -152,7 +156,7 @@ void Cyclone::UI::Tool::PathActiveTool::OnDraw( Cyclone::Core::LevelInterface *i
 				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + normalExpl *scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
 				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
 					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
-					drawList->AddLine( p1, p2, IM_COL32( 255, 255, 255, 255 ) );
+					//drawList->AddLine( p1, p2, IM_COL32( 255, 255, 255, 255 ) );
 				}
 				
 				// White = Explicit
