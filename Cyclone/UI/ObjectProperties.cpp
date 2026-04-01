@@ -73,7 +73,7 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 
 		ImGui::Text( "Segment Count" );
 		ImGui::SameLine( 128.0f );
-		ImGui::Text( Cyclone::Util::PrefixString( "", pathData.mPathSegments.size() ) );
+		ImGui::Text( Cyclone::Util::PrefixString( "", pathData.mPathGuide.size() ) );
 	}
 
 

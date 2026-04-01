@@ -43,7 +43,7 @@ namespace Cyclone::Core::Component
 
 					Cyclone::Math::Matrix44D rotmat = Cyclone::Math::Matrix44D::sFromXMMATRIX( DirectX::XMMatrixRotationRollPitchYawFromVector( rotation.mPitchYawRoll ) );
 
-					for ( const auto &segment : pathData.mPathSegments ) {
+					for ( const auto &segment : pathData.mPathGuide ) {
 						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, rotmat.TransformCoord3Unit( segment.mP0 ) );
 						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, rotmat.TransformCoord3Unit( segment.mP0 ) );
 

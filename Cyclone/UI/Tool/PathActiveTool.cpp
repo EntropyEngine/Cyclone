@@ -76,24 +76,59 @@ void Cyclone::UI::Tool::PathActiveTool::OnDraw( Cyclone::Core::LevelInterface *i
 		//	entityColorU32 = entityManager.GetEntityTypeColor( entityType );
 		//}
 
-		for ( const auto &segment : pathData.mPathSegments ) {
+		for ( const auto &segment : pathData.mPathGuide ) {
 			ImVec2 p1, p2;
 
 			DirectX::XMStoreFloat2( reinterpret_cast<DirectX::XMFLOAT2 *>( &p1 ), DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( segment.mP0 ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
 			DirectX::XMStoreFloat2( reinterpret_cast<DirectX::XMFLOAT2 *>( &p2 ), DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( segment.mP1 ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
 			p1 = inViewportData.ClipToScreen( p1 );
 			p2 = inViewportData.ClipToScreen( p2 );
-			drawList->AddLine( p1, p2, IM_COL32_WHITE );
-			drawList->AddCircleFilled( p1, 6.0f, IM_COL32_WHITE );
-			drawList->AddCircle( p2, 4.0f, IM_COL32_WHITE );
+			drawList->AddLine( p1, p2, IM_COL32( 255, 255, 255, 128 ) );
+			drawList->AddCircle( p1, 6.0f, IM_COL32( 255, 255, 255, 128 ) );
+			drawList->AddCircle( p2, 4.0f, IM_COL32( 255, 255, 255, 128 ) );
 
 			DirectX::XMStoreFloat2( reinterpret_cast<DirectX::XMFLOAT2 *>( &p1 ), DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( segment.mP2 ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
 			DirectX::XMStoreFloat2( reinterpret_cast<DirectX::XMFLOAT2 *>( &p2 ), DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( segment.mP3 ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
 			p1 = inViewportData.ClipToScreen( p1 );
 			p2 = inViewportData.ClipToScreen( p2 );
-			drawList->AddLine( p1, p2, IM_COL32_WHITE );
-			drawList->AddCircle( p1, 4.0f, IM_COL32_WHITE );
-			drawList->AddCircleFilled( p2, 6.0f, IM_COL32_WHITE );
+			drawList->AddLine( p1, p2, IM_COL32( 255, 255, 255, 128 ) );
+			drawList->AddCircle( p1, 4.0f, IM_COL32( 255, 255, 255, 128 ) );
+			drawList->AddCircle( p2, 6.0f, IM_COL32( 255, 255, 255, 128 ) );
+
+			Vector4D bitangent = Vector4D( 1.0, 0.0, 0.0 );
+			Vector4D half = Vector4D::sReplicate( 0.5 );
+
+			for ( double u = 0.0; u <= 1.0; u += 1.0 / 16 ) {
+				Vector4D p = segment.GetPoint( u );
+				Vector4D t = segment.GetDerivative( u ).GetNorm3();
+
+				Vector4D normal = Vector4D::sCross3( t, bitangent );
+				Vector4D b = Vector4D::sCross3( t, normal );
+
+				Vector4D n2 = Vector4D::sCross3( bitangent, Vector4D::sCross3( b, Vector4D( 0, 1, 0 ) ).GetNorm3() );
+
+				DirectX::XMStoreFloat2( reinterpret_cast<DirectX::XMFLOAT2 *>( &p1 ), DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				DirectX::XMStoreFloat2( reinterpret_cast<DirectX::XMFLOAT2 *>( &p2 ), DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + normal * half ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				p1 = inViewportData.ClipToScreen( p1 );
+				p2 = inViewportData.ClipToScreen( p2 );
+				drawList->AddLine( p1, p2, IM_COL32( 255, 0, 0, 255 ) );
+
+				DirectX::XMStoreFloat2( reinterpret_cast<DirectX::XMFLOAT2 *>( &p2 ), DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + bitangent * half ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				p2 = inViewportData.ClipToScreen( p2 );
+				drawList->AddLine( p1, p2, IM_COL32( 0, 255, 0, 255 ) );
+
+				DirectX::XMStoreFloat2( reinterpret_cast<DirectX::XMFLOAT2 *>( &p2 ), DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + b * half ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				p2 = inViewportData.ClipToScreen( p2 );
+				drawList->AddLine( p1, p2, IM_COL32( 0, 255, 255, 255 ) );
+
+				DirectX::XMStoreFloat2( reinterpret_cast<DirectX::XMFLOAT2 *>( &p2 ), DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + n2 * half ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				p2 = inViewportData.ClipToScreen( p2 );
+				drawList->AddLine( p1, p2, IM_COL32( 255, 0, 255, 255 ) );
+
+				//DirectX::XMStoreFloat2( reinterpret_cast<DirectX::XMFLOAT2 *>( &p1 ), DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + ( normal + bitangent ) * half ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				//p1 = inViewportData.ClipToScreen( p1 );
+				//drawList->AddLine( p1, p2, IM_COL32( 255, 0, 0, 255 ) );
+			}
 		}
 	}
 }

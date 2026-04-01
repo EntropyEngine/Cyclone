@@ -43,18 +43,39 @@ namespace Cyclone::Core::Entity
 			inRegistry.emplace<Component::PathTag>( entity );
 			Component::PathData &pathData = inRegistry.emplace<Component::PathData>( entity );
 
-			pathData.mPathSegments.emplace_back(
+			pathData.mPathGuide.emplace_back(
 				Cyclone::Math::Vector4D( 0.0, 0.0, 0.0 ),
 				Cyclone::Math::Vector4D( 0.0, 0.0, 1.0 ),
 				Cyclone::Math::Vector4D( 1.0, 1.0, 2.0 ),
 				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 )
 			);
 
-			pathData.mPathSegments.emplace_back(
-				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ),
-				Cyclone::Math::Vector4D( 1.0, 1.0, 4.0 ),
-				Cyclone::Math::Vector4D( 1.0, 1.0, 5.0 ),
-				Cyclone::Math::Vector4D( 1.0, 1.0, 6.0 )
+			pathData.mPathGuide.emplace_back(
+				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 0.0, 0.0, 0.0 ),
+				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 0.0, 0.0, 1.1045696 ),
+				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 0.28621688, 0.8954305, 2.0 ),
+				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 0.5, 2.0, 2.0 )
+			);
+
+			pathData.mPathGuide.emplace_back(
+				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 0.5, 2.0, 2.0 ),
+				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 0.71378312, 3.1045695, 2.0 ),
+				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 1.0, 4.0, 1.1045695 ),
+				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 1.0, 4.0, 0.0 )
+			);
+
+			pathData.mPathGuide.emplace_back(
+				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -1.0, 4.0, -0.0 ),
+				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -1.0, 4.0, -1.1045695 ),
+				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -0.71378312, 3.1045695, -2.0 ),
+				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -0.5, 2.0, -2.0 )
+			);
+
+			pathData.mPathGuide.emplace_back(
+				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -0.5, 2.0, -2.0 ),
+				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -0.28621688, 0.8954305, -2.0 ),
+				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -0.0, 0.0, -1.1045696 ),
+				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -0.0, 0.0, -0.0 )
 			);
 
 			localBounds.UpdateBoundingBox( entity, inRegistry );

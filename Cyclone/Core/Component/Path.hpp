@@ -33,8 +33,22 @@ namespace Cyclone::Core::Component
 
 				return mP0 * b0 + mP1 * b1 + mP2 * b2 + mP3 * b3;
 			}
+
+			Cyclone::Math::Vector4D XM_CALLCONV GetDerivative( double u ) const
+			{
+				const double u2 = u * u;
+
+				const double iu = 1.0 - u;
+				const double iu2 = iu * iu;
+
+				const Cyclone::Math::Vector4D b0 = Cyclone::Math::Vector4D::sReplicate( 3.0 * iu2 );
+				const Cyclone::Math::Vector4D b1 = Cyclone::Math::Vector4D::sReplicate( 6.0 * u * iu );
+				const Cyclone::Math::Vector4D b2 = Cyclone::Math::Vector4D::sReplicate( 3.0 * u2 );
+
+				return ( mP1 - mP0 ) * b0 + ( mP2 - mP1 ) * b1 + ( mP3 - mP2 ) * b2;
+			}
 		};
 
-		std::vector<Segment> mPathSegments;
+		std::vector<Segment> mPathGuide;
 	};
 }
