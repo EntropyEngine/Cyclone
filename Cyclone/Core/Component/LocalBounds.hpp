@@ -43,18 +43,15 @@ namespace Cyclone::Core::Component
 
 					Cyclone::Math::Matrix44D rotmat = Cyclone::Math::Matrix44D::sFromXMMATRIX( DirectX::XMMatrixRotationRollPitchYawFromVector( rotation.mPitchYawRoll ) );
 
-					for ( const auto &segment : pathData.mPathGuide ) {
-						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, rotmat.TransformCoord3Unit( segment.mP0 ) );
-						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, rotmat.TransformCoord3Unit( segment.mP0 ) );
+					for ( const auto &segment : pathData.mKnots ) {
+						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, rotmat.TransformCoord3Unit( segment.mPoint ) );
+						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, rotmat.TransformCoord3Unit( segment.mPoint ) );
 
-						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, rotmat.TransformCoord3Unit( segment.mP1 ) );
-						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, rotmat.TransformCoord3Unit( segment.mP1 ) );
+						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( segment.mInVec ) ) );
+						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( segment.mInVec ) ) );
 
-						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, rotmat.TransformCoord3Unit( segment.mP2 ) );
-						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, rotmat.TransformCoord3Unit( segment.mP2 ) );
-
-						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, rotmat.TransformCoord3Unit( segment.mP3 ) );
-						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, rotmat.TransformCoord3Unit( segment.mP3 ) );
+						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( segment.mOutVec ) ) );
+						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( segment.mOutVec ) ) );
 					}
 					
 					Cyclone::Math::Vector4D half = Cyclone::Math::Vector4D::sReplicate( 0.5 );

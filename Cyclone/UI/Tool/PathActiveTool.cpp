@@ -7,7 +7,7 @@
 // Core includes
 #include "Cyclone/Core/LevelInterface.hpp"
 
-// Compontnts
+// Components
 #include "Cyclone/Core/Component/Rotation.hpp"
 #include "Cyclone/Core/Component/Path.hpp"
 
@@ -78,12 +78,23 @@ void Cyclone::UI::Tool::PathActiveTool::OnDraw( Cyclone::Core::LevelInterface *i
 		//	entityColorU32 = entityManager.GetEntityTypeColor( entityType );
 		//}
 
-		for ( const auto &segment : pathData.mPathGuide ) {
+		size_t s = 0;
+		for ( const auto &knot : pathData.mKnots ) {
+			using namespace DirectX;
+
 			DirectX::XMFLOAT4 v1, v2;
 			ImVec2 p1, p2;
 
-			DirectX::XMStoreFloat4( &v1, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( segment.mP0 ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
-			DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( segment.mP1 ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+			DirectX::XMStoreFloat4( &v1, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( knot.mPoint ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+			DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( knot.mPoint + Vector4D::sFromXMVECTOR( knot.mInVec ) ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+			if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
+				p1 = inViewportData.ClipToScreen( { v1.x, v1.y } );
+				p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
+				drawList->AddLine( p1, p2, IM_COL32( 255, 255, 255, 128 ) );
+				drawList->AddCircle( p1, 6.0f, IM_COL32( 255, 255, 255, 128 ) );
+				drawList->AddCircle( p2, 4.0f, IM_COL32( 255, 255, 255, 128 ) );
+			}
+			DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( knot.mPoint + Vector4D::sFromXMVECTOR( knot.mOutVec ) ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
 			if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
 				p1 = inViewportData.ClipToScreen( { v1.x, v1.y } );
 				p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
@@ -92,58 +103,87 @@ void Cyclone::UI::Tool::PathActiveTool::OnDraw( Cyclone::Core::LevelInterface *i
 				drawList->AddCircle( p2, 4.0f, IM_COL32( 255, 255, 255, 128 ) );
 			}
 
-			DirectX::XMStoreFloat4( &v1, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( segment.mP2 ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
-			DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( segment.mP3 ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
-			if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
-				p1 = inViewportData.ClipToScreen( { v1.x, v1.y } );
-				p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
-				drawList->AddLine( p1, p2, IM_COL32( 255, 255, 255, 128 ) );
-				drawList->AddCircle( p1, 4.0f, IM_COL32( 255, 255, 255, 128 ) );
-				drawList->AddCircle( p2, 6.0f, IM_COL32( 255, 255, 255, 128 ) );
+			Vector4D bitangent = Vector4D( 1.0, 0.0, 0.0 );
+			Vector4D scale = Vector4D::sReplicate( 0.5 );
+
+			if ( s + 1 == pathData.mKnots.size() ) {
+				break;
 			}
 
-			Vector4D bitangent = Vector4D( 1.0, 0.0, 0.0 );
-			Vector4D half = Vector4D::sReplicate( 0.5 );
-
 			for ( double u = 0.0; u <= 1.0; u += 1.0 / 16 ) {
-				Vector4D p = segment.GetPoint( u );
-				Vector4D t = segment.GetDerivative( u ).GetNorm3();
+				Vector4D p = pathData.Interpolate( s, u );
 
-				Vector4D normal = Vector4D::sCross3( t, bitangent );
-				Vector4D b = Vector4D::sCross3( t, normal );
+				Vector4D t = Vector4D::sFromXMVECTOR( pathData.Differentiate( s, u ) ).GetNorm3();
 
-				Vector4D n2 = Vector4D::sCross3( bitangent, Vector4D::sCross3( b, Vector4D( 0, 1, 0 ) ).GetNorm3() );
+				Vector4D bitangentExpl = Vector4D::sFromXMVECTOR( pathData.InterpolateBitangent( s, u ) ).GetNorm3();
+				Vector4D normalExpl = Vector4D::sFromXMVECTOR( pathData.InterpolateNormal( s, u ) ).GetNorm3();
+
+				Vector4D normalImpl = Vector4D::sCross3( t, bitangentExpl ).GetNorm3();
+				Vector4D bitangentImpl2 = -Vector4D::sCross3( t, normalImpl ).GetNorm3();
+
+				Vector4D bitangentImpl = -Vector4D::sCross3( t, normalExpl ).GetNorm3();
+				Vector4D normalImpl2 = Vector4D::sCross3( t, bitangentImpl ).GetNorm3();
+
+				double dot12 = normalImpl.Dot3( bitangentImpl2 );
+				double dot21 = normalImpl2.Dot3( bitangentImpl );
+
+				assert( std::abs( dot12 ) < 0.1e-7 );
+				assert( std::abs( dot21 ) < 0.1e-7 );
 
 				DirectX::XMStoreFloat4( &v1, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
-				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + normal * half ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				p1 = inViewportData.ClipToScreen( { v1.x, v1.y } );
+
+				// White = Explicit
+				// Red = Implicit with Tilt
+				// Magenta = Implicit without tilt
+				
+				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + normalImpl * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
 				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
-					p1 = inViewportData.ClipToScreen( { v1.x, v1.y } );
 					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
 					drawList->AddLine( p1, p2, IM_COL32( 255, 0, 0, 255 ) );
 				}
 
-				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + bitangent * half ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
-				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
-					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
-					drawList->AddLine( p1, p2, IM_COL32( 0, 255, 0, 255 ) );
-				}
-
-				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + b * half ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
-				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
-					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
-					drawList->AddLine( p1, p2, IM_COL32( 0, 255, 255, 255 ) );
-				}
-
-				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + n2 * half ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + normalImpl2 * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
 				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
 					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
 					drawList->AddLine( p1, p2, IM_COL32( 255, 0, 255, 255 ) );
 				}
 
+				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + normalExpl *scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
+					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
+					drawList->AddLine( p1, p2, IM_COL32( 255, 255, 255, 255 ) );
+				}
+				
+				// White = Explicit
+				// Green = Implicit without tilt
+				// Cyan = Implicit with tilt
+				
+				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + bitangentExpl * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
+					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
+					drawList->AddLine( p1, p2, IM_COL32( 255, 255, 255, 255 ) );
+				}
+
+				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + bitangentImpl * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
+					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
+					drawList->AddLine( p1, p2, IM_COL32( 0, 255, 0, 255 ) );
+				}
+
+				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + bitangentImpl2 * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
+					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
+					drawList->AddLine( p1, p2, IM_COL32( 0, 255, 255, 255 ) );
+				}
+				
+
 				//DirectX::XMStoreFloat2( reinterpret_cast<DirectX::XMFLOAT2 *>( &p1 ), DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + ( normal + bitangent ) * half ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
 				//p1 = inViewportData.ClipToScreen( p1 );
 				//drawList->AddLine( p1, p2, IM_COL32( 255, 0, 0, 255 ) );
 			}
+
+			s += 1;
 		}
 	}
 }

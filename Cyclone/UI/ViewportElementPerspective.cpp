@@ -212,10 +212,10 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 				}
 				DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
 
-				std::vector<DirectX::VertexPositionColor> linePoints( pathData.mPathGuide.size() * 65 );
-				for ( size_t s = 0; s < pathData.mPathGuide.size(); ++s ) {
+				std::vector<DirectX::VertexPositionColor> linePoints( ( pathData.mKnots.size() - 1 ) * 65 );
+				for ( size_t s = 0; s + 1 < pathData.mKnots.size(); ++s ) {
 					for ( size_t i = 0; i <= 64; ++i ) {
-						DirectX::XMStoreFloat3( &linePoints[s * 65 + i].position, ( rotmat.TransformCoord3Unit( pathData.mPathGuide[s].GetPoint( static_cast<double>( i ) / 64 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
+						DirectX::XMStoreFloat3( &linePoints[s * 65 + i].position, ( rotmat.TransformCoord3Unit( pathData.Interpolate( s, static_cast<float>( i ) / 64 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
 						DirectX::XMStoreFloat4( &linePoints[s * 65 + i].color, entityColorV );
 					}
 				}

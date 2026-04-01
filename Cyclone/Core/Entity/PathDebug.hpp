@@ -43,40 +43,56 @@ namespace Cyclone::Core::Entity
 			inRegistry.emplace<Component::PathTag>( entity );
 			Component::PathData &pathData = inRegistry.emplace<Component::PathData>( entity );
 
-			pathData.mPathGuide.emplace_back(
+			std::vector<Component::PathData::Segment> pathGuide;
+			pathGuide.emplace_back(
 				Cyclone::Math::Vector4D( 0.0, 0.0, 0.0 ),
 				Cyclone::Math::Vector4D( 0.0, 0.0, 1.0 ),
 				Cyclone::Math::Vector4D( 1.0, 1.0, 2.0 ),
 				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 )
 			);
 
-			pathData.mPathGuide.emplace_back(
+			pathGuide.emplace_back(
 				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 0.0, 0.0, 0.0 ),
 				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 0.0, 0.0, 1.1045696 ),
 				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 0.28621688, 0.8954305, 2.0 ),
 				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 0.5, 2.0, 2.0 )
 			);
 
-			pathData.mPathGuide.emplace_back(
+			pathGuide.emplace_back(
 				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 0.5, 2.0, 2.0 ),
 				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 0.71378312, 3.1045695, 2.0 ),
 				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 1.0, 4.0, 1.1045695 ),
 				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( 1.0, 4.0, 0.0 )
 			);
-
-			pathData.mPathGuide.emplace_back(
+			
+			pathGuide.emplace_back(
 				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -1.0, 4.0, -0.0 ),
 				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -1.0, 4.0, -1.1045695 ),
 				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -0.71378312, 3.1045695, -2.0 ),
 				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -0.5, 2.0, -2.0 )
 			);
-
-			pathData.mPathGuide.emplace_back(
+			
+			pathGuide.emplace_back(
 				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -0.5, 2.0, -2.0 ),
 				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -0.28621688, 0.8954305, -2.0 ),
 				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -0.0, 0.0, -1.1045696 ),
 				Cyclone::Math::Vector4D( 3.0, 1.0, 3.0 ) + Cyclone::Math::Vector4D( -0.0, 0.0, -0.0 )
 			);
+
+
+			pathData.mKnots.emplace_back( pathGuide[0].mP0, ( -pathGuide[0].mP1 + pathGuide[0].mP0 ).ToXMVECTOR(), ( pathGuide[0].mP1 - pathGuide[0].mP0 ).ToXMVECTOR() );
+			pathData.mKnots.emplace_back( pathGuide[1].mP0, ( pathGuide[0].mP2 - pathGuide[1].mP0 ).ToXMVECTOR(), ( pathGuide[1].mP1 - pathGuide[1].mP0 ).ToXMVECTOR() );												  
+			pathData.mKnots.emplace_back( pathGuide[2].mP0, ( pathGuide[1].mP2 - pathGuide[2].mP0 ).ToXMVECTOR(), ( pathGuide[2].mP1 - pathGuide[2].mP0 ).ToXMVECTOR() );	  
+			pathData.mKnots.emplace_back( pathGuide[3].mP0, ( pathGuide[2].mP2 - pathGuide[3].mP0 ).ToXMVECTOR(), ( pathGuide[3].mP1 - pathGuide[3].mP0 ).ToXMVECTOR() );
+			pathData.mKnots.emplace_back( pathGuide[4].mP0, ( pathGuide[3].mP2 - pathGuide[4].mP0 ).ToXMVECTOR(), ( pathGuide[4].mP1 - pathGuide[4].mP0 ).ToXMVECTOR() );
+			pathData.mKnots.emplace_back( pathGuide[4].mP3, ( pathGuide[4].mP2 - pathGuide[4].mP3 ).ToXMVECTOR(), ( -pathGuide[4].mP2 + pathGuide[4].mP3 ).ToXMVECTOR() );
+
+			pathData.mExtrusions.emplace_back( DirectX::XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f ), DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 0.0f ) );
+			pathData.mExtrusions.emplace_back( DirectX::XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f ), DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 0.0f ) );
+			pathData.mExtrusions.emplace_back( DirectX::XMVectorSet( 0.0f, 0.0f, -1.0f, 0.0f ), DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 0.0f ) );
+			pathData.mExtrusions.emplace_back( DirectX::XMVectorSet( 0.0f, -1.0f, 0.0f, 0.0f ), DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 0.0f ) );
+			pathData.mExtrusions.emplace_back( DirectX::XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f ), DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 0.0f ) );
+			pathData.mExtrusions.emplace_back( DirectX::XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f ), DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 0.0f ) );
 
 			localBounds.UpdateBoundingBox( entity, inRegistry );
 

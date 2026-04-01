@@ -71,9 +71,9 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 
 		PathData &pathData = registry.get<PathData>( inEntity );
 
-		ImGui::Text( "Segment Count" );
+		ImGui::Text( "Knot Count" );
 		ImGui::SameLine( 128.0f );
-		ImGui::Text( Cyclone::Util::PrefixString( "", pathData.mPathGuide.size() ) );
+		ImGui::Text( Cyclone::Util::PrefixString( "", pathData.mKnots.size() ) );
 	}
 
 
