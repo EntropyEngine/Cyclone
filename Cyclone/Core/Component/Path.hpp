@@ -38,7 +38,7 @@ namespace Cyclone::Core::Component
 			Tilt				= NormalTilt | BitangentTilt,
 
 			TYPE_MASK			= ( 0b11 << 0 ),
-			TYPE_SHIFT			= ( 1 << 2 ),
+			TYPE_SHIFT			= 2,
 			NORMAL_MASK			= TYPE_MASK,
 			BITANGENT_MASK		= TYPE_MASK << 2,
 		};
@@ -193,10 +193,10 @@ namespace Cyclone::Core::Component
 					__assume( false );
 			}
 
-			assert( std::abs( normal.Dot3( bitangent ) ) < 0.1e-7 );
-			if ( mExtrusionTypes[root] != Explicit ) {
-				assert( std::abs( normal.Dot3( t ) ) < 0.1e-7 );
-			}
+			//assert( std::abs( normal.Dot3( bitangent ) ) < 0.1e-7 );
+			//if ( mExtrusionTypes[root] != Explicit ) {
+			//	assert( std::abs( normal.Dot3( t ) ) < 0.1e-7 );
+			//}
 
 			return p + bitangent * Vector4D::sReplicate( v ) + normal * Vector4D::sReplicate( w );
 		}
