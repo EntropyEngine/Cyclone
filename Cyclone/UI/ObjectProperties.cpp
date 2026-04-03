@@ -173,7 +173,7 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text( "Knot Count" );
 		LineSpace();
-		ImGui::Text( Cyclone::Util::PrefixString( "", pathData.mKnots.size() ) );
+		ImGui::Text( Cyclone::Util::PrefixString( "", pathData.mKnots.size() ) );		
 
 		for ( int i = 0; i < pathData.mKnots.size(); ++i ) {
 			ImGui::AlignTextToFramePadding();
@@ -243,7 +243,7 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 				if ( ImGui::TreeNodeEx( "Quick Edit", ImGuiTreeNodeFlags_DrawLinesFull | ImGuiTreeNodeFlags_DefaultOpen ) ) {
 					LineSpace();
 					ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
-					if ( ImGui::BeginTable( "QuickEditTable", 3, ImGuiTableFlags_None | ImGuiTableFlags_PadOuterX ) ) {
+					if ( ImGui::BeginTable( "QuickEditTable", 3, ImGuiTableFlags_None ) ) {
 						ImGui::TableNextRow();
 
 						ImGui::TableSetColumnIndex( 0 );
@@ -361,10 +361,28 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 				ImGui::TreePop();
 			}
 		}
+	
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text( "Add Knot" );
+		LineSpace();
+		if ( ImGui::Button( "+##AddKnot", { ImGui::GetFrameHeight(), ImGui::GetFrameHeight() } ) ) {
+			pathData.AddKnot();
+			dirty = true;
+		}
+
+		ImGuiStorage *localStorage = ImGui::GetStateStorage();
+
+		if ( !localStorage->GetVoidPtr( ImGui::GetID( "test" ) ) ) {
+			localStorage->SetFloat( ImGui::GetID( "test" ), 1.0f );
+		}
+
+		ImGui::DragFloat( "TestStorage", localStorage->GetFloatRef( ImGui::GetID( "test" ) ) );
+
 	}
 
 
 	if ( dirty ) {
+		registry.get<LocalBounds>( inEntity ).UpdateBoundingBox( inEntity, registry );
 		entityManager.BeginAction();
 		entityManager.UpdateEntity( inEntity, registry );
 		entityManager.EndAction( registry );
