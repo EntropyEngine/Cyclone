@@ -15,6 +15,99 @@
 using Cyclone::Math::Vector4D;
 using namespace Cyclone::Core::Component;
 
+namespace
+{
+	void LineSpace()
+	{
+		ImGui::SameLine( std::max( 160.0f, ImGui::GetWindowWidth() / 4.0f ) );
+	}
+
+	void LeafNode( const char *inLabel, float inRatio = 1.0f )
+	{
+		ImGui::AlignTextToFramePadding();
+		ImGui::TreeNodeEx( inLabel, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_DrawLinesFull );
+		ImGui::TreePop();
+		LineSpace();
+		ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x * inRatio );
+	}
+
+	bool HandleTangents( PathData &inPathData, int inKnot, bool inIsOut )
+	{
+		bool dirty = false;
+
+		DirectX::XMVECTOR &vec = inIsOut ? inPathData.mKnots[inKnot].mOutVec : inPathData.mKnots[inKnot].mInVec;
+		DirectX::XMVECTORF32 vecData{ .v = vec };
+
+		LeafNode( inIsOut ? "OutVec" : "InVec", 2.0f / 3.0f );
+		ImGui::DragScalarN( inIsOut ? "##OutVec" : "##InVec", ImGuiDataType_Float, vecData.f, 3, 0.1f, nullptr, nullptr, "%.3f" );
+
+		float len = DirectX::XMVectorGetX( DirectX::XMVector3Length( vecData ) );
+		if ( ImGui::IsItemEdited() && len > 0 ) {
+			vec = vecData.v;
+			inPathData.UpdateTangentValue( inKnot, inIsOut );
+			inPathData.ComputeAutoExtrusions( inKnot );
+		}
+		if ( ImGui::IsItemDeactivatedAfterEdit() && len > 0 ) {
+			dirty = true;
+		}
+
+
+		ImGui::SameLine( 0.0f );
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text( "Len:" );
+		ImGui::SameLine( 0.0f, 0.0f );
+		ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
+		ImGui::DragFloat( inIsOut ? "##OutVecLen" : "##InVecLen", &len, 0.1f, 0.1f, FLT_MAX );
+
+		if ( ImGui::IsItemEdited() && len > 0 ) {
+			vec = DirectX::XMVectorScale( DirectX::XMVector3Normalize( vecData.v ), std::max( 0.1f, len ) );
+			inPathData.UpdateTangentValue( inKnot, inIsOut );
+			inPathData.ComputeAutoExtrusions( inKnot );
+		}
+		if ( ImGui::IsItemDeactivatedAfterEdit() && len > 0 ) {
+			dirty = true;
+		}
+
+		return dirty;
+	}
+
+	bool HandleExtrusions( PathData &inPathData, int inKnot, bool isBitan )
+	{
+		bool dirty = false;
+
+		DirectX::XMVECTOR &vec = isBitan ? inPathData.mExtrusions[inKnot].mBitangent : inPathData.mExtrusions[inKnot].mNormal;
+		DirectX::XMVECTORF32 vecData{ .v = vec };
+
+		LeafNode( isBitan ? "Bitangent" : "Normal" );
+
+		bool isCustom = inPathData.mExtrusionTypes[inKnot] & ( isBitan ? PathData::EExtrusionType::CustomBitangent : PathData::EExtrusionType::CustomNormal );
+		if ( ImGui::Checkbox( isBitan ? "##BitanCustom" : "##NormalCustom", &isCustom ) ) {
+			inPathData.mExtrusionTypes[inKnot] ^= ( isBitan ? PathData::EExtrusionType::CustomBitangent : PathData::EExtrusionType::CustomNormal );
+			inPathData.ComputeAutoExtrusions( inKnot, isBitan );
+			dirty = true;
+		}
+
+		ImGui::BeginDisabled( !isCustom );
+
+		ImGui::SameLine( 0.0f, 4.0f );
+		ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
+		ImGui::DragScalarN( isBitan ? "##BitanVec" : "##NormalVec", ImGuiDataType_Float, vecData.f, 3, 0.1f, nullptr, nullptr, "%.5f" );
+
+		float len = DirectX::XMVectorGetX( DirectX::XMVector3Length( vecData ) );
+		if ( ImGui::IsItemEdited() && len > 0 ) {
+			vec = DirectX::XMVectorScale( vecData.v, 1.0f / len );
+			inPathData.ComputeAutoExtrusions( inKnot, isBitan );
+		}
+		if ( ImGui::IsItemDeactivatedAfterEdit() && len > 0 ) {
+			dirty = true;
+		}
+
+		ImGui::EndDisabled();
+
+		return dirty;
+	}
+}
+
 void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *inLevelInterface, entt::entity inEntity )
 {
 	entt::registry &registry = inLevelInterface->GetRegistry();
@@ -27,12 +120,12 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 
 	ImGui::AlignTextToFramePadding();
 	ImGui::Text( "Type" );
-	ImGui::SameLine( 128.0f );
+	LineSpace();
 	ImGui::Text( entityManager.GetEntityTypeName( entityType ) );
 
 	ImGui::AlignTextToFramePadding();
 	ImGui::Text( "Category" );
-	ImGui::SameLine( 128.0f );
+	LineSpace();
 	ImGui::Text( entityManager.GetEntityCategoryName( entityCategory ) );
 
 	ImGui::Separator();
@@ -43,7 +136,7 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 		position.mValue.Store( positionData );
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text( "Position" );
-		ImGui::SameLine( 128.0f );
+		LineSpace();
 		ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
 		ImGui::DragScalarN( "##Position", ImGuiDataType_Double, positionData, 3, 1.0f, nullptr, nullptr, "%.2f" );
 		if ( ImGui::IsItemEdited() ) {
@@ -60,7 +153,7 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 		rotationData.v = rotationData * ( 180.0f / DirectX::XM_PI );
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text( "Rotation" );
-		ImGui::SameLine( 128.0f );
+		LineSpace();
 		ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
 		ImGui::DragScalarN( "##Rotation", ImGuiDataType_Float, rotationData.f, 3, 1.0f, nullptr, nullptr, "%.2f" );
 		if ( ImGui::IsItemEdited() ) {
@@ -79,23 +172,20 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text( "Knot Count" );
-		ImGui::SameLine( 128.0f );
+		LineSpace();
 		ImGui::Text( Cyclone::Util::PrefixString( "", pathData.mKnots.size() ) );
 
 		for ( int i = 0; i < pathData.mKnots.size(); ++i ) {
 			ImGui::AlignTextToFramePadding();
-			if ( ImGui::TreeNode( Cyclone::Util::PrefixString( "Knot ", i ) ) ) {
+			if ( ImGui::TreeNodeEx( Cyclone::Util::PrefixString( "Knot ", i ), ImGuiTreeNodeFlags_DrawLinesFull | ImGuiTreeNodeFlags_Framed ) ) {
 
 				{
 					Vector4D &position = pathData.mKnots[i].mPoint;
 					double positionData[4];
 					position.Store( positionData );
 
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text( "Rel Position" );
-					ImGui::SameLine( 128.0f );
-					ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
-					ImGui::DragScalarN( "##RelPosition", ImGuiDataType_Double, positionData, 3, 1.0f, nullptr, nullptr, "%.2f" );
+					LeafNode( "Position" );
+					ImGui::DragScalarN( "##Position", ImGuiDataType_Double, positionData, 3, 0.1f, nullptr, nullptr, "%.3f" );
 
 					if ( ImGui::IsItemEdited() ) {
 						position = Vector4D::sLoad( positionData );
@@ -106,13 +196,27 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 				}
 
 				{
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text( "Align Normal" );
-					ImGui::SameLine( 128.0f );
+					PathData::ETangentType &tangentType = pathData.mTangentType[i];
+					int tidx = static_cast<int>( tangentType );
+
+					LeafNode( "Tangent Type" );
+					if ( ImGui::Combo( "##TangentType", &tidx, PathData::kTangentTypes, std::size( PathData::kTangentTypes ) ) ) {
+						tangentType = static_cast<PathData::ETangentType>( tidx );
+						pathData.UpdateTangentType( i, false );
+						dirty = true;
+					}
+				}
+
+				{
+					dirty |= HandleTangents( pathData, i, false );
+					dirty |= HandleTangents( pathData, i, true );
+				}
+
+				{
+					LeafNode( "Align Normal" );
 
 					int nidx = ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::NORMAL_MASK ) - 1;
-					ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
-					if ( ImGui::Combo( "##N", &nidx, "Explict\0Aligned\0Tilt" ) ) {
+					if ( ImGui::Combo( "##AlignNormal", &nidx, PathData::kExtrusionTypes, std::size( PathData::kExtrusionTypes ) ) ) {
 						pathData.mExtrusionTypes[i] &= ~PathData::EExtrusionType::NORMAL_MASK;
 						pathData.mExtrusionTypes[i] |= nidx + 1;
 						dirty = true;
@@ -120,17 +224,73 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 				}
 
 				{
-					ImGui::AlignTextToFramePadding();
-					ImGui::Text( "Align Bitan" );
-					ImGui::SameLine( 128.0f );
+					LeafNode( "Align Bitangent" );
 
 					int bidx = ( ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::BITANGENT_MASK ) >> 2 ) - 1;
-					ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
-					if ( ImGui::Combo( "##B", &bidx, "Explict\0Aligned\0Tilt" ) ) {
+					if ( ImGui::Combo( "##AlignBitangent", &bidx, PathData::kExtrusionTypes, std::size( PathData::kExtrusionTypes ) ) ) {
 						pathData.mExtrusionTypes[i] &= ~PathData::EExtrusionType::BITANGENT_MASK;
 						pathData.mExtrusionTypes[i] |= ( bidx + 1 ) << 2;
 						dirty = true;
 					}
+				}
+
+				{
+					dirty |= HandleExtrusions( pathData, i, false );
+					dirty |= HandleExtrusions( pathData, i, true );
+				}
+
+				ImGui::AlignTextToFramePadding();
+				if ( ImGui::TreeNodeEx( "Quick Edit", ImGuiTreeNodeFlags_DrawLinesFull | ImGuiTreeNodeFlags_DefaultOpen ) ) {
+					LineSpace();
+					ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
+					if ( ImGui::BeginTable( "QuickEditTable", 3, ImGuiTableFlags_None | ImGuiTableFlags_PadOuterX ) ) {
+						ImGui::TableNextRow();
+
+						ImGui::TableSetColumnIndex( 0 );
+						ImGui::AlignTextToFramePadding();
+						ImGui::Text( "Pitch" );
+
+						float globalPitch = std::asin( DirectX::XMVectorGetX( DirectX::XMVector3Dot( DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ), DirectX::g_XMIdentityR1 ) ) );
+						ImGui::Text( "Global:%.2f", globalPitch * 180.0f / DirectX::XM_PI );
+
+						float pitchDrag = 0.0f;
+						ImGui::DragFloat( "##PitchDrag", &pitchDrag, DirectX::XM_PI / 32.0f );
+						if ( ImGui::IsItemEdited() ) {
+							DirectX::XMVECTOR pitchDir;
+							if ( !( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CustomNormal ) ) {
+								pitchDir = DirectX::XMVector3Normalize( DirectX::XMVector3Cross( pathData.mExtrusions[i].mNormal, DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ) ) );
+							}
+							else if ( ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CustomBitangent ) ) {
+								pitchDir = DirectX::XMVector3Cross( DirectX::XMVector3Normalize( DirectX::XMVector3Cross( DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ), pathData.mExtrusions[i].mBitangent ) ), DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ) );
+							}
+							else {
+								pitchDrag = std::clamp( globalPitch + pitchDrag, -DirectX::XM_PI / 4, DirectX::XM_PI / 4 ) - globalPitch;
+								pitchDir = DirectX::XMVector3Normalize( DirectX::XMVector3Cross( DirectX::g_XMIdentityR1, DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ) ) );
+							}
+							pathData.mKnots[i].mOutVec = DirectX::XMVector3Rotate( pathData.mKnots[i].mOutVec, DirectX::XMQuaternionRotationNormal( pitchDir, -pitchDrag ) );
+							pathData.UpdateTangentValue( i, true );
+							pathData.ComputeAutoExtrusions( i );
+						}
+						if ( ImGui::IsItemDeactivatedAfterEdit() ) {
+							dirty = true;
+						}
+
+						//ImGui::Text( "Bitan: %.2f", std::asin( DirectX::XMVectorGetX( DirectX::XMVector3Dot( DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ), DirectX::g_XMIdentityR1 ) ) ) * 180.0f / DirectX::XM_PI );
+						//ImGui::Text( "Local: %.2f", std::acos( DirectX::XMVectorGetX(
+						//	DirectX::XMVector3Dot( DirectX::XMVector3Normalize( DirectX::XMVector3Cross( DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ), pathData.mExtrusions[i].mNormal ) ), DirectX::g_XMIdentityR1 )
+						//) ) * 180.0f / DirectX::XM_PI );
+
+						ImGui::TableSetColumnIndex( 1 );
+						ImGui::AlignTextToFramePadding();
+						ImGui::Text( "Yaw" );
+
+						ImGui::TableSetColumnIndex( 2 );
+						ImGui::AlignTextToFramePadding();
+						ImGui::Text( "Roll" );
+					}
+					ImGui::EndTable();
+
+					ImGui::TreePop();
 				}
 
 				ImGui::TreePop();

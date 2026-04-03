@@ -45,8 +45,8 @@ namespace Cyclone::Core::Entity
 
 			std::vector<Component::PathData::Segment> pathGuide;
 			pathGuide.emplace_back(
-				Cyclone::Math::Vector4D( 0.0, 0.0, 0.0 ),
-				Cyclone::Math::Vector4D( 0.0, 0.0, 1.0 ),
+				Cyclone::Math::Vector4D( 1.0, 0.0, 2.0 ),
+				Cyclone::Math::Vector4D( 1.0, 0.0, 3.0 ),
 				Cyclone::Math::Vector4D( 1.0, 1.0, 2.0 ),
 				Cyclone::Math::Vector4D( 1.0, 1.0, 3.0 )
 			);
@@ -94,12 +94,23 @@ namespace Cyclone::Core::Entity
 			pathData.mExtrusions.emplace_back( DirectX::XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f ), DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 0.0f ) );
 			pathData.mExtrusions.emplace_back( DirectX::XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f ), DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 0.0f ) );
 
-			pathData.mExtrusionTypes.push_back( Component::PathData::Aligned );
-			pathData.mExtrusionTypes.push_back( Component::PathData::Tilt );
-			pathData.mExtrusionTypes.push_back( Component::PathData::Tilt );
-			pathData.mExtrusionTypes.push_back( Component::PathData::Tilt );
-			pathData.mExtrusionTypes.push_back( Component::PathData::Tilt );
-			pathData.mExtrusionTypes.push_back( Component::PathData::Tilt );
+			uint8_t custom = Component::PathData::EExtrusionType::CustomNormal;
+
+			pathData.mExtrusionTypes.push_back( Component::PathData::EExtrusionType::Twist | custom );
+			pathData.mExtrusionTypes.push_back( Component::PathData::EExtrusionType::Tilt | custom );
+			pathData.mExtrusionTypes.push_back( Component::PathData::EExtrusionType::Tilt | custom );
+			pathData.mExtrusionTypes.push_back( Component::PathData::EExtrusionType::Tilt | custom );
+			pathData.mExtrusionTypes.push_back( Component::PathData::EExtrusionType::Tilt | custom );
+			pathData.mExtrusionTypes.push_back( Component::PathData::EExtrusionType::Tilt | custom );
+
+			pathData.mTangentType.push_back( Component::PathData::ETangentType::Aligned );
+			pathData.mTangentType.push_back( Component::PathData::ETangentType::Aligned );
+			pathData.mTangentType.push_back( Component::PathData::ETangentType::Aligned );
+			pathData.mTangentType.push_back( Component::PathData::ETangentType::Aligned );
+			pathData.mTangentType.push_back( Component::PathData::ETangentType::Aligned );
+			pathData.mTangentType.push_back( Component::PathData::ETangentType::Aligned );
+
+			pathData.ValidatePath();
 
 			localBounds.UpdateBoundingBox( entity, inRegistry );
 

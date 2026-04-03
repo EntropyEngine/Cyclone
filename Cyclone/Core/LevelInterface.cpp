@@ -52,8 +52,10 @@ void Cyclone::Core::LevelInterface::Initialize()
 	*/
 
 	mEntityManager.BeginAction();
-	mEntityManager.CreateEntity( "path_debug"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
+	auto i = mEntityManager.CreateEntity( "path_debug"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
 	mEntityManager.EndAction( GetRegistry() );
+
+	mEntityManager.OpenEntityProperties( i );
 }
 
 void Cyclone::Core::LevelInterface::SetDevice( ID3D11Device3 *inDevice )

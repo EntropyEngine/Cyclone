@@ -132,8 +132,8 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	for ( entt::entity entity : std::set( entityManager.GetOpenedProperties() ) )
 	{
 		bool isOpen = registry.all_of<Core::Component::EntityType>( entity );
-		ImGui::SetNextWindowSizeConstraints( { 360, 360 }, { FLT_MAX, FLT_MAX } );
-		if ( ImGui::Begin( Cyclone::Util::PrefixString( "Entity: ", entity ), &isOpen ) ) {
+		ImGui::SetNextWindowSizeConstraints( { 480, 480 }, { FLT_MAX, FLT_MAX } );
+		if ( ImGui::Begin( Cyclone::Util::PrefixString( "Entity: ", entity ), &isOpen, ImGuiWindowFlags_AlwaysVerticalScrollbar ) ) {
 			ObjectProperties().ShowWindow( inLevelInterface, entity );
 		}
 		ImGui::End();

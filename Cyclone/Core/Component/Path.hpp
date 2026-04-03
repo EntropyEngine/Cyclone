@@ -23,24 +23,41 @@ namespace Cyclone::Core::Component
 			DirectX::XMVECTOR		mBitangent;
 		};
 
+		static constexpr const char * kExtrusionTypes[] = { "Explicit", "Twist", "Tilt" };
 		enum EExtrusionType : uint8_t
 		{
 			NormalExplicit		= ( 1 << 0 ),
-			NormalAligned		= ( 2 << 0 ),
+			NormalTwist		= ( 2 << 0 ),
 			NormalTilt			= ( 3 << 0 ),
 
 			BitangentExplicit	= ( 1 << 2 ),
-			BitangentAligned	= ( 2 << 2 ),
+			BitangentTwist	= ( 2 << 2 ),
 			BitangentTilt		= ( 3 << 2 ),
 
 			Explicit			= NormalExplicit | BitangentExplicit,
-			Aligned				= NormalAligned | BitangentAligned,
+			Twist				= NormalTwist | BitangentTwist,
 			Tilt				= NormalTilt | BitangentTilt,
 
 			TYPE_MASK			= ( 0b11 << 0 ),
 			TYPE_SHIFT			= 2,
 			NORMAL_MASK			= TYPE_MASK,
 			BITANGENT_MASK		= TYPE_MASK << 2,
+
+			CustomNormal		= ( 0b01 << ( TYPE_SHIFT + TYPE_SHIFT ) ),
+			CustomBitangent		= ( 0b10 << ( TYPE_SHIFT + TYPE_SHIFT ) )
+		};
+
+		static constexpr const char * kTangentTypes[] = { "Split", "Aligned", "Mirrored" };
+		enum class ETangentType : uint8_t
+		{
+			Split,
+			Aligned,
+			Mirrored
+		};
+
+		enum class ESegmentType : uint8_t
+		{
+
 		};
 
 		struct Segment
@@ -85,6 +102,7 @@ namespace Cyclone::Core::Component
 		std::vector<Knot>			mKnots;
 		std::vector<Extrusion>		mExtrusions;
 		std::vector<uint8_t>		mExtrusionTypes;
+		std::vector<ETangentType>	mTangentType;
 
 		Cyclone::Math::Vector4D XM_CALLCONV Interpolate( size_t root, float u ) const
 		{
@@ -141,6 +159,28 @@ namespace Cyclone::Core::Component
 			return result;
 		}
 
+		DirectX::XMVECTOR XM_CALLCONV Differentiate2( size_t root, float u ) const
+		{
+			const size_t knot0 = root;
+			const size_t knot1 = knot0 + 1;
+
+			using namespace DirectX;
+
+			DirectX::XMVECTOR PD = ( mKnots[knot1].mPoint - mKnots[knot0].mPoint ).ToXMVECTOR();
+			DirectX::XMVECTOR n2 = DirectX::XMVectorReplicate( -2.0f );
+
+			DirectX::XMVECTOR C0 = DirectX::XMVectorMultiplyAdd( mKnots[knot0].mOutVec, n2, mKnots[knot1].mInVec + PD );
+			DirectX::XMVECTOR C1 = DirectX::XMVectorMultiplyAdd( mKnots[knot1].mInVec, n2, mKnots[knot0].mOutVec - PD );
+
+			DirectX::XMVECTOR b0 = DirectX::XMVectorReplicate( 6 * ( 1 - u ) );
+			DirectX::XMVECTOR b1 = DirectX::XMVectorReplicate( 6 * u );
+
+			DirectX::XMVECTOR result = DirectX::XMVectorMultiply( C0, b0 );
+			result = DirectX::XMVectorMultiplyAdd( C1, b1, result);
+
+			return result;
+		}
+
 		DirectX::XMVECTOR XM_CALLCONV InterpolateBitangent( size_t root, float u ) const
 		{
 			return DirectX::XMVectorLerp( mExtrusions[root].mBitangent, mExtrusions[root + 1].mBitangent, u );
@@ -148,7 +188,29 @@ namespace Cyclone::Core::Component
 
 		DirectX::XMVECTOR XM_CALLCONV InterpolateNormal( size_t root, float u ) const
 		{
-			return DirectX::XMVectorLerp( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal, u );
+			using namespace DirectX;
+
+			//DirectX::XMVECTOR tang1 = Differentiate( root, 0 );
+			//DirectX::XMVECTOR quat1 = DirectX::XMVector3Cross( tang1, mExtrusions[root].mNormal );
+			//quat1 = DirectX::XMVectorSetW( quat1, DirectX::XMVectorGetX( DirectX::XMVector3Length( tang1 ) * DirectX::XMVector3Length( mExtrusions[root].mNormal ) * DirectX::XMVector3Dot( tang1, mExtrusions[root].mNormal ) ) );
+			//quat1 = DirectX::XMQuaternionNormalize( quat1 );
+			//
+			//DirectX::XMVECTOR tang2 = Differentiate( root, 1 );
+			//DirectX::XMVECTOR quat2 = DirectX::XMVector3Cross( tang2, mExtrusions[root + 1].mNormal );
+			//quat2 = DirectX::XMVectorSetW( quat2, DirectX::XMVectorGetX( DirectX::XMVector3Length( tang2 ) * DirectX::XMVector3Length( mExtrusions[root + 1].mNormal ) * DirectX::XMVector3Dot( tang2, mExtrusions[root + 1].mNormal ) ) );
+			//quat2 = DirectX::XMQuaternionNormalize( quat2 );
+			//
+			//DirectX::XMVECTOR quats = DirectX::XMQuaternionSlerp( quat1, quat2, u );
+			//
+			//return DirectX::XMVector3TransformCoord( tang1, DirectX::XMMatrixRotationQuaternion( quats ) );
+
+			DirectX::XMVECTOR quat1 = DirectX::XMVector3Cross( mExtrusions[root + 1].mNormal, mExtrusions[root].mNormal );
+			quat1 = DirectX::XMVectorSetW( quat1, DirectX::XMVectorGetX( DirectX::XMVector3Length( mExtrusions[root].mNormal ) * DirectX::XMVector3Length( mExtrusions[root + 1].mNormal ) * DirectX::XMVector3Dot( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal ) ) );
+			quat1 = DirectX::XMQuaternionNormalize( quat1 );
+
+			DirectX::XMVECTOR quats = DirectX::XMQuaternionNormalize( DirectX::XMQuaternionSlerp( DirectX::XMQuaternionIdentity(), quat1, u / 2 ) );
+
+			return DirectX::XMQuaternionMultiply( DirectX::XMQuaternionMultiply( quats, mExtrusions[root].mNormal ), DirectX::XMQuaternionInverse( quats ) );
 		}
 
 		Cyclone::Math::Vector4D XM_CALLCONV InterpolateUVW( size_t root, float u, float v, float w ) const
@@ -163,12 +225,20 @@ namespace Cyclone::Core::Component
 			Vector4D bitangentExpl = Vector4D::sFromXMVECTOR( InterpolateBitangent( root, u ) ).GetNorm3(); // BitangentExplicit
 
 			Vector4D normalImpl = Vector4D::sCross3( t, bitangentExpl ).GetNorm3(); // NormalTilt
-			Vector4D bitangentImpl = -Vector4D::sCross3( t, normalExpl ).GetNorm3(); // BitangentAligned
+			Vector4D bitangentImpl = -Vector4D::sCross3( t, normalExpl ).GetNorm3(); // BitangentTwist
 
-			Vector4D normalImpl2 = Vector4D::sCross3( t, bitangentImpl ).GetNorm3(); // NormalAligned
+			if ( std::abs( t.Dot3( normalExpl ) ) > 1.0f - 0.1e-7 ) {
+				bitangentImpl = bitangentExpl;
+			}
+
+			if ( std::abs( t.Dot3( bitangentExpl ) ) > 1.0f - 0.1e-7 ) {
+				normalImpl = normalExpl;
+			}
+
+			Vector4D normalImpl2 = Vector4D::sCross3( t, bitangentImpl ).GetNorm3(); // NormalTwist
 			Vector4D bitangentImpl2 = -Vector4D::sCross3( t, normalImpl ).GetNorm3(); // BitangentTilt
 
-			assert( std::abs( normalExpl.Dot3( bitangentExpl ) ) < 0.1e-7 );
+			//assert( std::abs( normalExpl.Dot3( bitangentExpl ) ) < 0.1e-7 );
 			assert( std::abs( normalImpl.Dot3( bitangentImpl2 ) ) < 0.1e-7 );
 			assert( std::abs( normalImpl2.Dot3( bitangentImpl ) ) < 0.1e-7 );
 
@@ -177,7 +247,7 @@ namespace Cyclone::Core::Component
 
 			switch ( mExtrusionTypes[root] & NORMAL_MASK ) {
 				case NormalExplicit: normal = normalExpl; break;
-				case NormalAligned:  normal = normalImpl2; break;
+				case NormalTwist:  normal = normalImpl2; break;
 				case NormalTilt:	 normal = normalImpl; break;
 				default:
 					assert( false );
@@ -186,7 +256,7 @@ namespace Cyclone::Core::Component
 
 			switch ( mExtrusionTypes[root] & BITANGENT_MASK ) {
 				case BitangentExplicit:	bitangent = bitangentExpl; break;
-				case BitangentAligned:	bitangent = bitangentImpl; break;
+				case BitangentTwist:	bitangent = bitangentImpl; break;
 				case BitangentTilt:		bitangent = bitangentImpl2; break;
 				default:
 					assert( false );
@@ -199,6 +269,98 @@ namespace Cyclone::Core::Component
 			//}
 
 			return p + bitangent * Vector4D::sReplicate( v ) + normal * Vector4D::sReplicate( w );
+		}
+
+		void UpdateTangentType( size_t root, bool priorityOutVec )
+		{
+			if ( mTangentType[root] != ETangentType::Split ) {
+				DirectX::XMVECTOR iLen = DirectX::XMVector3Length( mKnots[root].mInVec );
+				DirectX::XMVECTOR oLen = DirectX::XMVector3Length( mKnots[root].mOutVec );
+
+				DirectX::XMVECTOR iNorm = DirectX::XMVectorDivide( mKnots[root].mInVec, iLen );
+				DirectX::XMVECTOR oNorm = DirectX::XMVectorDivide( mKnots[root].mOutVec, oLen );
+
+
+				if ( mTangentType[root] == ETangentType::Mirrored ) {
+					DirectX::XMVECTOR aLen = DirectX::XMVectorMultiply( DirectX::XMVectorAdd( iLen, oLen ), DirectX::XMVectorReplicate( 0.5f ) );
+					if ( priorityOutVec ) {
+						mKnots[root].mInVec = DirectX::XMVectorMultiply( DirectX::XMVectorNegate( oNorm ), aLen );
+						mKnots[root].mOutVec = DirectX::XMVectorMultiply( oNorm, aLen );
+					}
+					else {
+						mKnots[root].mInVec = DirectX::XMVectorMultiply( iNorm, aLen );
+						mKnots[root].mOutVec = DirectX::XMVectorMultiply( DirectX::XMVectorNegate( iNorm ), aLen );
+					}
+				}
+				else if ( mTangentType[root] == ETangentType::Aligned ) {
+					if ( priorityOutVec ) {
+						mKnots[root].mInVec = DirectX::XMVectorMultiply( DirectX::XMVectorNegate( oNorm ), iLen );
+						mKnots[root].mOutVec = DirectX::XMVectorMultiply( oNorm, oLen );
+					}
+					else {
+						mKnots[root].mInVec = DirectX::XMVectorMultiply( iNorm, iLen );
+						mKnots[root].mOutVec = DirectX::XMVectorMultiply( DirectX::XMVectorNegate( iNorm ), oLen );
+					}
+				}
+			}
+		}
+
+		void UpdateTangentValue( size_t root, bool priorityOutVec )
+		{
+			DirectX::XMVECTOR iLen = DirectX::XMVector3Length( mKnots[root].mInVec );
+			DirectX::XMVECTOR oLen = DirectX::XMVector3Length( mKnots[root].mOutVec );
+
+			DirectX::XMVECTOR iNorm = DirectX::XMVectorDivide( mKnots[root].mInVec, iLen );
+			DirectX::XMVECTOR oNorm = DirectX::XMVectorDivide( mKnots[root].mOutVec, oLen );
+
+			if ( mTangentType[root] == ETangentType::Mirrored ) {
+				if ( priorityOutVec ) {
+					mKnots[root].mInVec = DirectX::XMVectorMultiply( DirectX::XMVectorNegate( oNorm ), oLen );
+					mKnots[root].mOutVec = DirectX::XMVectorMultiply( oNorm, oLen );
+				}
+				else {
+					mKnots[root].mInVec = DirectX::XMVectorMultiply( iNorm, iLen );
+					mKnots[root].mOutVec = DirectX::XMVectorMultiply( DirectX::XMVectorNegate( iNorm ), iLen );
+				}
+			}
+			else if ( mTangentType[root] == ETangentType::Aligned ) {
+				if ( priorityOutVec ) {
+					mKnots[root].mInVec = DirectX::XMVectorMultiply( DirectX::XMVectorNegate( oNorm ), iLen );
+					mKnots[root].mOutVec = DirectX::XMVectorMultiply( oNorm, oLen );
+				}
+				else {
+					mKnots[root].mInVec = DirectX::XMVectorMultiply( iNorm, iLen );
+					mKnots[root].mOutVec = DirectX::XMVectorMultiply( DirectX::XMVectorNegate( iNorm ), oLen );
+				}
+			}
+		}
+
+		void ComputeAutoExtrusions( size_t root, bool priorityBitangent = true )
+		{
+			if ( priorityBitangent ) {
+				if ( !( mExtrusionTypes[root] & EExtrusionType::CustomBitangent ) ) {
+					mExtrusions[root].mBitangent = DirectX::XMVector3Normalize( DirectX::XMVector3Cross( mExtrusions[root].mNormal, DirectX::XMVector3Normalize( mKnots[root].mOutVec ) ) );
+				}
+				if ( !( mExtrusionTypes[root] & EExtrusionType::CustomNormal ) ) {
+					mExtrusions[root].mNormal = DirectX::XMVector3Normalize( DirectX::XMVector3Cross( DirectX::XMVector3Normalize( mKnots[root].mOutVec ), mExtrusions[root].mBitangent ) );
+				}
+			}
+			else {
+				if ( !( mExtrusionTypes[root] & EExtrusionType::CustomNormal ) ) {
+					mExtrusions[root].mNormal = DirectX::XMVector3Normalize( DirectX::XMVector3Cross( DirectX::XMVector3Normalize( mKnots[root].mOutVec ), mExtrusions[root].mBitangent ) );
+				}
+				if ( !( mExtrusionTypes[root] & EExtrusionType::CustomBitangent ) ) {
+					mExtrusions[root].mBitangent = DirectX::XMVector3Normalize( DirectX::XMVector3Cross( mExtrusions[root].mNormal, DirectX::XMVector3Normalize( mKnots[root].mOutVec ) ) );
+				}
+			}
+		}
+
+		void ValidatePath()
+		{
+			for ( size_t i = 0; i < mKnots.size(); ++i ) {
+				UpdateTangentValue( i, true );
+				ComputeAutoExtrusions( i, true );
+			}
 		}
 	};
 }
