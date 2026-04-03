@@ -104,6 +104,23 @@ namespace Cyclone::Core::Component
 		std::vector<uint8_t>		mExtrusionTypes;
 		std::vector<ETangentType>	mTangentType;
 
+		void AddKnot()
+		{
+			if ( mKnots.size() == 0 ) {
+				mKnots.emplace_back( Cyclone::Math::Vector4D::sZero(), DirectX::XMVectorSet( 0.0f, 0.0f, -1.0f, 0.0f ), DirectX::XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f ) );
+				mExtrusions.emplace_back( DirectX::XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f ), DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 0.0f ) );
+				mExtrusionTypes.push_back( EExtrusionType::Tilt );
+				mTangentType.push_back( ETangentType::Aligned );
+			}
+			else {
+				size_t i = mKnots.size() - 1;
+				mKnots.emplace_back( mKnots[i].mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( mKnots[i].mOutVec ) * Cyclone::Math::Vector4D::sReplicate( 3.0f ), DirectX::XMVectorNegate( mKnots[i].mOutVec ), mKnots[i].mOutVec);
+				mExtrusions.emplace_back( mExtrusions[i].mNormal, mExtrusions[i].mBitangent );
+				mExtrusionTypes.push_back( EExtrusionType::Tilt );
+				mTangentType.push_back( ETangentType::Aligned );
+			}
+		}
+
 		Cyclone::Math::Vector4D XM_CALLCONV Interpolate( size_t root, float u ) const
 		{
 			const size_t knot0 = root;

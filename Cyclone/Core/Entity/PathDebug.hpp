@@ -43,6 +43,7 @@ namespace Cyclone::Core::Entity
 			inRegistry.emplace<Component::PathTag>( entity );
 			Component::PathData &pathData = inRegistry.emplace<Component::PathData>( entity );
 
+			/*
 			std::vector<Component::PathData::Segment> pathGuide;
 			pathGuide.emplace_back(
 				Cyclone::Math::Vector4D( 1.0, 0.0, 2.0 ),
@@ -109,6 +110,10 @@ namespace Cyclone::Core::Entity
 			pathData.mTangentType.push_back( Component::PathData::ETangentType::Aligned );
 			pathData.mTangentType.push_back( Component::PathData::ETangentType::Aligned );
 			pathData.mTangentType.push_back( Component::PathData::ETangentType::Aligned );
+			*/
+
+			pathData.AddKnot();
+			pathData.AddKnot();
 
 			pathData.ValidatePath();
 
