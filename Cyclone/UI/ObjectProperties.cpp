@@ -370,6 +370,14 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 			dirty = true;
 		}
 
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text( "Add Loop" );
+		LineSpace();
+		if ( ImGui::Button( "+##AddLoop", { ImGui::GetFrameHeight(), ImGui::GetFrameHeight() } ) ) {
+			pathData.AddLoop();
+			dirty = true;
+		}
+
 		ImGuiStorage *localStorage = ImGui::GetStateStorage();
 
 		if ( !localStorage->GetVoidPtr( ImGui::GetID( "test" ) ) ) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Cyclone/Math/Vector.hpp"
+#include "Cyclone/Math/Matrix.hpp"
 
 namespace Cyclone::Core::Component
 {
@@ -119,6 +120,102 @@ namespace Cyclone::Core::Component
 				mExtrusionTypes.push_back( EExtrusionType::Tilt );
 				mTangentType.push_back( ETangentType::Aligned );
 			}
+		}
+
+		void AddLoop( double inT = DirectX::XM_2PI, double inStride = 2.0f, double inRadius = 2.0f, bool inFull = true )
+		{
+			using Cyclone::Math::Vector4D;
+			using Cyclone::Math::Matrix44D;
+
+			size_t knot0 = mKnots.size() - 1;
+
+			inT /= inFull ? 2 : 1;
+			inStride /= inFull ? 2 : 1;
+			inStride /= inRadius;
+
+			const double A = -DirectX::XM_PI / 2;
+			const double D = inT -DirectX::XM_PI / 2;
+			const double B = ( A + D ) / 2;
+
+			Vector4D LP = Vector4D::sReplicate( ( 4.0 / 3.0 ) * std::tan( ( B - A ) / 4.0 ) );
+			Vector4D LJ = Vector4D::sReplicate( ( 4.0 / 3.0 ) * std::tan( ( B - D ) / 4.0 ) );
+
+			const double sinA = std::sin( A );
+			const double cosA = std::cos( A );
+
+			const double sinB = std::sin( B );
+			const double cosB = std::cos( B );
+
+			const double sinD = std::sin( D );
+			const double cosD = std::cos( D );
+			
+			Vector4D P0( cosA, 0, sinA );
+			Vector4D J0( cosD, inStride, sinD );
+
+			Vector4D P1 = P0 + LP * Vector4D( -sinA, 0, cosA );
+			Vector4D J1 = J0 + LJ * Vector4D( -sinD, 0, cosD );
+
+			Vector4D C3( cosB, inStride / 2, sinB );
+
+			Vector4D P2 = C3 - LP * Vector4D( -sinB, 0.0, cosB );
+			P2 -= Vector4D( 0, inStride / 4, 0 ) / P2.GetLength3V();
+
+			Vector4D J2 = C3 - LJ * Vector4D( -sinB, 0.0, cosB );
+			J2 -= Vector4D( 0, -inStride / 4, 0 ) / J2.GetLength3V();
+
+			mExtrusionTypes[knot0] &= ~( CustomNormal | CustomBitangent );
+			mTangentType[knot0] = ETangentType::Aligned;
+
+			UpdateTangentValue( knot0, false );
+			ComputeAutoExtrusions( knot0 );
+
+			Vector4D scale = Vector4D::sReplicate( inRadius );
+			Matrix44D align(
+				Vector4D::sFromXMVECTOR( DirectX::XMVectorSetW( mKnots[knot0].mOutVec, 0 ) ).GetNorm3() * scale,
+				Vector4D::sFromXMVECTOR( DirectX::XMVectorSetW( mExtrusions[knot0].mBitangent, 0 ) ) * scale,
+				Vector4D::sFromXMVECTOR( DirectX::XMVectorSetW( mExtrusions[knot0].mNormal, 0 ) ) * scale,
+				Vector4D( 0, 0, 0, 1 )
+			);
+
+			Vector4D offset( 0, 0, 1 );
+
+			P0 = align.TransformCoord3Unit( P0 + offset ) + mKnots[knot0].mPoint;
+			J0 = align.TransformCoord3Unit( J0 + offset ) + mKnots[knot0].mPoint;
+
+			P1 = align.TransformCoord3Unit( P1 + offset ) + mKnots[knot0].mPoint;
+			J1 = align.TransformCoord3Unit( J1 + offset ) + mKnots[knot0].mPoint;
+
+			P2 = align.TransformCoord3Unit( P2 + offset ) + mKnots[knot0].mPoint;
+			J2 = align.TransformCoord3Unit( J2 + offset ) + mKnots[knot0].mPoint;
+
+			C3 = align.TransformCoord3Unit( C3 + offset ) + mKnots[knot0].mPoint;
+
+			AddKnot();
+			AddKnot();
+
+			assert( ( mKnots[knot0].mPoint - P0 ).GetLength3() < 1e-7 );
+
+			mKnots[knot0].mOutVec = ( P1 - P0 ).ToXMVECTOR();
+
+			mKnots[knot0 + 1].mPoint = C3;
+			mKnots[knot0 + 1].mInVec = ( P2 - C3 ).ToXMVECTOR();
+			mKnots[knot0 + 1].mOutVec = ( J2 - C3 ).ToXMVECTOR();
+
+			mExtrusions[knot0 + 1].mNormal = DirectX::XMVector3Rotate( mExtrusions[knot0].mNormal, DirectX::XMQuaternionRotationNormal( mExtrusions[knot0].mBitangent, - inT / 2 ) );
+
+			mKnots[knot0 + 2].mPoint = J0;
+			mKnots[knot0 + 2].mInVec = ( J1 - J0 ).ToXMVECTOR();
+			mKnots[knot0 + 2].mOutVec = ( -J1 + J0 ).ToXMVECTOR();
+
+			mExtrusions[knot0 + 2].mNormal = DirectX::XMVector3Rotate( mExtrusions[knot0 + 1].mNormal, DirectX::XMQuaternionRotationNormal( mExtrusions[knot0].mBitangent, - inT / 2 ) );
+
+			mExtrusionTypes[knot0 + 1] &= ~( CustomNormal | CustomBitangent );
+			mExtrusionTypes[knot0 + 2] &= ~( CustomNormal | CustomBitangent );
+			mTangentType[knot0 + 1] = ETangentType::Aligned;
+			mTangentType[knot0 + 2] = ETangentType::Aligned;
+			ComputeAutoExtrusions( knot0 + 1 );
+			ComputeAutoExtrusions( knot0 + 2 );
+
 		}
 
 		Cyclone::Math::Vector4D XM_CALLCONV Interpolate( size_t root, float u ) const
