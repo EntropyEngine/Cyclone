@@ -250,39 +250,66 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 						ImGui::AlignTextToFramePadding();
 						ImGui::Text( "Pitch" );
 
-						float globalPitch = std::asin( DirectX::XMVectorGetX( DirectX::XMVector3Dot( DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ), DirectX::g_XMIdentityR1 ) ) );
+						DirectX::XMVECTOR normTangent = DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec );
+
+						float globalPitch = std::asin( DirectX::XMVectorGetX( DirectX::XMVector3Dot( normTangent, DirectX::g_XMIdentityR1 ) ) );
+						float localPitch = std::asin( DirectX::XMVectorGetX( DirectX::XMVector3Dot( normTangent, pathData.mExtrusions[i].mNormal ) ) );
 						ImGui::Text( "Global:%.2f", globalPitch * 180.0f / DirectX::XM_PI );
+						ImGui::Text( "Local: %.2f", localPitch * 180.0f / DirectX::XM_PI );
 
-						float pitchDrag = 0.0f;
-						ImGui::DragFloat( "##PitchDrag", &pitchDrag, DirectX::XM_PI / 32.0f );
-						if ( ImGui::IsItemEdited() ) {
-							DirectX::XMVECTOR pitchDir;
-							if ( !( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CustomNormal ) ) {
-								pitchDir = DirectX::XMVector3Normalize( DirectX::XMVector3Cross( pathData.mExtrusions[i].mNormal, DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ) ) );
+						for ( int ln = 0; ln < 2; ++ln ) {
+							float pitchDrag = 0.0f;
+							ImGui::DragFloat( ( ln ? "L+N##PitchDrag" : "L##PitchDrag" ), &pitchDrag, DirectX::XM_PI / 180.0f, 0.0f, 0.0f, "", ImGuiSliderFlags_NoRoundToFormat );
+							if ( ImGui::IsItemEdited() ) {
+								DirectX::XMVECTOR pitchDir;
+								if ( !( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CustomNormal ) ) {
+									pitchDir = DirectX::XMVector3Normalize( DirectX::XMVector3Cross( pathData.mExtrusions[i].mNormal, normTangent ) );
+								}
+								else if ( ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CustomBitangent ) ) {
+									pitchDir = DirectX::XMVector3Cross( DirectX::XMVector3Normalize( DirectX::XMVector3Cross( normTangent, pathData.mExtrusions[i].mBitangent ) ), normTangent );
+								}
+								else {
+									pitchDrag = std::clamp( localPitch + pitchDrag, -DirectX::XM_PI * 85.0f / 180.0f, DirectX::XM_PI * 85.0f / 180.0f ) - localPitch;
+									pitchDir = DirectX::XMVector3Normalize( DirectX::XMVector3Cross( pathData.mExtrusions[i].mNormal, normTangent ) );
+								}
+								pathData.mKnots[i].mOutVec = DirectX::XMVector3Rotate( pathData.mKnots[i].mOutVec, DirectX::XMQuaternionRotationNormal( pitchDir, -pitchDrag ) );
+								if ( ln ) {
+									pathData.mExtrusions[i].mNormal = DirectX::XMVector3Rotate( pathData.mExtrusions[i].mNormal, DirectX::XMQuaternionRotationNormal( pitchDir, -pitchDrag ) );
+								}
+								pathData.UpdateTangentValue( i, true );
+								pathData.ComputeAutoExtrusions( i );
 							}
-							else if ( ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CustomBitangent ) ) {
-								pitchDir = DirectX::XMVector3Cross( DirectX::XMVector3Normalize( DirectX::XMVector3Cross( DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ), pathData.mExtrusions[i].mBitangent ) ), DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ) );
+							if ( ImGui::IsItemDeactivatedAfterEdit() ) {
+								dirty = true;
 							}
-							else {
-								pitchDrag = std::clamp( globalPitch + pitchDrag, -DirectX::XM_PI / 4, DirectX::XM_PI / 4 ) - globalPitch;
-								pitchDir = DirectX::XMVector3Normalize( DirectX::XMVector3Cross( DirectX::g_XMIdentityR1, DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ) ) );
-							}
-							pathData.mKnots[i].mOutVec = DirectX::XMVector3Rotate( pathData.mKnots[i].mOutVec, DirectX::XMQuaternionRotationNormal( pitchDir, -pitchDrag ) );
-							pathData.UpdateTangentValue( i, true );
-							pathData.ComputeAutoExtrusions( i );
 						}
-						if ( ImGui::IsItemDeactivatedAfterEdit() ) {
-							dirty = true;
-						}
-
-						//ImGui::Text( "Bitan: %.2f", std::asin( DirectX::XMVectorGetX( DirectX::XMVector3Dot( DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ), DirectX::g_XMIdentityR1 ) ) ) * 180.0f / DirectX::XM_PI );
-						//ImGui::Text( "Local: %.2f", std::acos( DirectX::XMVectorGetX(
-						//	DirectX::XMVector3Dot( DirectX::XMVector3Normalize( DirectX::XMVector3Cross( DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ), pathData.mExtrusions[i].mNormal ) ), DirectX::g_XMIdentityR1 )
-						//) ) * 180.0f / DirectX::XM_PI );
 
 						ImGui::TableSetColumnIndex( 1 );
 						ImGui::AlignTextToFramePadding();
 						ImGui::Text( "Yaw" );
+
+						float localYaw = std::asin( DirectX::XMVectorGetX( DirectX::XMVector3Dot( normTangent, pathData.mExtrusions[i].mBitangent ) ) );
+						ImGui::Text( "" );
+						ImGui::Text( "Local:%.2f", localYaw * 180.0f / DirectX::XM_PI );
+
+						for ( int lb = 0; lb < 2; ++lb ) {
+							float yawDrag = 0.0f;
+							ImGui::DragFloat( lb ? "L+B##YawDrag" : "L##YawDrag", &yawDrag, DirectX::XM_PI / 180.0f, 0.0f, 0.0f, "", ImGuiSliderFlags_NoRoundToFormat );
+							if ( ImGui::IsItemEdited() ) {
+								if ( ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CustomBitangent ) ) {
+									yawDrag = std::clamp( localYaw - yawDrag, -DirectX::XM_PI * 85.0f / 180.0f, DirectX::XM_PI * 85.0f / 180.0f ) - localYaw;
+								}
+								pathData.mKnots[i].mOutVec = DirectX::XMVector3Rotate( pathData.mKnots[i].mOutVec, DirectX::XMQuaternionRotationNormal( pathData.mExtrusions[i].mNormal, yawDrag ) );
+								if ( lb ) {
+									pathData.mExtrusions[i].mBitangent = DirectX::XMVector3Rotate( pathData.mExtrusions[i].mBitangent, DirectX::XMQuaternionRotationNormal( pathData.mExtrusions[i].mNormal, yawDrag ) );
+								}
+								pathData.UpdateTangentValue( i, true );
+								pathData.ComputeAutoExtrusions( i );
+							}
+							if ( ImGui::IsItemDeactivatedAfterEdit() ) {
+								dirty = true;
+							}
+						}
 
 						ImGui::TableSetColumnIndex( 2 );
 						ImGui::AlignTextToFramePadding();
