@@ -257,9 +257,9 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 						ImGui::Text( "Global:%.2f", globalPitch * 180.0f / DirectX::XM_PI );
 						ImGui::Text( "Local: %.2f", localPitch * 180.0f / DirectX::XM_PI );
 
-						for ( int ln = 0; ln < 2; ++ln ) {
+						for ( int tn = 0; tn < 2; ++tn ) {
 							float pitchDrag = 0.0f;
-							ImGui::DragFloat( ( ln ? "L+N##PitchDrag" : "L##PitchDrag" ), &pitchDrag, DirectX::XM_PI / 180.0f, 0.0f, 0.0f, "", ImGuiSliderFlags_NoRoundToFormat );
+							ImGui::DragFloat( ( tn ? "T+N##PitchDrag" : "T##PitchDrag" ), &pitchDrag, DirectX::XM_PI / 180.0f, 0.0f, 0.0f, "", ImGuiSliderFlags_NoRoundToFormat );
 							if ( ImGui::IsItemEdited() ) {
 								DirectX::XMVECTOR pitchDir;
 								if ( !( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CustomNormal ) ) {
@@ -273,7 +273,7 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 									pitchDir = DirectX::XMVector3Normalize( DirectX::XMVector3Cross( pathData.mExtrusions[i].mNormal, normTangent ) );
 								}
 								pathData.mKnots[i].mOutVec = DirectX::XMVector3Rotate( pathData.mKnots[i].mOutVec, DirectX::XMQuaternionRotationNormal( pitchDir, -pitchDrag ) );
-								if ( ln ) {
+								if ( tn ) {
 									pathData.mExtrusions[i].mNormal = DirectX::XMVector3Rotate( pathData.mExtrusions[i].mNormal, DirectX::XMQuaternionRotationNormal( pitchDir, -pitchDrag ) );
 								}
 								pathData.UpdateTangentValue( i, true );
@@ -292,15 +292,15 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 						ImGui::Text( "" );
 						ImGui::Text( "Local:%.2f", localYaw * 180.0f / DirectX::XM_PI );
 
-						for ( int lb = 0; lb < 2; ++lb ) {
+						for ( int tb = 0; tb < 2; ++tb ) {
 							float yawDrag = 0.0f;
-							ImGui::DragFloat( lb ? "L+B##YawDrag" : "L##YawDrag", &yawDrag, DirectX::XM_PI / 180.0f, 0.0f, 0.0f, "", ImGuiSliderFlags_NoRoundToFormat );
+							ImGui::DragFloat( tb ? "T+B##YawDrag" : "T##YawDrag", &yawDrag, DirectX::XM_PI / 180.0f, 0.0f, 0.0f, "", ImGuiSliderFlags_NoRoundToFormat );
 							if ( ImGui::IsItemEdited() ) {
 								if ( ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CustomBitangent ) ) {
 									yawDrag = std::clamp( localYaw - yawDrag, -DirectX::XM_PI * 85.0f / 180.0f, DirectX::XM_PI * 85.0f / 180.0f ) - localYaw;
 								}
 								pathData.mKnots[i].mOutVec = DirectX::XMVector3Rotate( pathData.mKnots[i].mOutVec, DirectX::XMQuaternionRotationNormal( pathData.mExtrusions[i].mNormal, yawDrag ) );
-								if ( lb ) {
+								if ( tb ) {
 									pathData.mExtrusions[i].mBitangent = DirectX::XMVector3Rotate( pathData.mExtrusions[i].mBitangent, DirectX::XMQuaternionRotationNormal( pathData.mExtrusions[i].mNormal, yawDrag ) );
 								}
 								pathData.UpdateTangentValue( i, true );
