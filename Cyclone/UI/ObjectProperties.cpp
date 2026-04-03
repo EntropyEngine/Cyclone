@@ -314,6 +314,44 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 						ImGui::TableSetColumnIndex( 2 );
 						ImGui::AlignTextToFramePadding();
 						ImGui::Text( "Roll" );
+
+						float normalRoll = -std::asin( DirectX::XMVectorGetX( DirectX::XMVector3Dot( pathData.mExtrusions[i].mNormal, pathData.mExtrusions[i].mBitangent ) ) );
+						float bitanRoll = std::acos( DirectX::XMVectorGetX( DirectX::XMVector3Dot( pathData.mExtrusions[i].mNormal, pathData.mExtrusions[i].mBitangent ) ) );
+						ImGui::Text( "LocalN:%.2f", normalRoll * 180.0f / DirectX::XM_PI );
+						ImGui::Text( "LocalB:%.2f", bitanRoll * 180.0f / DirectX::XM_PI );
+
+						{
+							float rollDrag = 0.0f;
+							ImGui::DragFloat( "N##RollDrag", &rollDrag, DirectX::XM_PI / 180.0f, 0.0f, 0.0f, "", ImGuiSliderFlags_NoRoundToFormat );
+							if ( ImGui::IsItemEdited() ) {
+								if ( ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CustomBitangent ) ) {
+									rollDrag = std::clamp( normalRoll + rollDrag, -DirectX::XM_PI * 85.0f / 180.0f, DirectX::XM_PI * 85.0f / 180.0f ) - normalRoll;
+								}
+								pathData.mExtrusions[i].mNormal = DirectX::XMVector3Rotate( pathData.mExtrusions[i].mNormal, DirectX::XMQuaternionRotationNormal( normTangent, rollDrag ) );
+								pathData.ComputeAutoExtrusions( i, true );
+							}
+							if ( ImGui::IsItemDeactivatedAfterEdit() ) {
+								dirty = true;
+							}
+						}
+
+						{
+							float rollDrag = 0.0f;
+							ImGui::DragFloat( "B##RollDrag", &rollDrag, DirectX::XM_PI / 180.0f, 0.0f, 0.0f, "", ImGuiSliderFlags_NoRoundToFormat );
+							if ( ImGui::IsItemEdited() ) {
+								if ( ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CustomNormal ) ) {
+									rollDrag = std::clamp( bitanRoll - rollDrag, DirectX::XM_PI * 5.0f / 180.0f, DirectX::XM_PI * 175.0f / 180.0f ) - bitanRoll;
+								}
+								else {
+									rollDrag = -rollDrag;
+								}
+								pathData.mExtrusions[i].mBitangent = DirectX::XMVector3Rotate( pathData.mExtrusions[i].mBitangent, DirectX::XMQuaternionRotationNormal( normTangent, -rollDrag ) );
+								pathData.ComputeAutoExtrusions( i, false );
+							}
+							if ( ImGui::IsItemDeactivatedAfterEdit() ) {
+								dirty = true;
+							}
+						}
 					}
 					ImGui::EndTable();
 
