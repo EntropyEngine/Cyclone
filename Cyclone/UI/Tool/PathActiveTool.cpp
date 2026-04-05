@@ -123,8 +123,11 @@ void Cyclone::UI::Tool::PathActiveTool::OnDraw( Cyclone::Core::LevelInterface *i
 			}
 
 			/*
+			if ( s + 1 == pathData.mKnots.size() ) break;
+
 			Vector4D scale = Vector4D::sReplicate( 0.1 );
 
+			
 			for ( double u = 0.0; u <= 1.0 && s + 1 < pathData.mKnots.size(); u += 1.0 / 16 ) {
 				Vector4D p = pathData.Interpolate( s, u );
 
@@ -139,9 +142,9 @@ void Cyclone::UI::Tool::PathActiveTool::OnDraw( Cyclone::Core::LevelInterface *i
 					drawList->AddLine( p1, p2, IM_COL32( 255, 255, 255, 255 ) );
 				}
 			}
-			*/
+			
 
-			/*
+			
 			for ( double u = 0.0; u <= 1.0; u += 1.0 / 16 ) {
 				Vector4D p = pathData.Interpolate( s, u );
 
@@ -171,17 +174,17 @@ void Cyclone::UI::Tool::PathActiveTool::OnDraw( Cyclone::Core::LevelInterface *i
 				// Red = Implicit with Tilt
 				// Magenta = Implicit without tilt
 				
-				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3( p + normalImpl * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
-				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
-					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
-					drawList->AddLine( p1, p2, IM_COL32( 255, 0, 0, 255 ) );
-				}
-
-				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3( p + normalImpl2 * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
-				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
-					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
-					drawList->AddLine( p1, p2, IM_COL32( 255, 0, 255, 255 ) );
-				}
+				//DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3( p + normalImpl * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				//if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
+				//	p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
+				//	drawList->AddLine( p1, p2, IM_COL32( 255, 0, 0, 255 ) );
+				//}
+				//
+				//DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3( p + normalImpl2 * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				//if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
+				//	p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
+				//	drawList->AddLine( p1, p2, IM_COL32( 255, 0, 255, 255 ) );
+				//}
 
 				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3( p + normalExpl *scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
 				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
@@ -199,17 +202,17 @@ void Cyclone::UI::Tool::PathActiveTool::OnDraw( Cyclone::Core::LevelInterface *i
 					drawList->AddLine( p1, p2, IM_COL32( 255, 255, 255, 255 ) );
 				}
 
-				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3( p + bitangentImpl * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
-				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
-					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
-					drawList->AddLine( p1, p2, IM_COL32( 0, 255, 0, 255 ) );
-				}
-
-				DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3( p + bitangentImpl2 * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
-				if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
-					p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
-					drawList->AddLine( p1, p2, IM_COL32( 0, 255, 255, 255 ) );
-				}
+				//DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3( p + bitangentImpl * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				//if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
+				//	p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
+				//	drawList->AddLine( p1, p2, IM_COL32( 0, 255, 0, 255 ) );
+				//}
+				//
+				//DirectX::XMStoreFloat4( &v2, DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3( p + bitangentImpl2 * scale ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );
+				//if ( ortho || ( v1.z < 1 && v2.z < 1 ) ) {
+				//	p2 = inViewportData.ClipToScreen( { v2.x, v2.y } );
+				//	drawList->AddLine( p1, p2, IM_COL32( 0, 255, 255, 255 ) );
+				//}
 				
 
 				//DirectX::XMStoreFloat2( reinterpret_cast<DirectX::XMFLOAT2 *>( &p1 ), DirectX::XMVector3TransformCoord( ( rotmat.TransformCoord3Unit( p + ( normal + bitangent ) * half ) + rebasedEntityPosition ).ToXMVECTOR(), ViewProj ) );

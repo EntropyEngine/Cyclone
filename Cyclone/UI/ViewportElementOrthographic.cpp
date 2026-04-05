@@ -320,8 +320,8 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 
 							DirectX::XMVECTOR A = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR();
 							DirectX::XMVECTOR B = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR();
-							DirectX::XMVECTOR C = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, 0.1 ) ) + rebasedEntityPosition ).ToXMVECTOR();
-							DirectX::XMVECTOR D = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, 0.1 ) ) + rebasedEntityPosition ).ToXMVECTOR();
+							DirectX::XMVECTOR C = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, -0.1 ) ) + rebasedEntityPosition ).ToXMVECTOR();
+							DirectX::XMVECTOR D = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, -0.1 ) ) + rebasedEntityPosition ).ToXMVECTOR();
 
 							mWireframeGridBatch->DrawLine( { A, entityColorV }, { B, entityColorV } );
 							mWireframeGridBatch->DrawLine( { B, entityColorV }, { C, entityColorV } );

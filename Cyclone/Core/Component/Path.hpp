@@ -28,11 +28,11 @@ namespace Cyclone::Core::Component
 		enum EExtrusionType : uint8_t
 		{
 			NormalExplicit		= ( 1 << 0 ),
-			NormalTwist		= ( 2 << 0 ),
+			NormalTwist			= ( 2 << 0 ),
 			NormalTilt			= ( 3 << 0 ),
 
 			BitangentExplicit	= ( 1 << 2 ),
-			BitangentTwist	= ( 2 << 2 ),
+			BitangentTwist		= ( 2 << 2 ),
 			BitangentTilt		= ( 3 << 2 ),
 
 			Explicit			= NormalExplicit | BitangentExplicit,
@@ -110,14 +110,14 @@ namespace Cyclone::Core::Component
 			if ( mKnots.size() == 0 ) {
 				mKnots.emplace_back( Cyclone::Math::Vector4D::sZero(), DirectX::XMVectorSet( 0.0f, 0.0f, -1.0f, 0.0f ), DirectX::XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f ) );
 				mExtrusions.emplace_back( DirectX::XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f ), DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 0.0f ) );
-				mExtrusionTypes.push_back( EExtrusionType::Tilt );
+				mExtrusionTypes.push_back( EExtrusionType::Twist );
 				mTangentType.push_back( ETangentType::Aligned );
 			}
 			else {
 				size_t i = mKnots.size() - 1;
 				mKnots.emplace_back( mKnots[i].mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( mKnots[i].mOutVec ) * Cyclone::Math::Vector4D::sReplicate( 3.0f ), DirectX::XMVectorNegate( mKnots[i].mOutVec ), mKnots[i].mOutVec);
 				mExtrusions.emplace_back( mExtrusions[i].mNormal, mExtrusions[i].mBitangent );
-				mExtrusionTypes.push_back( EExtrusionType::Tilt );
+				mExtrusionTypes.push_back( EExtrusionType::Twist );
 				mTangentType.push_back( ETangentType::Aligned );
 			}
 		}
@@ -213,8 +213,8 @@ namespace Cyclone::Core::Component
 			mExtrusionTypes[knot0 + 2] &= ~( CustomNormal | CustomBitangent );
 			mTangentType[knot0 + 1] = ETangentType::Aligned;
 			mTangentType[knot0 + 2] = ETangentType::Aligned;
-			ComputeAutoExtrusions( knot0 + 1 );
-			ComputeAutoExtrusions( knot0 + 2 );
+			ComputeAutoExtrusions( knot0 + 1, false );
+			ComputeAutoExtrusions( knot0 + 2, false );
 
 		}
 
@@ -304,27 +304,34 @@ namespace Cyclone::Core::Component
 		{
 			using namespace DirectX;
 
-			//DirectX::XMVECTOR tang1 = Differentiate( root, 0 );
-			//DirectX::XMVECTOR quat1 = DirectX::XMVector3Cross( tang1, mExtrusions[root].mNormal );
-			//quat1 = DirectX::XMVectorSetW( quat1, DirectX::XMVectorGetX( DirectX::XMVector3Length( tang1 ) * DirectX::XMVector3Length( mExtrusions[root].mNormal ) * DirectX::XMVector3Dot( tang1, mExtrusions[root].mNormal ) ) );
-			//quat1 = DirectX::XMQuaternionNormalize( quat1 );
+			//DirectX::XMVECTOR N0 = mExtrusions[root].mNormal;
+			//DirectX::XMVECTOR N1 = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal, 1.0f / 3.0f ) );
+			//DirectX::XMVECTOR N2 = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal, 2.0f / 3.0f ) );
+			//DirectX::XMVECTOR N3 = mExtrusions[root + 1].mNormal;
 			//
-			//DirectX::XMVECTOR tang2 = Differentiate( root, 1 );
-			//DirectX::XMVECTOR quat2 = DirectX::XMVector3Cross( tang2, mExtrusions[root + 1].mNormal );
-			//quat2 = DirectX::XMVectorSetW( quat2, DirectX::XMVectorGetX( DirectX::XMVector3Length( tang2 ) * DirectX::XMVector3Length( mExtrusions[root + 1].mNormal ) * DirectX::XMVector3Dot( tang2, mExtrusions[root + 1].mNormal ) ) );
-			//quat2 = DirectX::XMQuaternionNormalize( quat2 );
+			//DirectX::XMVECTOR A = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( N0, N1, u ) );
+			//DirectX::XMVECTOR B = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( N1, N2, u ) );
+			//DirectX::XMVECTOR C = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( N2, N3, u ) );
 			//
-			//DirectX::XMVECTOR quats = DirectX::XMQuaternionSlerp( quat1, quat2, u );
-			//
-			//return DirectX::XMVector3TransformCoord( tang1, DirectX::XMMatrixRotationQuaternion( quats ) );
+			//DirectX::XMVECTOR D = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( A, B, u ) );
+			//DirectX::XMVECTOR E = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( B, C, u ) );
 
+
+			/*
+			return mExtrusions[root].mNormal * std::cos( u * DirectX::XM_PIDIV2 ) + mExtrusions[root + 1].mNormal * std::sin( u * DirectX::XM_PIDIV2 );
+			*/
+
+			return DirectX::XMVectorLerp( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal, u );
+
+			/*
 			DirectX::XMVECTOR quat1 = DirectX::XMVector3Cross( mExtrusions[root + 1].mNormal, mExtrusions[root].mNormal );
 			quat1 = DirectX::XMVectorSetW( quat1, DirectX::XMVectorGetX( DirectX::XMVector3Length( mExtrusions[root].mNormal ) * DirectX::XMVector3Length( mExtrusions[root + 1].mNormal ) * DirectX::XMVector3Dot( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal ) ) );
 			quat1 = DirectX::XMQuaternionNormalize( quat1 );
 
-			DirectX::XMVECTOR quats = DirectX::XMQuaternionNormalize( DirectX::XMQuaternionSlerp( DirectX::XMQuaternionIdentity(), quat1, u / 2 ) );
+			DirectX::XMVECTOR quats = DirectX::XMQuaternionNormalize( DirectX::XMQuaternionSlerp( DirectX::XMQuaternionIdentity(), quat1, -u / 2 ) );
 
-			return DirectX::XMQuaternionMultiply( DirectX::XMQuaternionMultiply( quats, mExtrusions[root].mNormal ), DirectX::XMQuaternionInverse( quats ) );
+			return DirectX::XMVector3Rotate( mExtrusions[root].mNormal, quats );
+			*/
 		}
 
 		Cyclone::Math::Vector4D XM_CALLCONV InterpolateUVW( size_t root, float u, float v, float w ) const
