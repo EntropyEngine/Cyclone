@@ -175,6 +175,34 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 		LineSpace();
 		ImGui::Text( Cyclone::Util::PrefixString( "", pathData.mKnots.size() ) );		
 
+		ImGui::Separator();
+
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text( "Add Segment" );
+		LineSpace();
+		if ( ImGui::Button( "+##AddSegment", { ImGui::GetFrameHeight(), ImGui::GetFrameHeight() } ) ) {
+			pathData.AddKnot();
+			dirty = true;
+		}
+
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text( "Add Loop" );
+		LineSpace();
+		if ( ImGui::Button( "+##AddLoop", { ImGui::GetFrameHeight(), ImGui::GetFrameHeight() } ) ) {
+			pathData.AddLoop( DirectX::XM_2PI, 1.5f );
+			pathData.AddLoop( DirectX::XM_2PI, 1.5f );
+			dirty = true;
+		}
+
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text( "Add Half-Loop" );
+		LineSpace();
+		if ( ImGui::Button( "+##AddHalfLoop", { ImGui::GetFrameHeight(), ImGui::GetFrameHeight() } ) ) {
+			pathData.AddLoop( DirectX::XM_2PI, 1.5f );
+			dirty = true;
+		}
+		ImGui::Separator();
+
 		for ( int i = 0; i < pathData.mKnots.size(); ++i ) {
 			ImGui::AlignTextToFramePadding();
 			if ( ImGui::TreeNodeEx( Cyclone::Util::PrefixString( "Knot ", i ), ImGuiTreeNodeFlags_DrawLinesFull | ImGuiTreeNodeFlags_Framed ) ) {
@@ -361,23 +389,8 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 				ImGui::TreePop();
 			}
 		}
-	
-		ImGui::AlignTextToFramePadding();
-		ImGui::Text( "Add Knot" );
-		LineSpace();
-		if ( ImGui::Button( "+##AddKnot", { ImGui::GetFrameHeight(), ImGui::GetFrameHeight() } ) ) {
-			pathData.AddKnot();
-			dirty = true;
-		}
 
-		ImGui::AlignTextToFramePadding();
-		ImGui::Text( "Add Loop" );
-		LineSpace();
-		if ( ImGui::Button( "+##AddLoop", { ImGui::GetFrameHeight(), ImGui::GetFrameHeight() } ) ) {
-			pathData.AddLoop();
-			dirty = true;
-		}
-
+		/*
 		ImGuiStorage *localStorage = ImGui::GetStateStorage();
 
 		if ( !localStorage->GetVoidPtr( ImGui::GetID( "test" ) ) ) {
@@ -385,6 +398,7 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 		}
 
 		ImGui::DragFloat( "TestStorage", localStorage->GetFloatRef( ImGui::GetID( "test" ) ) );
+		*/
 
 	}
 

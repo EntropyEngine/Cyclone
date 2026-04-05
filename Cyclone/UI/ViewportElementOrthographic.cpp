@@ -300,13 +300,24 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 				DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
 
 				std::vector<DirectX::VertexPositionColor> linePoints( ( pathData.mKnots.size() - 1 ) * 65 );
+				//std::vector<DirectX::VertexPositionColor> linePointsL( ( pathData.mKnots.size() - 1 ) * 17 );
+				//std::vector<DirectX::VertexPositionColor> linePointsR( ( pathData.mKnots.size() - 1 ) * 17 );
 				for ( size_t s = 0; s + 1 < pathData.mKnots.size(); ++s ) {
 					for ( size_t i = 0; i <= 64; ++i ) {
 						float u = static_cast<float>( i ) / 64;
-						DirectX::XMStoreFloat3( &linePoints[s * 65 + i].position, ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
+						DirectX::XMStoreFloat3( &linePoints[s * 65 + i].position, ( rotmat.TransformCoord3Unit( pathData.Interpolate( s, u ) ) + rebasedEntityPosition ).ToXMVECTOR() );
 						DirectX::XMStoreFloat4( &linePoints[s * 65 + i].color, entityColorV );
 
 						if ( i % 4 == 0 ) {
+							using namespace DirectX;
+
+							//DirectX::XMStoreFloat3( &linePointsL[s * 17 + i / 4].position, ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
+							//DirectX::XMStoreFloat4( &linePointsL[s * 17 + i / 4].color, entityColorV * 0.75f );
+
+							//DirectX::XMStoreFloat3( &linePointsR[s * 17 + i / 4].position, ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
+							//DirectX::XMStoreFloat4( &linePointsR[s * 17 + i / 4].color, entityColorV * 0.75f );
+
+
 							DirectX::XMVECTOR A = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR();
 							DirectX::XMVECTOR B = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR();
 							DirectX::XMVECTOR C = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, 0.1 ) ) + rebasedEntityPosition ).ToXMVECTOR();
@@ -316,12 +327,17 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 							mWireframeGridBatch->DrawLine( { B, entityColorV }, { C, entityColorV } );
 							mWireframeGridBatch->DrawLine( { C, entityColorV }, { D, entityColorV } );
 							mWireframeGridBatch->DrawLine( { D, entityColorV }, { A, entityColorV } );
+
+
+							//mWireframeGridBatch->DrawLine( linePointsL[s * 17 + i / 4], linePointsR[s * 17 + i / 4] );
 						}
-						
+
 					}
 				}
 
 				mWireframeGridBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePoints.data(), linePoints.size() );
+				//mWireframeGridBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePointsL.data(), linePointsL.size() );
+				//mWireframeGridBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePointsR.data(), linePointsR.size() );
 
 				// TODO
 				// Draw the path
