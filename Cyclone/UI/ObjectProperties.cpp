@@ -177,6 +177,13 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 
 		ImGui::Separator();
 
+		ImGuiStorage *localStorage = ImGui::GetStateStorage();
+
+		if ( !localStorage->GetVoidPtr( ImGui::GetID( "AddLoopAngle" ) ) ) localStorage->SetFloat( ImGui::GetID( "AddLoopAngle" ), 360.0f );
+		if ( !localStorage->GetVoidPtr( ImGui::GetID( "AddLoopStride" ) ) ) localStorage->SetFloat( ImGui::GetID( "AddLoopStride" ), 0.0f );
+		if ( !localStorage->GetVoidPtr( ImGui::GetID( "AddLoopRadius" ) ) ) localStorage->SetFloat( ImGui::GetID( "AddLoopRadius" ), 2.0f );
+
+
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text( "Add Segment" );
 		LineSpace();
@@ -189,16 +196,28 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 		ImGui::Text( "Add Loop" );
 		LineSpace();
 		if ( ImGui::Button( "+##AddLoop", { ImGui::GetFrameHeight(), ImGui::GetFrameHeight() } ) ) {
-			pathData.AddLoop( DirectX::XM_2PI, 1.5f );
-			pathData.AddLoop( DirectX::XM_2PI, 1.5f );
+			pathData.AddFullLoop(
+				localStorage->GetFloat( ImGui::GetID( "AddLoopAngle" ) ) / 180.0 * DirectX::XM_PI,
+				localStorage->GetFloat( ImGui::GetID( "AddLoopStride" ) ),
+				localStorage->GetFloat( ImGui::GetID( "AddLoopRadius" ) )
+			);
 			dirty = true;
 		}
+		ImGui::SameLine( 0.0f, 4.0f );
+		ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x / 3 );
+		ImGui::DragFloat( "##AddLoopAngle", localStorage->GetFloatRef( ImGui::GetID( "AddLoopAngle" ) ), 1.0f, 90.0f, 360.0f, "Angle=%.0f", ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoRoundToFormat );
+		ImGui::SameLine( 0.0f, 4.0f );
+		ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x / 2 );
+		ImGui::DragFloat( "##AddLoopStride", localStorage->GetFloatRef( ImGui::GetID( "AddLoopStride" ) ), 1.0f, 0.0f, 0.0f, "Stride=%.2f", ImGuiSliderFlags_NoRoundToFormat );
+		ImGui::SameLine( 0.0f, 4.0f );
+		ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x / 1 );
+		ImGui::DragFloat( "##AddLoopRadius", localStorage->GetFloatRef( ImGui::GetID( "AddLoopRadius" ) ), 1.0f, 0.0f, 0.0f, "Radius=%.2f", ImGuiSliderFlags_NoRoundToFormat );
 
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text( "Add Half-Loop" );
 		LineSpace();
 		if ( ImGui::Button( "+##AddHalfLoop", { ImGui::GetFrameHeight(), ImGui::GetFrameHeight() } ) ) {
-			pathData.AddLoop( DirectX::XM_2PI, 1.5f );
+			pathData.AddHalfLoop( DirectX::XM_PI / 2, 1.0f, 2.0f );
 			dirty = true;
 		}
 		ImGui::Separator();

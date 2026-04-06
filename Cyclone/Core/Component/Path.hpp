@@ -56,9 +56,13 @@ namespace Cyclone::Core::Component
 			Mirrored
 		};
 
+		static constexpr const char * kSegmentTypes[] = { "Custom", "HalfLoop", "FullLoop" };
 		enum class ESegmentType : uint8_t
 		{
-
+			Custom,
+			HalfLoop,
+			FullLoop,
+			Child
 		};
 
 		struct Segment
@@ -110,28 +114,32 @@ namespace Cyclone::Core::Component
 			if ( mKnots.size() == 0 ) {
 				mKnots.emplace_back( Cyclone::Math::Vector4D::sZero(), DirectX::XMVectorSet( 0.0f, 0.0f, -1.0f, 0.0f ), DirectX::XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f ) );
 				mExtrusions.emplace_back( DirectX::XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f ), DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 0.0f ) );
-				mExtrusionTypes.push_back( EExtrusionType::Twist );
+				mExtrusionTypes.push_back( EExtrusionType::Tilt );
 				mTangentType.push_back( ETangentType::Aligned );
 			}
 			else {
 				size_t i = mKnots.size() - 1;
 				mKnots.emplace_back( mKnots[i].mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( mKnots[i].mOutVec ) * Cyclone::Math::Vector4D::sReplicate( 3.0f ), DirectX::XMVectorNegate( mKnots[i].mOutVec ), mKnots[i].mOutVec);
 				mExtrusions.emplace_back( mExtrusions[i].mNormal, mExtrusions[i].mBitangent );
-				mExtrusionTypes.push_back( EExtrusionType::Twist );
+				mExtrusionTypes.push_back( EExtrusionType::Tilt );
 				mTangentType.push_back( ETangentType::Aligned );
 			}
 		}
 
-		void AddLoop( double inT = DirectX::XM_2PI, double inStride = 2.0f, double inRadius = 2.0f, bool inFull = true )
+		void AddHalfLoop( double inT = DirectX::XM_PI, double inStride = 1.0f, double inRadius = 2.0f )
 		{
 			using Cyclone::Math::Vector4D;
 			using Cyclone::Math::Matrix44D;
 
 			size_t knot0 = mKnots.size() - 1;
 
-			inT /= inFull ? 2 : 1;
-			inStride /= inFull ? 2 : 1;
 			inStride /= inRadius;
+
+			mExtrusionTypes[knot0] &= ~( CustomNormal | CustomBitangent );
+			mTangentType[knot0] = ETangentType::Aligned;
+
+			UpdateTangentValue( knot0, false );
+			ComputeAutoExtrusions( knot0 );
 
 			const double A = -DirectX::XM_PI / 2;
 			const double D = inT -DirectX::XM_PI / 2;
@@ -162,12 +170,6 @@ namespace Cyclone::Core::Component
 
 			Vector4D J2 = C3 - LJ * Vector4D( -sinB, 0.0, cosB );
 			J2 -= Vector4D( 0, -inStride / 4, 0 ) / J2.GetLength3V();
-
-			mExtrusionTypes[knot0] &= ~( CustomNormal | CustomBitangent );
-			mTangentType[knot0] = ETangentType::Aligned;
-
-			UpdateTangentValue( knot0, false );
-			ComputeAutoExtrusions( knot0 );
 
 			Vector4D scale = Vector4D::sReplicate( inRadius );
 			Matrix44D align(
@@ -216,6 +218,115 @@ namespace Cyclone::Core::Component
 			ComputeAutoExtrusions( knot0 + 1, false );
 			ComputeAutoExtrusions( knot0 + 2, false );
 
+		}
+
+		void AddFullLoop( double inT = DirectX::XM_PI, double stride = 1.0f, double radius = 2.0f )
+		{
+			using Cyclone::Math::Vector4D;
+			using Cyclone::Math::Matrix44D;
+
+			size_t knot0 = mKnots.size() - 1;
+
+			mExtrusionTypes[knot0] &= ~( CustomNormal | CustomBitangent );
+			mTangentType[knot0] = ETangentType::Aligned;
+
+			UpdateTangentValue( knot0, false );
+			ComputeAutoExtrusions( knot0 );
+
+			auto c_bezier = [inT]( double u0, double u1, Vector4D *C ) {
+				auto c = [inT]( double u ) {
+					return Vector4D( std::sin( inT * u ), 0.5 - 0.5 * std::cos( DirectX::XM_PI * u ), -std::cos( inT * u ) );
+				};
+
+				auto c_prime = [inT]( double u ) {
+					return Vector4D( inT * std::cos( inT * u ), DirectX::XM_PI * 0.5 * std::sin( DirectX::XM_PI * u ), inT * std::sin( inT * u ) );
+				};
+
+				C[0] = c( u0 );
+				C[3] = c( u1 );
+
+				Vector4D T0 = c_prime( u0 );
+				Vector4D T1 = c_prime( u1 );
+
+				Vector4D delta = Vector4D::sReplicate( ( u1 - u0 ) / 3.0 );
+
+				C[1] = C[0] + delta * T0;
+				C[2] = C[3] - delta * T1;
+			};
+
+			Vector4D C0[4] = {
+				{ 0.000000, 0.000000, -1.000000 },
+				{ 0.523599, 0.000000, -1.000000 },
+				{ 1.000000, 0.053887, -0.523599 },
+				{ 1.000000, 0.146447, 0.000000 },
+			};
+
+			Vector4D C1[4] = {
+				{ 1.000000, 0.146447, 0.000000 },
+				{ 1.000000, 0.239007, 0.523599 },
+				{ 0.523599, 0.369100, 1.000000 },
+				{ 0.000000, 0.500000, 1.000000 },
+			};
+
+			Vector4D C2[4] = {
+				{ 0.000000, 0.500000, 1.000000 },
+				{ -0.523599, 0.630900, 1.000000 },
+				{ -1.000000, 0.760993, 0.523599 },
+				{ -1.000000, 0.853553, 0.000000 },
+			};
+
+			Vector4D C3[4] = {
+				{ -1.000000, 0.853553, 0.000000 },
+				{ -1.000000, 0.946113, -0.523599 },
+				{ -0.523599, 1.000000, -1.000000 },
+				{ 0.000000, 1.000000, -1.000000 },
+			};
+
+			c_bezier( 0.0 / 4, 1.0 / 4, C0 );
+			c_bezier( 1.0 / 4, 2.0 / 4, C1 );
+			c_bezier( 2.0 / 4, 3.0 / 4, C2 );
+			c_bezier( 3.0 / 4, 4.0 / 4, C3 );
+
+			Vector4D *curves[4] = { C0, C1, C2, C3 };
+
+			Vector4D fScale = Vector4D::sReplicate( std::abs( radius ) );
+			Vector4D rScale = Vector4D::sReplicate( radius );
+			Vector4D sScale = Vector4D::sReplicate( stride );
+			Matrix44D align(
+				Vector4D::sFromXMVECTOR( DirectX::XMVectorSetW( mKnots[knot0].mOutVec, 0 ) ).GetNorm3() * fScale,
+				Vector4D::sFromXMVECTOR( DirectX::XMVectorSetW( mExtrusions[knot0].mBitangent, 0 ) ) * sScale,
+				Vector4D::sFromXMVECTOR( DirectX::XMVectorSetW( mExtrusions[knot0].mNormal, 0 ) ) * rScale,
+				Vector4D( 0, 0, 0, 1 )
+			);
+
+			Vector4D offset( 0, 0, 1 );
+
+			for ( Vector4D *curve : curves ) {
+				for ( size_t i = 0; i < 4; ++i ) {
+					curve[i] = align.TransformCoord3Unit( curve[i] + offset ) + mKnots[knot0].mPoint;
+				}
+			}
+
+			mKnots[knot0].mOutVec = ( curves[0][1] - curves[0][0] ).ToXMVECTOR();
+
+			for ( size_t c = 0; c < 4; ++c ) {
+				AddKnot();
+
+				mTangentType[knot0 + 1 + c] = ETangentType::Aligned;
+				mExtrusions[knot0 + 1 + c].mBitangent = mExtrusions[knot0].mBitangent;
+				mExtrusionTypes[knot0 + 1 + c] &= ~CustomNormal;
+				mExtrusionTypes[knot0 + 1 + c] |= CustomBitangent;
+
+				mKnots[knot0 + 1 + c].mPoint = curves[c][3];
+				mKnots[knot0 + 1 + c].mInVec = ( curves[c][2] - curves[c][3] ).ToXMVECTOR();
+				mKnots[knot0 + 1 + c].mOutVec = ( curves[c][3] - curves[c][2] ).ToXMVECTOR();
+
+				UpdateTangentValue( knot0 + 1 + c, false );
+				ComputeAutoExtrusions( knot0 + 1 + c, false );
+
+				mExtrusionTypes[knot0 + 1 + c] &= ~CustomBitangent;
+				ComputeAutoExtrusions( knot0 + 1 + c, false );
+			}
 		}
 
 		Cyclone::Math::Vector4D XM_CALLCONV Interpolate( size_t root, float u ) const
