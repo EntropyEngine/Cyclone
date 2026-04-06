@@ -189,7 +189,7 @@ void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDe
 		{
 			mWireframeGridBatch->Begin();
 
-			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, PathData, entt::tag<"is_visible"_hs>>();
+			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, PathData, DrawTag>();
 			//view.use<BoundingBox>();
 			for ( const entt::entity entity : view ) {
 				const auto &entityType = view.get<EntityType>( entity );
