@@ -9,6 +9,7 @@ namespace Cyclone::Rendering::Shader
 
 	class EntityIndexShader
 	{
+		static constexpr uint32_t kSearchWidth = 16;
 	public:
 		void SetDevice( ID3D11Device *inDevice );
 		void SizeResources( size_t inWidth, size_t inHeight, size_t inSamples );

@@ -12,7 +12,7 @@ Texture2D<uint> gEntityBuffer : register( t0 );
 Texture2DMS<uint, MSAA_LEVEL> gEntityBuffer : register( t0 );
 #endif
 
-#define MOUSE_WIDTH 8
+#define MOUSE_WIDTH 16
 
 #define TOTAL_THREADS (MOUSE_WIDTH * MOUSE_WIDTH * MSAA_LEVEL)
 

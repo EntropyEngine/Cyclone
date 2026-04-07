@@ -43,7 +43,7 @@ void Cyclone::Rendering::Shader::EntityIndexShader::SizeResources( size_t inWidt
 		bufDesc.Usage = D3D11_USAGE_DEFAULT;
 		bufDesc.CPUAccessFlags = 0;
 
-		bufDesc.ByteWidth = bufDesc.StructureByteStride * mSampleCount * 8 * 8;
+		bufDesc.ByteWidth = bufDesc.StructureByteStride * mSampleCount * kSearchWidth * kSearchWidth;
 
 		D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
@@ -51,7 +51,7 @@ void Cyclone::Rendering::Shader::EntityIndexShader::SizeResources( size_t inWidt
 		uavDesc.Buffer.FirstElement = 0;
 		uavDesc.Buffer.Flags = 0;
 
-		uavDesc.Buffer.NumElements = mSampleCount * 8 * 8;
+		uavDesc.Buffer.NumElements = mSampleCount * kSearchWidth * kSearchWidth;
 
 		D3D11_BUFFER_DESC stagingDesc = {};
 		stagingDesc.BindFlags = 0;
@@ -66,7 +66,7 @@ void Cyclone::Rendering::Shader::EntityIndexShader::SizeResources( size_t inWidt
 		DX::ThrowIfFailed( mDevice->CreateUnorderedAccessView( mOutputBuffer.Get(), &uavDesc, mOutputBufferUAV.ReleaseAndGetAddressOf() ) );
 		DX::ThrowIfFailed( mDevice->CreateBuffer( &stagingDesc, nullptr, mOutputBufferStaging.ReleaseAndGetAddressOf() ) );
 
-		mOutputBufferCPU.resize( mSampleCount * 8 * 8, 0 );
+		mOutputBufferCPU.resize( mSampleCount * kSearchWidth * kSearchWidth, 0 );
 	}
 
 	if ( inWidth != mWidth || inHeight != mHeight ) {
@@ -86,7 +86,13 @@ entt::entity Cyclone::Rendering::Shader::EntityIndexShader::ReadViewport( ID3D11
 	inContext->CSSetShaderResources( 0, 1, &inEntitySRV );
 	inContext->CSSetUnorderedAccessViews( 0, 1, &outputUAV, nullptr );
 
-	inContext->CSSetShader( mShader1x.Get(), nullptr, 0 );
+	switch ( mSampleCount ) {
+		case 1: inContext->CSSetShader( mShader1x.Get(), nullptr, 0 ); break;
+		case 4: inContext->CSSetShader( mShader4x.Get(), nullptr, 0 ); break;
+		default:
+			assert( false );
+			__assume( false );
+	}
 
 	inContext->Dispatch( 1, 1, 1 );
 
@@ -100,10 +106,10 @@ entt::entity Cyclone::Rendering::Shader::EntityIndexShader::ReadViewport( ID3D11
 
 	inContext->CopyResource( mOutputBufferStaging.Get(), mOutputBuffer.Get() );
 
-	D3D11_MAPPED_SUBRESOURCE mappedResource = {};
-	inContext->Map( mOutputBufferStaging.Get(), 0, D3D11_MAP_READ, 0, &mappedResource );
-	std::memcpy( mOutputBufferCPU.data(), mappedResource.pData, mOutputBufferCPU.size() * sizeof( uint32_t ) );
-	inContext->Unmap( mOutputBufferStaging.Get(), 0 );
+	{
+		DirectX::MapGuard map( inContext, mOutputBufferStaging.Get(), 0, D3D11_MAP_READ, 0 );
+		memcpy( mOutputBufferCPU.data(), map.pData, mOutputBufferCPU.size() * sizeof( uint32_t ) );
+	}
 
 	std::sort( mOutputBufferCPU.begin(), mOutputBufferCPU.end() );
 	auto first = std::upper_bound( mOutputBufferCPU.begin(), mOutputBufferCPU.end(), 0U );
@@ -111,7 +117,6 @@ entt::entity Cyclone::Rendering::Shader::EntityIndexShader::ReadViewport( ID3D11
 	if ( first == mOutputBufferCPU.end() ) {
 		return entt::null;
 	}
-
 	else {
 		return static_cast<entt::entity>( static_cast<uint32_t>( entt::null ) - *first );
 	}
