@@ -3,13 +3,15 @@ struct VSInput
     float3 Position : SV_Position;
     float4 Center: InstCenter;
     float4 Extent: InstExtent;
-    float4 Color: InstColor;
+    float3 Color: InstColor;
+    uint EntityID: InstEntityID;
 };
 
 struct VSOutput
 {
     float4 PositionPS : SV_Position;
-    float4 Color : COLOR;
+    float3 Color : COLOR;
+    uint EntityID : TEXCOORD0;
 };
 
 cbuffer cViewProj : register( b0 )
@@ -31,6 +33,7 @@ VSOutput main( VSInput input )
     VSOutput output;
     output.PositionPS = PositionPS;
     output.Color = input.Color;
+    output.EntityID = input.EntityID;
     
     return output;
 }

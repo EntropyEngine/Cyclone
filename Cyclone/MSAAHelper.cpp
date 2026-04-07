@@ -87,7 +87,7 @@ void MSAAHelper::ValidateSampleCount( ID3D11Device *device )
 		}
 
 		constexpr UINT32 required = D3D11_FORMAT_SUPPORT_RENDER_TARGET
-			| D3D11_FORMAT_SUPPORT_MULTISAMPLE_RESOLVE
+			//| D3D11_FORMAT_SUPPORT_MULTISAMPLE_RESOLVE
 			| D3D11_FORMAT_SUPPORT_MULTISAMPLE_RENDERTARGET;
 		if ( ( formatSupport & required ) != required )
 		{

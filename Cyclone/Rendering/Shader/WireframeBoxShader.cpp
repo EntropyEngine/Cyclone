@@ -7,11 +7,12 @@
 #include <ReadData.h>
 #include <DirectXHelpers.h>
 
-const D3D11_INPUT_ELEMENT_DESC Cyclone::Rendering::Shader::WireframeBoxShader::sInputElements[4] = {
-	{ "SV_Position",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA,	0 },
-	{ "InstCenter",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-	{ "InstExtent",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-	{ "InstColor",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+const D3D11_INPUT_ELEMENT_DESC Cyclone::Rendering::Shader::WireframeBoxShader::sInputElements[5] = {
+	{ "SV_Position",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA,	0 },
+	{ "InstCenter",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 0,	D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+	{ "InstExtent",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, 16,	D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+	{ "InstColor",		0, DXGI_FORMAT_R32G32B32_FLOAT,		1, 32,	D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+	{ "InstEntityID",	0, DXGI_FORMAT_R32_UINT,			1, 44,	D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 };
 
 void Cyclone::Rendering::Shader::WireframeBoxShader::SetDevice( ID3D11Device *inDevice )
@@ -97,8 +98,12 @@ void XM_CALLCONV Cyclone::Rendering::Shader::WireframeBoxShader::SetViewProj( ID
 	inContext->VSSetConstantBuffers( 0, 1, &buffer );
 }
 
-void XM_CALLCONV Cyclone::Rendering::Shader::WireframeBoxShader::SetInstance( ID3D11DeviceContext *inContext, DirectX::FXMVECTOR inCenter, DirectX::FXMVECTOR inExtent, DirectX::FXMVECTOR inColor )
+void XM_CALLCONV Cyclone::Rendering::Shader::WireframeBoxShader::SetInstance( ID3D11DeviceContext *inContext, DirectX::FXMVECTOR inCenter, DirectX::FXMVECTOR inExtent, DirectX::FXMVECTOR inColor, uint32_t inEntityID )
 {
-	mInstanceData[mInstanceCount++] = { inCenter, inExtent, inColor };
+	auto &data = mInstanceData[mInstanceCount++];
+	data.gCenter = inCenter;
+	data.gExtent = inExtent;
+	DirectX::XMStoreFloat3( &data.gColor, inColor );
+	data.gEntityID = static_cast<uint32_t>( -1 ) - inEntityID;
 	if ( mInstanceCount >= kBatchSize ) DrawInstances( inContext );
 }

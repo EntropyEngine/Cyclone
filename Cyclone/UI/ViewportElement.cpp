@@ -24,6 +24,7 @@
 Cyclone::UI::ViewportElement::ViewportElement( DXGI_FORMAT inBackBufferFormat, DXGI_FORMAT inDepthBufferFormat, const DirectX::XMVECTORF32 inClearColor, bool inAntialiasing )
 {
 	mTargetMSAA = std::make_unique<DX::MSAAHelper>( inBackBufferFormat, inDepthBufferFormat, inAntialiasing ? 4 : 1 );
+	mTargetID = std::make_unique<DX::MSAAHelper>( DXGI_FORMAT_R32_UINT, DXGI_FORMAT_UNKNOWN, inAntialiasing ? 4 : 1 );
 	mTargetRT = std::make_unique<DX::RenderTexture>( inBackBufferFormat );
 	mClearColor = inClearColor;
 
@@ -36,12 +37,14 @@ Cyclone::UI::ViewportElement::ViewportElement( DXGI_FORMAT inBackBufferFormat, D
 Cyclone::UI::ViewportElement::~ViewportElement()
 {
 	mTargetMSAA->ReleaseDevice();
+	mTargetID->ReleaseDevice();
 	mTargetRT->ReleaseDevice();
 }
 
 void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 *inDevice )
 {
 	mTargetMSAA->SetDevice( inDevice );
+	mTargetID->SetDevice( inDevice );
 	mTargetRT->SetDevice( inDevice );
 
 	mWireframeBoxShader->SetDevice( inDevice );
@@ -110,6 +113,7 @@ void Cyclone::UI::ViewportElement::UpdateViewportData()
 ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetOrResizeSRV( size_t inWidth, size_t inHeight )
 {
 	mTargetMSAA->SizeResources( inWidth, inHeight );
+	mTargetID->SizeResources( inWidth, inHeight );
 	mTargetRT->SizeResources( inWidth, inHeight );
 
 	mWidth = inWidth;
@@ -121,12 +125,16 @@ ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetOrResizeSRV( size_t i
 void Cyclone::UI::ViewportElement::Clear( ID3D11DeviceContext3 * inDeviceContext )
 {
 	ID3D11RenderTargetView *renderTargetView = mTargetMSAA->GetMSAARenderTargetView();
+	ID3D11RenderTargetView *renderTargetViewID = mTargetID->GetMSAARenderTargetView();
 	ID3D11DepthStencilView *depthStencilView = mTargetMSAA->GetMSAADepthStencilView();
 
 	inDeviceContext->ClearRenderTargetView( renderTargetView, mClearColor );
+	inDeviceContext->ClearRenderTargetView( renderTargetViewID, DirectX::XMVECTORF32{{{ 0.0f, 0.0f, 0.0f, 0.0f }}} );
 	inDeviceContext->ClearDepthStencilView( depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0 );
 
-	inDeviceContext->OMSetRenderTargets( 1, &renderTargetView, depthStencilView );
+	ID3D11RenderTargetView *views[2] = { renderTargetView, renderTargetViewID };
+
+	inDeviceContext->OMSetRenderTargets( 2, views, depthStencilView );
 
 	D3D11_VIEWPORT viewport{ 0.0f, 0.0f, static_cast<float>( mWidth ), static_cast<float>( mHeight ), 0.0f, 1.0f };
 	inDeviceContext->RSSetViewports( 1, &viewport );
@@ -140,6 +148,7 @@ void Cyclone::UI::ViewportElement::Resolve( ID3D11DeviceContext3 * inDeviceConte
 void Cyclone::UI::ViewportElement::ToggleAntialiasing( bool inEnabled )
 {
 	mTargetMSAA->SetSampleCount( inEnabled ? 4 : 1 );
+	mTargetID->SetSampleCount( inEnabled ? 4 : 1 );
 }
 
 template<Cyclone::UI::EViewportType T>
@@ -263,7 +272,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				Vector4D rebasedEntityPosition = ( position - cameraP );
 				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
-				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV, static_cast<uint32_t>( selectedEntity ) );
 			}
 			mWireframeBoxShader->DrawInstances( inDeviceContext );
 		}
@@ -290,7 +299,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				Vector4D rebasedEntityPosition = ( position - cameraP );
 				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
-				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV, static_cast<uint32_t>( entity ) );
 			}
 			mWireframeBoxShader->DrawInstances( inDeviceContext );
 		}
@@ -319,7 +328,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				Vector4D rebasedEntityPosition = ( position - cameraP );
 				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
 
-				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV, static_cast<uint32_t>( entity ) );
 			}
 			mWireframeBoxShader->DrawInstances( inDeviceContext );
 		}

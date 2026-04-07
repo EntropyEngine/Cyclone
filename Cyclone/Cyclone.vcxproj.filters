@@ -438,5 +438,8 @@
     <FxCompile Include="Shaders\WireframeBox_PS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\EntityIndex_CS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

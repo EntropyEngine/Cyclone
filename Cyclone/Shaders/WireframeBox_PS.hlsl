@@ -1,10 +1,20 @@
 struct PSInput
 {
     float4 PositionPS : SV_Position;
-    float4 Color : COLOR;
+    float3 Color : COLOR;
+    uint EntityID : TEXCOORD0;
 };
 
-float4 main( PSInput input ) : SV_Target
+struct PSOutput
 {
-    return input.Color;
+    float4 Color : SV_Target0;
+    uint EntityID : SV_Target1;
+};
+
+PSOutput main( PSInput input ) : SV_Target
+{
+    PSOutput output;
+    output.Color = float4( input.Color, 1.0f );
+    output.EntityID = input.EntityID;
+    return output;
 }

@@ -30,7 +30,7 @@ namespace Cyclone::Rendering::Shader
 		void DrawInstances( ID3D11DeviceContext *inContext );
 
 		void XM_CALLCONV SetViewProj( ID3D11DeviceContext *inContext, DirectX::FXMMATRIX inView, DirectX::FXMMATRIX inProj );
-		void XM_CALLCONV SetInstance( ID3D11DeviceContext *inContext, DirectX::FXMVECTOR inCenter, DirectX::FXMVECTOR inExtent, DirectX::FXMVECTOR inColor );
+		void XM_CALLCONV SetInstance( ID3D11DeviceContext *inContext, DirectX::FXMVECTOR inCenter, DirectX::FXMVECTOR inExtent, DirectX::FXMVECTOR inColor, uint32_t inEntityID );
 
 	protected:
 		ComPtr<ID3D11VertexShader>	mVertexShader;
@@ -47,12 +47,13 @@ namespace Cyclone::Rendering::Shader
 		{
 			DirectX::XMVECTOR gCenter;
 			DirectX::XMVECTOR gExtent;
-			DirectX::XMVECTOR gColor;
+			DirectX::XMFLOAT3 gColor;
+			uint32_t		  gEntityID;
 		};
 		ComPtr<ID3D11Buffer> mInstanceBuffer;
 		std::unique_ptr<InstanceBuffer[]> mInstanceData;
 		UINT mInstanceCount;
 
-		static const D3D11_INPUT_ELEMENT_DESC sInputElements[4];
+		static const D3D11_INPUT_ELEMENT_DESC sInputElements[5];
 	};
 }

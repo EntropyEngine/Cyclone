@@ -54,6 +54,7 @@ namespace Cyclone::UI
 		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools );
 
 		std::unique_ptr<DX::MSAAHelper>				mTargetMSAA;
+		std::unique_ptr<DX::MSAAHelper>				mTargetID;
 		std::unique_ptr<DX::RenderTexture>			mTargetRT;
 
 		std::unique_ptr<Cyclone::Rendering::Shader::WireframeBoxShader> mWireframeBoxShader;
