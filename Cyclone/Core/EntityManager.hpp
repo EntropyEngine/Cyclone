@@ -68,6 +68,8 @@ namespace Cyclone::Core
 		void					OpenEntityProperties( entt::entity inEntity ) { mOpenedProperties.emplace( inEntity ); }
 		void					CloseEntityProperties( entt::entity inEntity ) { mOpenedProperties.erase( inEntity ); }
 
+		bool					IsSelectionModified() const;
+
 	protected:
 		template<typename T>
 		void RegisterEntityClass();

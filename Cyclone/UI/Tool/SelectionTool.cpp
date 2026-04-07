@@ -8,6 +8,9 @@
 #include "Cyclone/Core/Component/Selectable.hpp"
 #include "Cyclone/Core/Component/Visible.hpp"
 
+// Cyclone Rendering
+#include "Cyclone/Rendering/Shader/EntityIndexShader.hpp"
+
 // Cyclone math
 #include "Cyclone/Math/Vector.hpp"
 
@@ -73,6 +76,11 @@ void Cyclone::UI::Tool::SelectionTool::OnUpdate( Cyclone::Core::LevelInterface *
 		}
 	}
 
+	entt::entity hovered = inViewportData.mEntityIndexShader->ReadViewport( inViewportData.mDeviceContext, inViewportData.mEntitySRV, static_cast<size_t>( inViewportData.mAbsoluteMouse.x ), static_cast<size_t>( inViewportData.mAbsoluteMouse.y ) );
+	if ( hovered != entt::null ) {
+		selectionCandidates.insert( hovered );
+	}
+
 	std::erase_if( selectionCandidates, [&cregistry, &entityManager]( entt::entity inEntity ) {
 		if ( !static_cast<bool>( cregistry.get<Cyclone::Core::Component::Selectable>( inEntity ) ) ) return true;
 		if ( !static_cast<bool>( cregistry.get<Cyclone::Core::Component::Visible>( inEntity ) ) ) return true;
@@ -121,7 +129,7 @@ void Cyclone::UI::Tool::SelectionTool::OnUpdate( Cyclone::Core::LevelInterface *
 
 	selectionContext.mPreviousCandidates = selectionCandidates;
 
-	if ( selectionContext.mDirty ) {
+	if ( selectionContext.mDirty && entityManager.IsSelectionModified() ) {
 		entityManager.BeginAction();
 		entityManager.EndAction( registry );
 

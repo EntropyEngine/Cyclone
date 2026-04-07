@@ -97,7 +97,7 @@ void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 *inDevice )
 	mWireframeGridBatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>( deviceContext.Get(), 16384 * 3, 16384 );
 }
 
-void Cyclone::UI::ViewportElement::UpdateViewportData()
+void Cyclone::UI::ViewportElement::UpdateViewportData( ID3D11DeviceContext *inContext )
 {
 	mViewportData.mViewSize = ImGui::GetWindowSize();
 	mViewportData.mViewOrigin = ImGui::GetCursorScreenPos();
@@ -111,6 +111,9 @@ void Cyclone::UI::ViewportElement::UpdateViewportData()
 	// Split channels into 4 planes
 	mViewportData.mDrawList->ChannelsSplit( 4 );
 	mViewportData.mDrawList->ChannelsSetCurrent( 0 );
+
+	mViewportData.mDeviceContext = inContext;
+	mViewportData.mEntityIndexShader = mEntityIndexShader.get();
 }
 
 ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetOrResizeSRV( size_t inWidth, size_t inHeight )
@@ -120,6 +123,7 @@ ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetOrResizeSRV( size_t i
 	mTargetRT->SizeResources( inWidth, inHeight );
 
 	mEntityIndexShader->SizeResources( inWidth, inHeight, mTargetMSAA->GetSampleCount() );
+	mViewportData.mEntitySRV = mTargetID->GetShaderResourceView();
 
 	mWidth = inWidth;
 	mHeight = inHeight;

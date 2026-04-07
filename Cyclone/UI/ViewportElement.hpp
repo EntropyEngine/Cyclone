@@ -38,7 +38,7 @@ namespace Cyclone::UI
 		virtual ~ViewportElement();
 
 		void SetDevice( ID3D11Device3 *inDevice );
-		void UpdateViewportData();
+		void UpdateViewportData( ID3D11DeviceContext *inContext );
 		const ViewportData &GetViewportData() const { return mViewportData; }
 
 		ID3D11ShaderResourceView *GetOrResizeSRV( size_t inWidth, size_t inHeight );

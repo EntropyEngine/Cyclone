@@ -117,7 +117,7 @@ void Cyclone::Application::Update( float inDeltaTime )
 	ImGui::NewFrame();
 	ImGuizmo::BeginFrame();
 
-	mMainUI->Update( inDeltaTime, mLevelInterface.get() );
+	mMainUI->Update( mDeviceContext.Get(), inDeltaTime, mLevelInterface.get() );
 }
 
 void Cyclone::Application::Render()

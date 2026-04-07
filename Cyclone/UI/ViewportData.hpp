@@ -1,5 +1,9 @@
 #pragma once
 
+namespace Cyclone::Rendering::Shader {
+	class EntityIndexShader;
+}
+
 namespace Cyclone::UI
 {
 	struct ViewportData
@@ -11,11 +15,17 @@ namespace Cyclone::UI
 		ImGuiID mCanvasID;
 		bool mIsActive;
 
+		ImVec2 mAbsoluteMouse;
+
 		double mWorldMouseU;
 		double mWorldMouseV;
 
 		DirectX::XMMATRIX mViewMatrix;
 		DirectX::XMMATRIX mProjMatrix;
+
+		ID3D11DeviceContext *mDeviceContext;
+		ID3D11ShaderResourceView *mEntitySRV;
+		Cyclone::Rendering::Shader::EntityIndexShader *mEntityIndexShader;
 
 		ImVec2 ClipToScreen( const ImVec2 &inClip ) const
 		{

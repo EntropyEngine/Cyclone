@@ -407,6 +407,11 @@ void Cyclone::Core::EntityManager::RestoreContextStatePostAction()
 	mSelectionTool.mSelectedEntities = newTop.mSelectedEntities;
 }
 
+bool Cyclone::Core::EntityManager::IsSelectionModified() const
+{
+	return mSelectionTool.GetSelectedEntities() != mUndoStack[mUndoStackEpoch].mSelectedEntities || mSelectionTool.GetSelectedEntity() != mUndoStack[mUndoStackEpoch].mSelectedEntity;
+}
+
 void Cyclone::Core::EntityManager::ValidateSelection( entt::registry & inRegistry )
 {
 	// Clear selected tags

@@ -76,7 +76,7 @@ void Cyclone::UI::ViewportManager::MenuBarUpdate()
 	if ( ImGui::MenuItem( "Autosize Viewports", "Ctrl+A" ) ) mShouldAutosize = true;
 }
 
-void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
+void Cyclone::UI::ViewportManager::Update( ID3D11DeviceContext3 *inDeviceContext, float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
 {
 	ImGuiWindowFlags viewportFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking;
 	ImVec2 viewSizePerspective, viewSizeTop, viewSizeFront, viewSizeSide;
@@ -93,27 +93,27 @@ void Cyclone::UI::ViewportManager::Update( float inDeltaTime, Cyclone::Core::Lev
 
 		ImGui::SetNextWindowSizeConstraints( { kMinViewportSize, kMinViewportSize }, { viewSize.x - kMinViewportSize, viewSize.y - kMinViewportSize } );
 		if ( ImGui::BeginChild( "PerspectiveView", { ImGui::GetContentRegionAvail().x / 2, ImGui::GetContentRegionAvail().y / 2 }, ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY, viewportFlags ) ) {
-			mViewportPerspective->UpdateViewportData();
+			mViewportPerspective->UpdateViewportData( inDeviceContext );
 			viewSizePerspective = mViewportPerspective->GetViewportData().mViewSize;
 		}
 		ImGui::EndChild();
 
 		ImGui::SameLine();
 		if ( ImGui::BeginChild( "TopView", { ImGui::GetContentRegionAvail().x, viewSizePerspective.y }, ImGuiChildFlags_Borders, viewportFlags ) ) {
-			mViewportTop->UpdateViewportData();
+			mViewportTop->UpdateViewportData( inDeviceContext );
 			viewSizeTop = mViewportTop->GetViewportData().mViewSize;
 		}
 		ImGui::EndChild();
 
 		if ( ImGui::BeginChild( "FrontView", { viewSizePerspective.x, ImGui::GetContentRegionAvail().y }, ImGuiChildFlags_Borders, viewportFlags ) ) {
-			mViewportFront->UpdateViewportData();
+			mViewportFront->UpdateViewportData( inDeviceContext );
 			viewSizeFront = mViewportFront->GetViewportData().mViewSize;
 		}
 		ImGui::EndChild();
 
 		ImGui::SameLine();
 		if ( ImGui::BeginChild( "SideView", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Borders, viewportFlags ) ) {
-			mViewportSide->UpdateViewportData();
+			mViewportSide->UpdateViewportData( inDeviceContext );
 			viewSizeSide = mViewportSide->GetViewportData().mViewSize;
 		}
 		ImGui::EndChild();

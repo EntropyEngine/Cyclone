@@ -43,7 +43,7 @@ void Cyclone::UI::MainUI::SetDevice( ID3D11Device3 *inDevice )
 	mViewportManager->SetDevice( inDevice );
 }
 
-void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
+void Cyclone::UI::MainUI::Update( ID3D11DeviceContext3 *inDeviceContext, float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface )
 {
 	static bool showDemoMenu = false;
 	static bool showMetricsMenu = false;
@@ -108,7 +108,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, { 0.0f, 0.0f } );
 	ImGui::PushStyleVar( ImGuiStyleVar_WindowBorderSize, 0.0f );
 	if ( ImGui::Begin( "MainWindow", nullptr, windowFlags | ImGuiWindowFlags_NoDecoration ) ) {
-		mViewportManager->Update( inDeltaTime, inLevelInterface, mSidebar->GetTools() );
+		mViewportManager->Update( inDeviceContext, inDeltaTime, inLevelInterface, mSidebar->GetTools() );
 	}
 	ImGui::End();
 	ImGui::PopStyleVar( 3 );

@@ -44,7 +44,7 @@ namespace DX
         ID3D11RenderTargetView *GetMSAARenderTargetView() const noexcept { return m_renderTargetView.Get(); }
         ID3D11DepthStencilView *GetMSAADepthStencilView() const noexcept { return m_depthStencilView.Get(); }
 		ID3D11ShaderResourceView *GetMSAADepthStencilSRV() const noexcept { return m_depthStencilSRV.Get(); }
-		ID3D11ShaderResourceView *GetRenderTargetSRV() const noexcept { return m_renderTargetSRV.Get(); }
+		ID3D11ShaderResourceView *GetShaderResourceView() const noexcept { return m_renderTargetSRV.Get(); }
 
         DXGI_FORMAT GetBackBufferFormat() const noexcept { return m_backBufferFormat; }
         DXGI_FORMAT GetDepthBufferFormat() const noexcept { return m_depthBufferFormat; }
