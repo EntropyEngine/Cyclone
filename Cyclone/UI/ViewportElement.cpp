@@ -50,15 +50,10 @@ void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 *inDevice )
 	rssDesc.FillMode = D3D11_FILL_WIREFRAME;
 	rssDesc.CullMode = D3D11_CULL_NONE;
 	rssDesc.FrontCounterClockwise = TRUE;
-	DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mWireframeRSS.ReleaseAndGetAddressOf() ) );
+	DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mWireframeRasterState.ReleaseAndGetAddressOf() ) );
 
-	rssDesc.DepthBias = -1;
 	rssDesc.MultisampleEnable = TRUE;
-	DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mToolRSS_MSAA.ReleaseAndGetAddressOf() ) );
-
-	rssDesc.DepthBias = -1;
-	rssDesc.MultisampleEnable = FALSE;
-	DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mToolRSS_NOAA.ReleaseAndGetAddressOf() ) );
+	DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mWireframeRasterStateMSAA.ReleaseAndGetAddressOf() ) );
 
 	mCommonStates = std::make_unique<DirectX::CommonStates>( inDevice );
 
@@ -152,7 +147,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 	const DirectX::XMMATRIX projMatrix = mViewportData.mProjMatrix;
 
 	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
-	inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mCommonStates->Wireframe() : mWireframeRSS.Get() );
+	inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mWireframeRasterStateMSAA.Get() : mWireframeRasterState.Get() );
 	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
 
 	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), viewMatrix, projMatrix );
@@ -240,8 +235,6 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 
 	// Call all tool renders with depth enabled
 	{
-		inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mToolRSS_MSAA.Get() : mToolRSS_NOAA.Get() );
-
 		mWireframeGridBatch->Begin();
 		for ( auto &tool : inTools ) {
 			tool->OnRender( T, inLevelInterface, mViewportData, mWireframeGridBatch.get() );
@@ -252,9 +245,6 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 
 	// Render bounding boxes (excluding paths)
 	{
-		inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mCommonStates->Wireframe() : mWireframeRSS.Get() );
-		//inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mToolRSS_MSAA.Get() : mToolRSS_NOAA.Get() );
-
 		mWireframeBoxShader->Apply( inDeviceContext );
 		mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
 		mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
