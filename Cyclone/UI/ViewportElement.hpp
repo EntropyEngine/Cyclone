@@ -60,6 +60,8 @@ namespace Cyclone::UI
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState> mWireframeRasterState;
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState> mWireframeRasterStateMSAA;
 
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilState> mLayeredDepthState;
+
 		std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> mWireframeGridBatch;
 		std::unique_ptr<DirectX::BasicEffect>		mWireframeGridEffect;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	mWireframeGridInputLayout;

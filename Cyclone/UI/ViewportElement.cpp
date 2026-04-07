@@ -45,15 +45,40 @@ void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 *inDevice )
 	mTargetRT->SetDevice( inDevice );
 
 	mWireframeBoxShader->SetDevice( inDevice );
+	
+	// Rasterizer States
+	{
+		CD3D11_RASTERIZER_DESC rssDesc( D3D11_DEFAULT );
+		rssDesc.FillMode = D3D11_FILL_WIREFRAME;
+		rssDesc.CullMode = D3D11_CULL_NONE;
+		rssDesc.FrontCounterClockwise = TRUE;
+		DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mWireframeRasterState.ReleaseAndGetAddressOf() ) );
 
-	CD3D11_RASTERIZER_DESC rssDesc( D3D11_DEFAULT );
-	rssDesc.FillMode = D3D11_FILL_WIREFRAME;
-	rssDesc.CullMode = D3D11_CULL_NONE;
-	rssDesc.FrontCounterClockwise = TRUE;
-	DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mWireframeRasterState.ReleaseAndGetAddressOf() ) );
+		rssDesc.MultisampleEnable = TRUE;
+		DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mWireframeRasterStateMSAA.ReleaseAndGetAddressOf() ) );
+	}
 
-	rssDesc.MultisampleEnable = TRUE;
-	DX::ThrowIfFailed( inDevice->CreateRasterizerState( &rssDesc, mWireframeRasterStateMSAA.ReleaseAndGetAddressOf() ) );
+	// Depth Stencil States
+	{
+		D3D11_DEPTH_STENCIL_DESC dssDesc = {};
+
+		dssDesc.DepthEnable = TRUE;
+		dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		dssDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+		dssDesc.StencilEnable = TRUE;
+		dssDesc.StencilReadMask = 0xFF;
+		dssDesc.StencilWriteMask = 0xFF;
+
+		dssDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		dssDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		dssDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+		dssDesc.FrontFace.StencilFunc = D3D11_COMPARISON_GREATER_EQUAL;
+
+		dssDesc.BackFace = dssDesc.FrontFace;
+
+		DX::ThrowIfFailed( inDevice->CreateDepthStencilState( &dssDesc, mLayeredDepthState.ReleaseAndGetAddressOf() ) );
+	}
 
 	mCommonStates = std::make_unique<DirectX::CommonStates>( inDevice );
 
@@ -146,15 +171,75 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 	const DirectX::XMMATRIX viewMatrix = mViewportData.mViewMatrix;
 	const DirectX::XMMATRIX projMatrix = mViewportData.mProjMatrix;
 
-	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
+	inDeviceContext->OMSetBlendState( mCommonStates->Opaque(), nullptr, 0xFFFFFFFF );
 	inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mWireframeRasterStateMSAA.Get() : mWireframeRasterState.Get() );
-	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
 
+	// Render bounding boxes (excluding paths)
+	{
+		mWireframeBoxShader->Apply( inDeviceContext );
+		mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
+		mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
+
+		{
+			auto view = cregistry.view<Position, BoundingBox, DrawTag, entt::tag<"is_selected"_hs>>( entt::exclude<PathTag> );
+
+			inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 2 );
+			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 255, 0, 255 ) );
+			if ( view.contains( selectedEntity ) ) {
+				const auto &position = view.get<Position>( selectedEntity ).mValue;
+				const auto &boundingBox = view.get<BoundingBox>( selectedEntity ).mValue;
+
+				Vector4D rebasedEntityPosition = ( position - cameraP );
+				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
+
+				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+			}
+			mWireframeBoxShader->DrawInstances( inDeviceContext );
+
+			inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 1 );
+			entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
+			for ( const entt::entity entity : view ) {
+				if ( selectedEntity == entity ) continue;
+
+				const auto &position = view.get<Position>( entity ).mValue;
+				const auto &boundingBox = view.get<BoundingBox>( entity ).mValue;
+
+				Vector4D rebasedEntityPosition = ( position - cameraP );
+				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
+
+				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+			}
+			mWireframeBoxShader->DrawInstances( inDeviceContext );
+		}
+
+		{
+			inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 0 );
+			auto view = cregistry.view<EntityType, Position, BoundingBox, DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>, PathTag> );
+			//view.use<BoundingBox>();
+			for ( const entt::entity entity : view ) {
+				const auto &entityType = view.get<EntityType>( entity );
+				const auto &position = view.get<Position>( entity ).mValue;
+				const auto &boundingBox = view.get<BoundingBox>( entity ).mValue;
+
+				uint32_t entityColorU32 = entityManager.GetEntityTypeColor( entityType );
+
+				DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
+
+				Vector4D rebasedEntityPosition = ( position - cameraP );
+				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
+
+				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
+			}
+			mWireframeBoxShader->DrawInstances( inDeviceContext );
+		}
+	}
+
+	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
 	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), viewMatrix, projMatrix );
 	mWireframeGridEffect->Apply( inDeviceContext );
 
 	// Switch to depth buffer
-	inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthDefault(), 0 );
+	inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 0 );
 
 	// Render paths
 	{
@@ -234,6 +319,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 	}
 
 	// Call all tool renders with depth enabled
+	inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 0 );
 	{
 		mWireframeGridBatch->Begin();
 		for ( auto &tool : inTools ) {
@@ -241,65 +327,6 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 		}
 		mWireframeGridBatch->End();
 
-	}
-
-	// Render bounding boxes (excluding paths)
-	{
-		mWireframeBoxShader->Apply( inDeviceContext );
-		mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
-		mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
-
-		{
-			auto view = cregistry.view<EntityType, Position, BoundingBox, DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>, PathTag> );
-			//view.use<BoundingBox>();
-			for ( const entt::entity entity : view ) {
-				const auto &entityType = view.get<EntityType>( entity );
-				const auto &position = view.get<Position>( entity ).mValue;
-				const auto &boundingBox = view.get<BoundingBox>( entity ).mValue;
-
-				uint32_t entityColorU32 = entityManager.GetEntityTypeColor( entityType );
-
-				DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
-
-				Vector4D rebasedEntityPosition = ( position - cameraP );
-				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
-
-				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
-			}
-			mWireframeBoxShader->DrawInstances( inDeviceContext );
-		}
-
-		inDeviceContext->OMSetDepthStencilState( mCommonStates->DepthNone(), 0 );
-
-		{
-			auto view = cregistry.view<Position, BoundingBox, DrawTag, entt::tag<"is_selected"_hs>>( entt::exclude<PathTag> );
-
-			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
-			for ( const entt::entity entity : view ) {
-				if ( selectedEntity == entity ) continue;
-
-				const auto &position = view.get<Position>( entity ).mValue;
-				const auto &boundingBox = view.get<BoundingBox>( entity ).mValue;
-
-				Vector4D rebasedEntityPosition = ( position - cameraP );
-				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
-
-				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
-			}
-
-			entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 255, 0, 255 ) );
-			if ( view.contains( selectedEntity ) ) {
-				const auto &position = view.get<Position>( selectedEntity ).mValue;
-				const auto &boundingBox = view.get<BoundingBox>( selectedEntity ).mValue;
-
-				Vector4D rebasedEntityPosition = ( position - cameraP );
-				Vector4D rebasedBoundingBoxPosition = rebasedEntityPosition + boundingBox.mCenter;
-
-				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
-			}
-
-			mWireframeBoxShader->DrawInstances( inDeviceContext );
-		}
 	}
 }
 

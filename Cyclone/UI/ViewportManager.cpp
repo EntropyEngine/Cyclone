@@ -52,7 +52,7 @@ namespace
 Cyclone::UI::ViewportManager::ViewportManager()
 {
 	const DXGI_FORMAT rtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-	const DXGI_FORMAT dsvFormat = DXGI_FORMAT_D32_FLOAT;
+	const DXGI_FORMAT dsvFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	const DirectX::XMVECTORF32 clearColor = DirectX::Colors::Black;
 
 	mViewportPerspective = std::make_unique<ViewportElementPerspective>( rtvFormat, dsvFormat, clearColor, mAntialiasingEnabled );

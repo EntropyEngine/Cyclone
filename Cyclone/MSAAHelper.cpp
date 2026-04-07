@@ -59,7 +59,7 @@ MSAAHelper::MSAAHelper( DXGI_FORMAT backBufferFormat,
 
 		case DXGI_FORMAT_D24_UNORM_S8_UINT:
 			m_depthBufferFormatTypeless = DXGI_FORMAT_R24G8_TYPELESS;
-			m_depthBufferFormatBindable = DXGI_FORMAT_D24_UNORM_S8_UINT;
+			m_depthBufferFormatBindable = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
 			break;
 
 		case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
