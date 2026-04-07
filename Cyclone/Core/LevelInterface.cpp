@@ -45,7 +45,7 @@ void Cyclone::Core::LevelInterface::Initialize()
 
 	for ( int x = 0; x < nent; ++x ) {
 		for ( int y = 0; y < nent; ++y ) {
-			mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 2.0, 0.0, 2.0 } );
+			//mEntityManager.CreateEntity( "point_debug"_hs, GetRegistry(), { 2.0, 0.0, 2.0 } );
 		}
 	}
 	mEntityManager.EndAction( GetRegistry() );
