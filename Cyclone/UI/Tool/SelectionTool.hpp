@@ -21,5 +21,7 @@ namespace Cyclone::UI::Tool
 	protected:
 		template<EViewportType T>
 		void				OnUpdate( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
+
+		void				OnUpdatePerspective( Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData );
 	};
 }

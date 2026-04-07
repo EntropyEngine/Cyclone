@@ -107,6 +107,9 @@ void Cyclone::UI::ViewportElementPerspective::UpdateNavigation( float inDeltaTim
 
 	ImVec2 viewportAbsMousePos( io.MousePos.x - mViewportData.mViewOrigin.x, io.MousePos.y - mViewportData.mViewOrigin.y );
 	ImVec2 viewportRelMousePos( viewportAbsMousePos.x - viewSize.x / 2.0f, viewportAbsMousePos.y - viewSize.y / 2.0f );
+
+	mViewportData.mAbsoluteMouse = viewportAbsMousePos;
+
 	mViewportData.mWorldMouseU = viewportRelMousePos.x / ( viewSize.x / 2.0f );
 	mViewportData.mWorldMouseV = -viewportRelMousePos.y / ( viewSize.y / 2.0f );
 
