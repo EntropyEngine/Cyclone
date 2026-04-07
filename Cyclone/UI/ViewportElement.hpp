@@ -5,6 +5,7 @@
 
 // Cyclone UI
 #include "Cyclone/UI/ViewportData.hpp"
+#include "Cyclone/UI/ViewportType.hpp"
 
 // Common includes
 #include <MSAAHelper.h>
@@ -19,9 +20,16 @@
 // Rendering includes
 #include "Cyclone/Rendering/Shader/WireframeBoxShader.hpp"
 
+namespace Cyclone::Core {
+	class LevelInterface;
+}
 
 namespace Cyclone::UI
 {
+	namespace Tool {
+		class BaseTool;
+	}
+
 	class ViewportElement : public Cyclone::Util::NonCopyable
 	{
 	public:
@@ -42,6 +50,9 @@ namespace Cyclone::UI
 		void ToggleAntialiasing( bool inEnabled );
 
 	protected:
+		template<Cyclone::UI::EViewportType T>
+		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools );
+
 		std::unique_ptr<DX::MSAAHelper>				mTargetMSAA;
 		std::unique_ptr<DX::RenderTexture>			mTargetRT;
 
