@@ -88,7 +88,7 @@ void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 *inDevice )
 
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext3> deviceContext;
 	inDevice->GetImmediateContext3( deviceContext.GetAddressOf() );
-	mWireframeGridBatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>( deviceContext.Get() );
+	mWireframeGridBatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>( deviceContext.Get(), 16384 * 3, 16384 );
 }
 
 void Cyclone::UI::ViewportElement::UpdateViewportData()
@@ -171,19 +171,105 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 	const DirectX::XMMATRIX viewMatrix = mViewportData.mViewMatrix;
 	const DirectX::XMMATRIX projMatrix = mViewportData.mProjMatrix;
 
+	auto pathLambda = [&]( bool selected, bool selection, auto &view ) {
+		inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
+		mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), viewMatrix, projMatrix );
+		mWireframeGridEffect->Apply( inDeviceContext );
+
+		mWireframeGridBatch->Begin();
+
+		auto draw = [&]( const entt::entity entity ) {
+			const auto &entityType = view.get<EntityType>( entity );
+			const auto &position = view.get<Position>( entity ).mValue;
+			const auto &rotation = view.get<Rotation>( entity ).mPitchYawRoll;
+			const PathData &pathData = view.get<PathData>( entity );
+
+			Matrix44D rotmat = Matrix44D::sFromXMMATRIX( DirectX::XMMatrixRotationRollPitchYawFromVector( rotation ) );
+			Vector4D rebasedEntityPosition = ( position - cameraP );
+
+			uint32_t entityColorU32;
+			if ( entity == selectedEntity ) {
+				entityColorU32 = Cyclone::Util::ColorU32( 255, 255, 0, 255 );
+			}
+			else if ( selection ) {
+				entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
+			}
+			else {
+				entityColorU32 = entityManager.GetEntityTypeColor( entityType );
+			}
+			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
+
+			std::vector<DirectX::VertexPositionColor> linePoints( ( pathData.mKnots.size() - 1 ) * 17 );
+			//std::vector<DirectX::VertexPositionColor> linePointsL( ( pathData.mKnots.size() - 1 ) * 17 );
+			//std::vector<DirectX::VertexPositionColor> linePointsR( ( pathData.mKnots.size() - 1 ) * 17 );
+			for ( size_t s = 0; s + 1 < pathData.mKnots.size(); ++s ) {
+				for ( size_t i = 0; i <= 16; ++i ) {
+					float u = static_cast<float>( i ) / 16;
+					DirectX::XMStoreFloat3( &linePoints[s * 17 + i].position, ( rotmat.TransformCoord3Unit( pathData.Interpolate( s, u ) ) + rebasedEntityPosition ).ToXMVECTOR() );
+					DirectX::XMStoreFloat4( &linePoints[s * 17 + i].color, entityColorV );
+
+					if ( true || i % 4 == 0 ) {
+						using namespace DirectX;
+
+						//DirectX::XMStoreFloat3( &linePointsL[s * 17 + i / 4].position, ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
+						//DirectX::XMStoreFloat4( &linePointsL[s * 17 + i / 4].color, entityColorV * 0.75f );
+
+						//DirectX::XMStoreFloat3( &linePointsR[s * 17 + i / 4].position, ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
+						//DirectX::XMStoreFloat4( &linePointsR[s * 17 + i / 4].color, entityColorV * 0.75f );
+
+
+						DirectX::XMVECTOR A = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR();
+						DirectX::XMVECTOR B = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR();
+						DirectX::XMVECTOR C = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, -0.1 ) ) + rebasedEntityPosition ).ToXMVECTOR();
+						DirectX::XMVECTOR D = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, -0.1 ) ) + rebasedEntityPosition ).ToXMVECTOR();
+
+						mWireframeGridBatch->DrawLine( { A, entityColorV }, { B, entityColorV } );
+						mWireframeGridBatch->DrawLine( { B, entityColorV }, { C, entityColorV } );
+						mWireframeGridBatch->DrawLine( { C, entityColorV }, { D, entityColorV } );
+						mWireframeGridBatch->DrawLine( { D, entityColorV }, { A, entityColorV } );
+
+
+						//mWireframeGridBatch->DrawLine( linePointsL[s * 17 + i / 4], linePointsR[s * 17 + i / 4] );
+					}
+
+				}
+			}
+
+			mWireframeGridBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePoints.data(), linePoints.size() );
+			//mWireframeGridBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePointsL.data(), linePointsL.size() );
+			//mWireframeGridBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePointsR.data(), linePointsR.size() );
+
+			// TODO
+			// Draw the path
+			// TODO
+		};
+
+		if ( !selected ) {
+			for ( const entt::entity entity : view ) {
+				if ( entity != selectedEntity )
+				draw( entity );
+			}
+		}
+		else if ( view.contains( selectedEntity ) ) {
+			draw( selectedEntity );
+		}
+
+		mWireframeGridBatch->End();
+	};
+
 	inDeviceContext->OMSetBlendState( mCommonStates->Opaque(), nullptr, 0xFFFFFFFF );
 	inDeviceContext->RSSetState( ( mTargetMSAA->GetSampleCount() > 1 ) ? mWireframeRasterStateMSAA.Get() : mWireframeRasterState.Get() );
 
 	// Render bounding boxes (excluding paths)
 	{
-		mWireframeBoxShader->Apply( inDeviceContext );
-		mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
-		mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
-
+		inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 2 );
 		{
+			mWireframeBoxShader->Apply( inDeviceContext );
+			mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
+			mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
+
 			auto view = cregistry.view<Position, BoundingBox, DrawTag, entt::tag<"is_selected"_hs>>( entt::exclude<PathTag> );
 
-			inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 2 );
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 255, 0, 255 ) );
 			if ( view.contains( selectedEntity ) ) {
 				const auto &position = view.get<Position>( selectedEntity ).mValue;
@@ -195,9 +281,21 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV );
 			}
 			mWireframeBoxShader->DrawInstances( inDeviceContext );
+		}
+		{
+			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, PathData, DrawTag, entt::tag<"is_selected"_hs>>();
+			pathLambda( true, false, view );
+		}
 
-			inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 1 );
-			entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
+		inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 1 );
+		{
+			mWireframeBoxShader->Apply( inDeviceContext );
+			mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
+			mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
+
+			auto view = cregistry.view<Position, BoundingBox, DrawTag, entt::tag<"is_selected"_hs>>( entt::exclude<PathTag> );
+
+			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
 			for ( const entt::entity entity : view ) {
 				if ( selectedEntity == entity ) continue;
 
@@ -211,11 +309,19 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			}
 			mWireframeBoxShader->DrawInstances( inDeviceContext );
 		}
-
 		{
-			inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 0 );
+			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, PathData, DrawTag, entt::tag<"is_selected"_hs>>();
+			pathLambda( false, true, view );
+		}
+
+		inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 0 );
+		{
+
+			mWireframeBoxShader->Apply( inDeviceContext );
+			mWireframeBoxShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
+			mWireframeBoxShader->SetMesh( inDeviceContext, inLevelInterface->GetPrimitives() );
+
 			auto view = cregistry.view<EntityType, Position, BoundingBox, DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>, PathTag> );
-			//view.use<BoundingBox>();
 			for ( const entt::entity entity : view ) {
 				const auto &entityType = view.get<EntityType>( entity );
 				const auto &position = view.get<Position>( entity ).mValue;
@@ -232,89 +338,9 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			}
 			mWireframeBoxShader->DrawInstances( inDeviceContext );
 		}
-	}
-
-	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
-	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), viewMatrix, projMatrix );
-	mWireframeGridEffect->Apply( inDeviceContext );
-
-	// Switch to depth buffer
-	inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 0 );
-
-	// Render paths
-	{
 		{
-			mWireframeGridBatch->Begin();
-
-			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, PathData, DrawTag>();
-			//view.use<BoundingBox>();
-			for ( const entt::entity entity : view ) {
-				const auto &entityType = view.get<EntityType>( entity );
-				const auto &position = view.get<Position>( entity ).mValue;
-				const auto &rotation = view.get<Rotation>( entity ).mPitchYawRoll;
-				const PathData &pathData = view.get<PathData>( entity );
-
-				Matrix44D rotmat = Matrix44D::sFromXMMATRIX( DirectX::XMMatrixRotationRollPitchYawFromVector( rotation ) );
-				Vector4D rebasedEntityPosition = ( position - cameraP );
-
-				uint32_t entityColorU32;
-				if ( entity == selectedEntity ) {
-					entityColorU32 = Cyclone::Util::ColorU32( 255, 255, 0, 255 );
-				}
-				else if ( selectedEntities.contains( entity ) ) {
-					entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
-				}
-				else {
-					entityColorU32 = entityManager.GetEntityTypeColor( entityType );
-				}
-				DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
-
-				std::vector<DirectX::VertexPositionColor> linePoints( ( pathData.mKnots.size() - 1 ) * 65 );
-				//std::vector<DirectX::VertexPositionColor> linePointsL( ( pathData.mKnots.size() - 1 ) * 17 );
-				//std::vector<DirectX::VertexPositionColor> linePointsR( ( pathData.mKnots.size() - 1 ) * 17 );
-				for ( size_t s = 0; s + 1 < pathData.mKnots.size(); ++s ) {
-					for ( size_t i = 0; i <= 64; ++i ) {
-						float u = static_cast<float>( i ) / 64;
-						DirectX::XMStoreFloat3( &linePoints[s * 65 + i].position, ( rotmat.TransformCoord3Unit( pathData.Interpolate( s, u ) ) + rebasedEntityPosition ).ToXMVECTOR() );
-						DirectX::XMStoreFloat4( &linePoints[s * 65 + i].color, entityColorV );
-
-						if ( i % 4 == 0 ) {
-							using namespace DirectX;
-
-							//DirectX::XMStoreFloat3( &linePointsL[s * 17 + i / 4].position, ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
-							//DirectX::XMStoreFloat4( &linePointsL[s * 17 + i / 4].color, entityColorV * 0.75f );
-
-							//DirectX::XMStoreFloat3( &linePointsR[s * 17 + i / 4].position, ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR() );
-							//DirectX::XMStoreFloat4( &linePointsR[s * 17 + i / 4].color, entityColorV * 0.75f );
-
-
-							DirectX::XMVECTOR A = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR();
-							DirectX::XMVECTOR B = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, 0 ) ) + rebasedEntityPosition ).ToXMVECTOR();
-							DirectX::XMVECTOR C = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, 0.5, -0.1 ) ) + rebasedEntityPosition ).ToXMVECTOR();
-							DirectX::XMVECTOR D = ( rotmat.TransformCoord3Unit( pathData.InterpolateUVW( s, u, -0.5, -0.1 ) ) + rebasedEntityPosition ).ToXMVECTOR();
-
-							mWireframeGridBatch->DrawLine( { A, entityColorV }, { B, entityColorV } );
-							mWireframeGridBatch->DrawLine( { B, entityColorV }, { C, entityColorV } );
-							mWireframeGridBatch->DrawLine( { C, entityColorV }, { D, entityColorV } );
-							mWireframeGridBatch->DrawLine( { D, entityColorV }, { A, entityColorV } );
-
-
-							//mWireframeGridBatch->DrawLine( linePointsL[s * 17 + i / 4], linePointsR[s * 17 + i / 4] );
-						}
-
-					}
-				}
-
-				mWireframeGridBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePoints.data(), linePoints.size() );
-				//mWireframeGridBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePointsL.data(), linePointsL.size() );
-				//mWireframeGridBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePointsR.data(), linePointsR.size() );
-
-				// TODO
-				// Draw the path
-				// TODO
-			}
-
-			mWireframeGridBatch->End();
+			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, PathData, DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>> );
+			pathLambda( false, false, view );
 		}
 	}
 

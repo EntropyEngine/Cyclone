@@ -133,7 +133,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 	{
 		bool isOpen = registry.all_of<Core::Component::EntityType>( entity );
 		ImGui::SetNextWindowSizeConstraints( { 480, 480 }, { FLT_MAX, FLT_MAX } );
-		if ( ImGui::Begin( Cyclone::Util::PrefixString( "Entity: ", entity ), &isOpen, ImGuiWindowFlags_AlwaysVerticalScrollbar ) ) {
+		if ( isOpen && ImGui::Begin( Cyclone::Util::PrefixString( "Entity: ", entity ), &isOpen, ImGuiWindowFlags_AlwaysVerticalScrollbar ) ) {
 			ObjectProperties().ShowWindow( inLevelInterface, entity );
 		}
 		ImGui::End();
