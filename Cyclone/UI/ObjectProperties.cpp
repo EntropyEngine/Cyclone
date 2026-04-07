@@ -31,7 +31,7 @@ namespace
 		ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x * inRatio );
 	}
 
-	bool HandleTangents( PathData &inPathData, int inKnot, bool inIsOut )
+	bool HandleTangents( entt::registry &inRegistry, entt::entity inEntity, PathData &inPathData, PathCache &inPathCache, int inKnot, bool inIsOut )
 	{
 		bool dirty = false;
 
@@ -46,6 +46,7 @@ namespace
 			vec = vecData.v;
 			inPathData.UpdateTangentValue( inKnot, inIsOut );
 			inPathData.ComputeAutoExtrusions( inKnot );
+			inPathCache.Rebuild( inRegistry, inEntity );
 		}
 		if ( ImGui::IsItemDeactivatedAfterEdit() && len > 0 ) {
 			dirty = true;
@@ -63,6 +64,7 @@ namespace
 			vec = DirectX::XMVectorScale( DirectX::XMVector3Normalize( vecData.v ), std::max( 0.1f, len ) );
 			inPathData.UpdateTangentValue( inKnot, inIsOut );
 			inPathData.ComputeAutoExtrusions( inKnot );
+			inPathCache.Rebuild( inRegistry, inEntity );
 		}
 		if ( ImGui::IsItemDeactivatedAfterEdit() && len > 0 ) {
 			dirty = true;
@@ -71,7 +73,7 @@ namespace
 		return dirty;
 	}
 
-	bool HandleExtrusions( PathData &inPathData, int inKnot, bool isBitan )
+	bool HandleExtrusions( entt::registry &inRegistry, entt::entity inEntity,PathData &inPathData, PathCache &inPathCache, int inKnot, bool isBitan )
 	{
 		bool dirty = false;
 
@@ -84,6 +86,7 @@ namespace
 		if ( ImGui::Checkbox( isBitan ? "##BitanCustom" : "##NormalCustom", &isCustom ) ) {
 			inPathData.mExtrusionTypes[inKnot] ^= ( isBitan ? PathData::EExtrusionType::CustomBitangent : PathData::EExtrusionType::CustomNormal );
 			inPathData.ComputeAutoExtrusions( inKnot, isBitan );
+			inPathCache.Rebuild( inRegistry, inEntity );
 			dirty = true;
 		}
 
@@ -97,6 +100,7 @@ namespace
 		if ( ImGui::IsItemEdited() && len > 0 ) {
 			vec = DirectX::XMVectorScale( vecData.v, 1.0f / len );
 			inPathData.ComputeAutoExtrusions( inKnot, isBitan );
+			inPathCache.Rebuild( inRegistry, inEntity );
 		}
 		if ( ImGui::IsItemDeactivatedAfterEdit() && len > 0 ) {
 			dirty = true;
@@ -169,6 +173,7 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 		ImGui::SeparatorText( "Path Data" );
 
 		PathData &pathData = registry.get<PathData>( inEntity );
+		PathCache &pathCache = registry.get<PathCache>( inEntity );
 
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text( "Knot Count" );
@@ -236,6 +241,7 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 
 					if ( ImGui::IsItemEdited() ) {
 						position = Vector4D::sLoad( positionData );
+						pathCache.Rebuild( registry, inEntity );
 					}
 					if ( ImGui::IsItemDeactivatedAfterEdit() ) {
 						dirty = true;
@@ -250,13 +256,14 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 					if ( ImGui::Combo( "##TangentType", &tidx, PathData::kTangentTypes, std::size( PathData::kTangentTypes ) ) ) {
 						tangentType = static_cast<PathData::ETangentType>( tidx );
 						pathData.UpdateTangentType( i, false );
+						pathCache.Rebuild( registry, inEntity );
 						dirty = true;
 					}
 				}
 
 				{
-					dirty |= HandleTangents( pathData, i, false );
-					dirty |= HandleTangents( pathData, i, true );
+					dirty |= HandleTangents( registry, inEntity, pathData, pathCache, i, false );
+					dirty |= HandleTangents( registry, inEntity, pathData, pathCache, i, true );
 				}
 
 				{
@@ -267,6 +274,10 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 						pathData.mExtrusionTypes[i] &= ~PathData::EExtrusionType::NORMAL_MASK;
 						pathData.mExtrusionTypes[i] |= nidx + 1;
 						dirty = true;
+
+						pathCache.Rebuild( registry, inEntity );
+
+						// TODO: what the fuck?
 					}
 				}
 
@@ -278,12 +289,14 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 						pathData.mExtrusionTypes[i] &= ~PathData::EExtrusionType::BITANGENT_MASK;
 						pathData.mExtrusionTypes[i] |= ( bidx + 1 ) << 2;
 						dirty = true;
+
+						pathCache.Rebuild( registry, inEntity );
 					}
 				}
 
 				{
-					dirty |= HandleExtrusions( pathData, i, false );
-					dirty |= HandleExtrusions( pathData, i, true );
+					dirty |= HandleExtrusions( registry, inEntity, pathData, pathCache, i, false );
+					dirty |= HandleExtrusions( registry, inEntity, pathData, pathCache, i, true );
 				}
 
 				ImGui::AlignTextToFramePadding();
@@ -325,6 +338,8 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 								}
 								pathData.UpdateTangentValue( i, true );
 								pathData.ComputeAutoExtrusions( i );
+
+								pathCache.Rebuild( registry, inEntity );
 							}
 							if ( ImGui::IsItemDeactivatedAfterEdit() ) {
 								dirty = true;
@@ -352,6 +367,8 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 								}
 								pathData.UpdateTangentValue( i, true );
 								pathData.ComputeAutoExtrusions( i );
+
+								pathCache.Rebuild( registry, inEntity );
 							}
 							if ( ImGui::IsItemDeactivatedAfterEdit() ) {
 								dirty = true;
@@ -376,6 +393,8 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 								}
 								pathData.mExtrusions[i].mNormal = DirectX::XMVector3Rotate( pathData.mExtrusions[i].mNormal, DirectX::XMQuaternionRotationNormal( normTangent, rollDrag ) );
 								pathData.ComputeAutoExtrusions( i, true );
+
+								pathCache.Rebuild( registry, inEntity );
 							}
 							if ( ImGui::IsItemDeactivatedAfterEdit() ) {
 								dirty = true;
@@ -394,6 +413,8 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 								}
 								pathData.mExtrusions[i].mBitangent = DirectX::XMVector3Rotate( pathData.mExtrusions[i].mBitangent, DirectX::XMQuaternionRotationNormal( normTangent, -rollDrag ) );
 								pathData.ComputeAutoExtrusions( i, false );
+
+								pathCache.Rebuild( registry, inEntity );
 							}
 							if ( ImGui::IsItemDeactivatedAfterEdit() ) {
 								dirty = true;
@@ -419,6 +440,9 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 		ImGui::DragFloat( "TestStorage", localStorage->GetFloatRef( ImGui::GetID( "test" ) ) );
 		*/
 
+		if ( dirty ) {
+			registry.get<PathCache>( inEntity ).Rebuild( registry, inEntity );
+		}
 	}
 
 

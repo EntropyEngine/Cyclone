@@ -136,7 +136,7 @@ void Cyclone::UI::MainUI::Update( float inDeltaTime, Cyclone::Core::LevelInterfa
 		if ( isOpen && ImGui::Begin( Cyclone::Util::PrefixString( "Entity: ", entity ), &isOpen, ImGuiWindowFlags_AlwaysVerticalScrollbar ) ) {
 			ObjectProperties().ShowWindow( inLevelInterface, entity );
 		}
-		ImGui::End();
+		if ( isOpen ) ImGui::End();
 		if ( !isOpen ) entityManager.CloseEntityProperties( entity );
 	}
 

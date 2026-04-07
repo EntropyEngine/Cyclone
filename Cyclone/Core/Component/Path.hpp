@@ -445,7 +445,7 @@ namespace Cyclone::Core::Component
 			*/
 		}
 
-		Cyclone::Math::Vector4D XM_CALLCONV InterpolateUVW( size_t root, float u, float v, float w ) const
+		Cyclone::Math::Vector4D XM_CALLCONV InterpolateNormalBitangent( size_t root, float u, DirectX::XMVECTOR &outNormal, DirectX::XMVECTOR &outBitangent ) const
 		{
 			using Cyclone::Math::Vector4D;
 
@@ -495,12 +495,19 @@ namespace Cyclone::Core::Component
 					__assume( false );
 			}
 
-			//assert( std::abs( normal.Dot3( bitangent ) ) < 0.1e-7 );
-			//if ( mExtrusionTypes[root] != Explicit ) {
-			//	assert( std::abs( normal.Dot3( t ) ) < 0.1e-7 );
-			//}
+			outNormal = normal.ToXMVECTOR();
+			outBitangent = bitangent.ToXMVECTOR();
 
-			return p + bitangent * Vector4D::sReplicate( v ) + normal * Vector4D::sReplicate( w );
+			return p;
+		}
+
+		Cyclone::Math::Vector4D XM_CALLCONV InterpolateUVW( size_t root, float u, float v, float w ) const
+		{
+			DirectX::XMVECTOR normal;
+			DirectX::XMVECTOR bitangent;
+			Cyclone::Math::Vector4D p = InterpolateNormalBitangent( root, u, normal, bitangent );
+
+			return p + Cyclone::Math::Vector4D::sFromXMVECTOR( DirectX::XMVectorAdd( DirectX::XMVectorScale( bitangent, v ), DirectX::XMVectorScale( normal, w ) ) );
 		}
 
 		void UpdateTangentType( size_t root, bool priorityOutVec )
@@ -592,6 +599,39 @@ namespace Cyclone::Core::Component
 			for ( size_t i = 0; i < mKnots.size(); ++i ) {
 				UpdateTangentValue( i, true );
 				ComputeAutoExtrusions( i, true );
+			}
+		}
+	};
+
+	struct PathCache
+	{
+		struct Interpolation
+		{
+			Cyclone::Math::Vector4D mPosition;
+			DirectX::XMVECTOR		mNormal;
+			DirectX::XMVECTOR		mTangent;
+		};
+
+		std::vector<Interpolation>	mArray;
+
+		void Rebuild( const entt::registry &inRegistry, entt::entity inEntity )
+		{
+			const PathData &pathData = inRegistry.get<PathData>( inEntity );
+
+			const size_t subdivisionScale = 16;
+
+			assert( pathData.mKnots.size() > 0 );
+			mArray.clear();
+			mArray.reserve( ( pathData.mKnots.size() - 1 ) * ( subdivisionScale + 1 ) );
+
+			for ( size_t i = 0; i + 1 < pathData.mKnots.size(); ++i ) {
+				for ( size_t u = 0; u <= subdivisionScale; ++u ) {
+					DirectX::XMVECTOR normal;
+					DirectX::XMVECTOR bitangent;
+					Cyclone::Math::Vector4D p = pathData.InterpolateNormalBitangent( i, static_cast<double>( u ) / subdivisionScale, normal, bitangent );
+
+					mArray.emplace_back( p, normal, bitangent );
+				}
 			}
 		}
 	};
