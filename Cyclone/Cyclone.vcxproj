@@ -184,6 +184,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="ReadData.h" />
     <ClInclude Include="Rendering\Primitives.hpp" />
+    <ClInclude Include="Rendering\Shader\EntityIndexShader.hpp" />
     <ClInclude Include="Rendering\Shader\WireframeBoxShader.hpp" />
     <ClInclude Include="RenderTexture.h" />
     <ClInclude Include="Resource.h" />
@@ -276,6 +277,7 @@
     </ClCompile>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Rendering\Primitives.cpp" />
+    <ClCompile Include="Rendering\Shader\EntityIndexShader.cpp" />
     <ClCompile Include="Rendering\Shader\WireframeBoxShader.cpp" />
     <ClCompile Include="RenderTexture.cpp" />
     <ClCompile Include="UI\MainUI.cpp" />
@@ -326,7 +328,7 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\EntityIndex_CS.hlsl">
+    <None Include="Shaders\EntityIndex_CS.hlsli">
       <FileType>Document</FileType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
@@ -334,6 +336,22 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">Compute</ShaderType>
+    </None>
+    <FxCompile Include="Shaders\EntityIndex_CS_1x.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Shaders\EntityIndex_CS_4x.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">5.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="Shaders\WireframeBox_PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>

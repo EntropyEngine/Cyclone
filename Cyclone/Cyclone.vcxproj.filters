@@ -257,6 +257,9 @@
     <ClInclude Include="DebugDraw.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="Rendering\Shader\EntityIndexShader.hpp">
+      <Filter>Rendering\Shader</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -371,6 +374,9 @@
     <ClCompile Include="DebugDraw.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="Rendering\Shader\EntityIndexShader.cpp">
+      <Filter>Rendering\Shader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Cyclone.rc">
@@ -387,6 +393,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Shaders\EntityIndex_CS.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="natvis\config.natvis">
@@ -438,7 +447,10 @@
     <FxCompile Include="Shaders\WireframeBox_PS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\EntityIndex_CS.hlsl">
+    <FxCompile Include="Shaders\EntityIndex_CS_1x.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\EntityIndex_CS_4x.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

@@ -1,12 +1,10 @@
-cbuffer CursorPosition : register( b0 )
+cbuffer ScreenData : register( b0 )
 {
     uint gMouseX;
     uint gMouseY;
     uint gScreenW;
     uint gScreenH;
 };
-
-#define MSAA_LEVEL 1
 
 #if MSAA_LEVEL == 1
 Texture2D<uint> gEntityBuffer : register( t0 );
