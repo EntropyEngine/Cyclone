@@ -213,6 +213,11 @@ void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *
 	const DirectX::XMMATRIX viewMatrix = mViewportData.mViewMatrix;
 	const DirectX::XMMATRIX projMatrix = mViewportData.mProjMatrix;
 
+	if ( mViewportData.mIsActive ) {
+		entt::entity hovered = mEntityIndexShader->ReadViewport( inDeviceContext, mTargetID->GetRenderTargetSRV(), static_cast<size_t>( ImGui::GetIO().MousePos.x - mViewportData.mViewOrigin.x ), static_cast<size_t>( ImGui::GetIO().MousePos.y - mViewportData.mViewOrigin.y ));
+		ImGui::SetTooltip( "%d", static_cast<uint32_t>( hovered ) );
+	}
+
 	Clear( inDeviceContext );
 
 	inDeviceContext->OMSetBlendState( mCommonStates->Opaque(), nullptr, 0xFFFFFFFF );

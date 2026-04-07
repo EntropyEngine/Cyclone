@@ -35,6 +35,7 @@ namespace Cyclone::Rendering::Shader
 		ComPtr<ID3D11Buffer>				mOutputBuffer;
 		ComPtr<ID3D11UnorderedAccessView>	mOutputBufferUAV;
 		ComPtr<ID3D11Buffer>				mOutputBufferStaging;
+		std::vector<uint32_t>				mOutputBufferCPU;
 
 		ComPtr<ID3D11ComputeShader>			mShader1x;
 		ComPtr<ID3D11ComputeShader>			mShader4x;

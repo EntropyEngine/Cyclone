@@ -29,6 +29,7 @@ Cyclone::UI::ViewportElement::ViewportElement( DXGI_FORMAT inBackBufferFormat, D
 	mClearColor = inClearColor;
 
 	mWireframeBoxShader = std::make_unique<Cyclone::Rendering::Shader::WireframeBoxShader>();
+	mEntityIndexShader = std::make_unique<Cyclone::Rendering::Shader::EntityIndexShader>();
 
 	mWidth = 0;
 	mHeight = 0;
@@ -48,6 +49,8 @@ void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 *inDevice )
 	mTargetRT->SetDevice( inDevice );
 
 	mWireframeBoxShader->SetDevice( inDevice );
+
+	mEntityIndexShader->SetDevice( inDevice );
 	
 	// Rasterizer States
 	{
@@ -116,6 +119,8 @@ ID3D11ShaderResourceView *Cyclone::UI::ViewportElement::GetOrResizeSRV( size_t i
 	mTargetID->SizeResources( inWidth, inHeight );
 	mTargetRT->SizeResources( inWidth, inHeight );
 
+	mEntityIndexShader->SizeResources( inWidth, inHeight, mTargetMSAA->GetSampleCount() );
+
 	mWidth = inWidth;
 	mHeight = inHeight;
 
@@ -149,6 +154,8 @@ void Cyclone::UI::ViewportElement::ToggleAntialiasing( bool inEnabled )
 {
 	mTargetMSAA->SetSampleCount( inEnabled ? 4 : 1 );
 	mTargetID->SetSampleCount( inEnabled ? 4 : 1 );
+
+	mEntityIndexShader->SizeResources( mWidth, mHeight, mTargetMSAA->GetSampleCount() );
 }
 
 template<Cyclone::UI::EViewportType T>

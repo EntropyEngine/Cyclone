@@ -19,6 +19,7 @@
 
 // Rendering includes
 #include "Cyclone/Rendering/Shader/WireframeBoxShader.hpp"
+#include "Cyclone/Rendering/Shader/EntityIndexShader.hpp"
 
 namespace Cyclone::Core {
 	class LevelInterface;
@@ -60,6 +61,8 @@ namespace Cyclone::UI
 		std::unique_ptr<Cyclone::Rendering::Shader::WireframeBoxShader> mWireframeBoxShader;
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState> mWireframeRasterState;
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState> mWireframeRasterStateMSAA;
+
+		std::unique_ptr<Cyclone::Rendering::Shader::EntityIndexShader> mEntityIndexShader;
 
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilState> mLayeredDepthState;
 

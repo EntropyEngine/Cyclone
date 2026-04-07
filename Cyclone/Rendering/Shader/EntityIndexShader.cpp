@@ -5,6 +5,9 @@
 #include <ReadData.h>
 #include <DirectXHelpers.h>
 
+// STL
+#include <format>
+
 void Cyclone::Rendering::Shader::EntityIndexShader::SetDevice( ID3D11Device *inDevice )
 {
 	mDevice = inDevice;
@@ -62,6 +65,8 @@ void Cyclone::Rendering::Shader::EntityIndexShader::SizeResources( size_t inWidt
 		DX::ThrowIfFailed( mDevice->CreateBuffer( &bufDesc, nullptr, mOutputBuffer.ReleaseAndGetAddressOf() ) );
 		DX::ThrowIfFailed( mDevice->CreateUnorderedAccessView( mOutputBuffer.Get(), &uavDesc, mOutputBufferUAV.ReleaseAndGetAddressOf() ) );
 		DX::ThrowIfFailed( mDevice->CreateBuffer( &stagingDesc, nullptr, mOutputBufferStaging.ReleaseAndGetAddressOf() ) );
+
+		mOutputBufferCPU.resize( mSampleCount * 8 * 8, 0 );
 	}
 
 	if ( inWidth != mWidth || inHeight != mHeight ) {
@@ -72,5 +77,42 @@ void Cyclone::Rendering::Shader::EntityIndexShader::SizeResources( size_t inWidt
 
 entt::entity Cyclone::Rendering::Shader::EntityIndexShader::ReadViewport( ID3D11DeviceContext *inContext, ID3D11ShaderResourceView *inEntitySRV, size_t inMouseX, size_t inMouseY )
 {
-	return entt::null;
+	mScreenData.SetData( inContext, { static_cast<uint32_t>( inMouseX ), static_cast<uint32_t>( inMouseY ), static_cast<uint32_t>( mWidth ), static_cast<uint32_t>( mHeight ) } );
+	ID3D11Buffer *screenDataBuffer = mScreenData.GetBuffer();
+
+	ID3D11UnorderedAccessView *outputUAV = mOutputBufferUAV.Get();
+
+	inContext->CSSetConstantBuffers( 0, 1, &screenDataBuffer );
+	inContext->CSSetShaderResources( 0, 1, &inEntitySRV );
+	inContext->CSSetUnorderedAccessViews( 0, 1, &outputUAV, nullptr );
+
+	inContext->CSSetShader( mShader1x.Get(), nullptr, 0 );
+
+	inContext->Dispatch( 1, 1, 1 );
+
+	ID3D11Buffer *clearCB[1] = { nullptr };
+	ID3D11ShaderResourceView *clearSRV[1] = { nullptr };
+	ID3D11UnorderedAccessView *clearUAV[1] = { nullptr };
+
+	inContext->CSSetConstantBuffers( 0, 1, clearCB );
+	inContext->CSSetShaderResources( 0, 1, clearSRV );
+	inContext->CSSetUnorderedAccessViews( 0, 1, clearUAV, nullptr );
+
+	inContext->CopyResource( mOutputBufferStaging.Get(), mOutputBuffer.Get() );
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource = {};
+	inContext->Map( mOutputBufferStaging.Get(), 0, D3D11_MAP_READ, 0, &mappedResource );
+	std::memcpy( mOutputBufferCPU.data(), mappedResource.pData, mOutputBufferCPU.size() * sizeof( uint32_t ) );
+	inContext->Unmap( mOutputBufferStaging.Get(), 0 );
+
+	std::sort( mOutputBufferCPU.begin(), mOutputBufferCPU.end() );
+	auto first = std::upper_bound( mOutputBufferCPU.begin(), mOutputBufferCPU.end(), 0U );
+
+	if ( first == mOutputBufferCPU.end() ) {
+		return entt::null;
+	}
+
+	else {
+		return static_cast<entt::entity>( static_cast<uint32_t>( entt::null ) - *first );
+	}
 }

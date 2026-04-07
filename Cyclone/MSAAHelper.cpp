@@ -193,7 +193,7 @@ void MSAAHelper::SizeResources( size_t width, size_t height )
 		static_cast<UINT>( height ),
 		1, // The render target view has only one texture.
 		1, // Use a single mipmap level.
-		D3D11_BIND_RENDER_TARGET,
+		D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,
 		D3D11_USAGE_DEFAULT,
 		0,
 		m_sampleCount
@@ -219,6 +219,19 @@ void MSAAHelper::SizeResources( size_t width, size_t height )
 	) );
 
 	SetDebugObjectName( m_renderTargetView.Get(), "MSAA Render Target" );
+
+	CD3D11_SHADER_RESOURCE_VIEW_DESC rtvsrvDesc(
+		m_sampleCount > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DMS : D3D11_SRV_DIMENSION_TEXTURE2D,
+		m_backBufferFormat
+	);
+	rtvsrvDesc.Texture2D.MipLevels = 1;
+
+	ThrowIfFailed( m_device->CreateShaderResourceView(
+		m_msaaRenderTarget.Get(),
+		&rtvsrvDesc,
+		m_renderTargetSRV.ReleaseAndGetAddressOf()
+	) );
+	SetDebugObjectName( m_renderTargetSRV.Get(), "MSAA Render SRV" );
 
 	if ( m_depthBufferFormat != DXGI_FORMAT_UNKNOWN )
 	{
