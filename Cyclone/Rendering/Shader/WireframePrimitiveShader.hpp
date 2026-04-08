@@ -3,6 +3,9 @@
 // DX Includes
 #include <BufferHelpers.h>
 
+// STL Includes
+#include <bit>
+
 namespace Cyclone::Rendering::Shader
 {
 	using Microsoft::WRL::ComPtr;
@@ -29,7 +32,21 @@ namespace Cyclone::Rendering::Shader
 			{
 				DirectX::XMStoreFloat3( &PositionPS, inPosition );
 				DirectX::XMStoreFloat3( &Color, inColor );
-				EntityID = static_cast<uint32_t>( -1 ) - static_cast<uint32_t>( inEntity );
+				EntityID = static_cast<uint32_t>( -1 ) - ( static_cast<uint32_t>( inEntity ) & entt::entt_traits<entt::entity>::entity_mask );
+			}
+
+			VertexPositionColorID( DirectX::FXMVECTOR inPosition, DirectX::FXMVECTOR inColor, entt::entity inEntity, uint16_t inIdentifier )
+			{
+				constexpr int idShift = std::popcount( entt::entt_traits<entt::entity>::entity_mask );
+				constexpr int idMax = 1 << std::popcount( entt::entt_traits<entt::entity>::version_mask );
+				assert( inIdentifier < idMax );
+
+				uint32_t lower = static_cast<uint32_t>( inEntity ) & entt::entt_traits<entt::entity>::entity_mask;
+				uint32_t upper = static_cast<uint32_t>( inIdentifier ) << idShift;
+
+				DirectX::XMStoreFloat3( &PositionPS, inPosition );
+				DirectX::XMStoreFloat3( &Color, inColor );
+				EntityID = static_cast<uint32_t>( -1 ) - lower - upper;
 			}
 		};
 
