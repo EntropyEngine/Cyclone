@@ -30,6 +30,7 @@ namespace Cyclone::UI
 {
 	namespace Tool {
 		class BaseTool;
+		struct ToolChanger;
 	}
 
 	class ViewportElement : public Cyclone::Util::NonCopyable
@@ -55,7 +56,7 @@ namespace Cyclone::UI
 
 	protected:
 		template<Cyclone::UI::EViewportType T>
-		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools );
+		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const Tool::ToolChanger &inTools );
 
 		std::unique_ptr<DX::MSAAHelper>				mTargetMSAA;
 		std::unique_ptr<DX::MSAAHelper>				mTargetID;

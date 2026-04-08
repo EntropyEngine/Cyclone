@@ -76,7 +76,7 @@ void Cyclone::UI::ViewportManager::MenuBarUpdate()
 	if ( ImGui::MenuItem( "Autosize Viewports", "Ctrl+A" ) ) mShouldAutosize = true;
 }
 
-void Cyclone::UI::ViewportManager::Update( ID3D11DeviceContext3 *inDeviceContext, float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
+void Cyclone::UI::ViewportManager::Update( ID3D11DeviceContext3 *inDeviceContext, float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const Tool::ToolChanger &inTools )
 {
 	ImGuiWindowFlags viewportFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking;
 	ImVec2 viewSizePerspective, viewSizeTop, viewSizeFront, viewSizeSide;
@@ -217,7 +217,7 @@ void Cyclone::UI::ViewportManager::Update( ID3D11DeviceContext3 *inDeviceContext
 	}
 }
 
-void Cyclone::UI::ViewportManager::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
+void Cyclone::UI::ViewportManager::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const Tool::ToolChanger &inTools )
 {
 	mViewportPerspective->Render( inDeviceContext, inLevelInterface, inTools );
 	mViewportTop->Render( inDeviceContext, inLevelInterface, inTools );

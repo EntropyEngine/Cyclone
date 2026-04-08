@@ -25,6 +25,8 @@ void Cyclone::UI::Sidebar::Init()
 
 	mToolChanger.emplace_back( std::make_unique<Tool::MeshSelectionTool>() );
 
+	mCurrentCategory = Tool::ECategory::Object;
+
 	mToolChanger[0]->mIsSelected = true;
 	mToolChanger[1]->mIsSelected = true;
 
@@ -63,6 +65,7 @@ void Cyclone::UI::Sidebar::SelectTool( Tool::BaseTool *inTool )
 		if ( tool->GetCategory() != inTool->GetCategory() ) tool->mIsSelected = false;
 	}
 
+	mCurrentCategory = inTool->GetCategory();
 	auto &category = mToolCategories[static_cast<size_t>( inTool->GetCategory() )];
 
 	switch ( inTool->GetSelectMode() ) {

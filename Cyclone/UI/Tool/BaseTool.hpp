@@ -75,4 +75,10 @@ namespace Cyclone::UI::Tool
 		bool				mIsActive{ false };		///< Is the tool currently updating
 		bool				mIsDrawing{ false };	///< Is the tool currently outputting draw calls
 	};
+
+	struct ToolChanger
+	{
+		ECategory mCurrentCategory;
+		std::span<std::unique_ptr<Tool::BaseTool>> mTools;
+	};
 }

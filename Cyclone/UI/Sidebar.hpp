@@ -17,11 +17,12 @@ namespace Cyclone::UI
 	public:
 		void Init();
 		void Update( Cyclone::Core::LevelInterface *inLevelInterface );
-		const std::span<std::unique_ptr<Tool::BaseTool>> GetTools() { return mToolChanger;  }
+		const Tool::ToolChanger GetTools() { return Tool::ToolChanger( mCurrentCategory, mToolChanger ); }
 
 	protected:
 		void SelectTool( Tool::BaseTool *inTool );
 
+		Tool::ECategory mCurrentCategory;
 		std::vector<std::unique_ptr<Tool::BaseTool>> mToolChanger;
 		std::array<std::vector<Tool::BaseTool *>, static_cast<size_t>( Tool::ECategory::COUNT )> mToolCategories;
 	};

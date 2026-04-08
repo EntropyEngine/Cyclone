@@ -166,7 +166,7 @@ void Cyclone::UI::ViewportElement::ToggleAntialiasing( bool inEnabled )
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
+void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const Tool::ToolChanger &inTools )
 {
 	using Cyclone::Math::Vector4D;
 	using Cyclone::Math::Matrix44D;
@@ -359,7 +359,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 	inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 0 );
 	{
 		mWireframeGridBatch->Begin();
-		for ( auto &tool : inTools ) {
+		for ( auto &tool : inTools.mTools ) {
 			tool->OnRender( T, inLevelInterface, mViewportData, mWireframeGridBatch.get() );
 		}
 		mWireframeGridBatch->End();
@@ -367,7 +367,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 	}
 }
 
-template void Cyclone::UI::ViewportElement::Render<Cyclone::UI::EViewportType::Perspective>( ID3D11DeviceContext3 *, Cyclone::Core::LevelInterface *, const std::span<std::unique_ptr<Tool::BaseTool>> );
-template void Cyclone::UI::ViewportElement::Render<Cyclone::UI::EViewportType::TopXZ>( ID3D11DeviceContext3 *, Cyclone::Core::LevelInterface *, const std::span<std::unique_ptr<Tool::BaseTool>> );
-template void Cyclone::UI::ViewportElement::Render<Cyclone::UI::EViewportType::FrontXY>( ID3D11DeviceContext3 *, Cyclone::Core::LevelInterface *, const std::span<std::unique_ptr<Tool::BaseTool>> );
-template void Cyclone::UI::ViewportElement::Render<Cyclone::UI::EViewportType::SideYZ>( ID3D11DeviceContext3 *, Cyclone::Core::LevelInterface *, const std::span<std::unique_ptr<Tool::BaseTool>> );
+template void Cyclone::UI::ViewportElement::Render<Cyclone::UI::EViewportType::Perspective>( ID3D11DeviceContext3 *, Cyclone::Core::LevelInterface *, const Tool::ToolChanger & );
+template void Cyclone::UI::ViewportElement::Render<Cyclone::UI::EViewportType::TopXZ>( ID3D11DeviceContext3 *, Cyclone::Core::LevelInterface *, const Tool::ToolChanger & );
+template void Cyclone::UI::ViewportElement::Render<Cyclone::UI::EViewportType::FrontXY>( ID3D11DeviceContext3 *, Cyclone::Core::LevelInterface *, const Tool::ToolChanger & );
+template void Cyclone::UI::ViewportElement::Render<Cyclone::UI::EViewportType::SideYZ>( ID3D11DeviceContext3 *, Cyclone::Core::LevelInterface *, const Tool::ToolChanger & );

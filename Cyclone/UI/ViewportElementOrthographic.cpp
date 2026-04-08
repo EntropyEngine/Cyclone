@@ -182,21 +182,21 @@ void Cyclone::UI::ViewportElementOrthographic<T>::UpdateNavigation( float inDelt
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
+void Cyclone::UI::ViewportElementOrthographic<T>::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const Tool::ToolChanger &inTools )
 {
-	for ( auto &tool : inTools ) {
+	for ( auto &tool : inTools.mTools ) {
 		if ( tool->mIsSelected )
 		tool->OnUpdate( T, inLevelInterface, mViewportData );
 	}
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
+void Cyclone::UI::ViewportElementOrthographic<T>::DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const Tool::ToolChanger &inTools )
 {
 	// Draw entites and get selection bounding box
 	DrawEntities( inLevelInterface );
 
-	for ( auto &tool : inTools ) {
+	for ( auto &tool : inTools.mTools ) {
 		tool->OnDraw( T, inLevelInterface, mViewportData );
 	}
 
@@ -204,7 +204,7 @@ void Cyclone::UI::ViewportElementOrthographic<T>::DrawGizmos( float inDeltaTime,
 }
 
 template<Cyclone::UI::EViewportType T>
-void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
+void Cyclone::UI::ViewportElementOrthographic<T>::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const Tool::ToolChanger &inTools )
 {
 	constexpr size_t AxisU = ViewportElementOrthographic::AxisU;
 	constexpr size_t AxisV = ViewportElementOrthographic::AxisV;

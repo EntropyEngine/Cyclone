@@ -166,7 +166,7 @@ void Cyclone::UI::MainUI::Update( ID3D11DeviceContext3 *inDeviceContext, float i
 				entityManager.EndAction( registry );
 			}
 
-			for ( const auto &tool : mSidebar->GetTools() ) {
+			for ( const auto &tool : mSidebar->GetTools().mTools ) {
 				tool->OnShortcut( inLevelInterface );
 			}
 		}

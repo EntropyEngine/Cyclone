@@ -25,7 +25,7 @@ void Cyclone::UI::Tool::SelectionTool::OnUpdate( EViewportType inType, Cyclone::
 	ImGuiIO &io = ImGui::GetIO();
 
 	const bool isLeftClickShort = ( ImGui::IsMouseReleased( 0, inViewportData.mCanvasID ) || ImGui::IsMouseReleased( 0, ImGuiKeyOwner_NoOwner ) ) && io.MouseDownDurationPrev[0] < io.MouseDoubleClickTime;
-	if ( !inViewportData.mIsActive || !isLeftClickShort || ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() ) return;
+	if ( !inViewportData.mIsActive || !isLeftClickShort || ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() || !mIsSelected ) return;
 
 	auto &entityManager = inLevelInterface->GetEntityManager();
 	if ( !entityManager.CanAquireActionLock() ) return;

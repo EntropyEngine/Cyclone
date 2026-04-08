@@ -120,23 +120,23 @@ void Cyclone::UI::ViewportElementPerspective::UpdateNavigation( float inDeltaTim
 	mViewportData.mProjMatrix = GetProjMatrix( mWidth, mHeight, kHorizontalFOV, gridContext.mWorldLimit );
 }
 
-void Cyclone::UI::ViewportElementPerspective::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
+void Cyclone::UI::ViewportElementPerspective::UpdateTools( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const Tool::ToolChanger &inTools )
 {
-	for ( auto &tool : inTools ) {
+	for ( auto &tool : inTools.mTools ) {
 		tool->OnUpdate( EViewportType::Perspective, inLevelInterface, mViewportData );
 	}
 }
 
-void Cyclone::UI::ViewportElementPerspective::DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
+void Cyclone::UI::ViewportElementPerspective::DrawGizmos( float inDeltaTime, Cyclone::Core::LevelInterface *inLevelInterface, const Tool::ToolChanger &inTools )
 {
-	for ( auto &tool : inTools ) {
+	for ( auto &tool : inTools.mTools ) {
 		tool->OnDraw( EViewportType::Perspective, inLevelInterface, mViewportData );
 	}
 
 	mViewportData.mDrawList->ChannelsMerge();
 }
 
-void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools )
+void Cyclone::UI::ViewportElementPerspective::Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const Tool::ToolChanger &inTools )
 {
 
 	Clear( inDeviceContext );
