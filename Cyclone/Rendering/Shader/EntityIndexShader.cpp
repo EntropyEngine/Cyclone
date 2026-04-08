@@ -76,7 +76,14 @@ void Cyclone::Rendering::Shader::EntityIndexShader::SizeResources( size_t inWidt
 	}
 }
 
-entt::entity Cyclone::Rendering::Shader::EntityIndexShader::ReadViewport( ID3D11DeviceContext *inContext, ID3D11ShaderResourceView *inEntitySRV, size_t inMouseX, size_t inMouseY )
+entt::entity Cyclone::Rendering::Shader::EntityIndexShader::ReadClosestEntity( ID3D11DeviceContext *inContext, ID3D11ShaderResourceView *inEntitySRV, size_t inMouseX, size_t inMouseY )
+{
+	DispatchAndMap( inContext, inEntitySRV, inMouseX, inMouseY );
+	uint32_t best = GetClosest();
+	return static_cast<entt::entity>( static_cast<uint32_t>( entt::null ) - best );
+}
+
+void Cyclone::Rendering::Shader::EntityIndexShader::DispatchAndMap( ID3D11DeviceContext *inContext, ID3D11ShaderResourceView *inEntitySRV, size_t inMouseX, size_t inMouseY )
 {
 	mScreenData.SetData( inContext, { static_cast<uint32_t>( inMouseX ), static_cast<uint32_t>( inMouseY ), static_cast<uint32_t>( mWidth ), static_cast<uint32_t>( mHeight ) } );
 	ID3D11Buffer *screenDataBuffer = mScreenData.GetBuffer();
@@ -111,51 +118,23 @@ entt::entity Cyclone::Rendering::Shader::EntityIndexShader::ReadViewport( ID3D11
 		DirectX::MapGuard map( inContext, mOutputBufferStaging.Get(), 0, D3D11_MAP_READ, 0 );
 		memcpy( mOutputBufferCPU.data(), map.pData, mOutputBufferCPU.size() * sizeof( uint32_t ) );
 	}
+}
 
-	/*
-	std::sort( mOutputBufferCPU.begin(), mOutputBufferCPU.end() );
-	auto first = std::upper_bound( mOutputBufferCPU.begin(), mOutputBufferCPU.end(), 0U );
-
-	if ( first == mOutputBufferCPU.end() ) {
-		return entt::null;
-	}
-	else {
-		uint32_t best = *first;
-		size_t bestCount = 1;
-		size_t currCount = 1;
-
-		for ( auto it = first + 1; it != mOutputBufferCPU.end(); ++it ) {
-			if ( *( it - 1 ) == *it ) {
-				++currCount;
-			}
-			else {
-				if ( currCount > bestCount ) {
-					bestCount = currCount;
-					best = *( it - 1 );
-				}
-				currCount = 1;
-			}
-		}
-		if ( currCount > bestCount ) {
-			best = mOutputBufferCPU.back();
-		}
-
-		return static_cast<entt::entity>( static_cast<uint32_t>( entt::null ) - best );
-	}
-	*/
-
+uint32_t Cyclone::Rendering::Shader::EntityIndexShader::GetClosest() const
+{
 	uint32_t best = 0;
 	float bestDistance = kSearchWidth * kSearchWidth;
 
 	for ( size_t x = 0; x < kSearchWidth; ++x ) {
 		for ( size_t y = 0; y < kSearchWidth; ++y ) {
 			for ( size_t s = 0; s < mSampleCount; ++s ) {
-				if ( mOutputBufferCPU[x + y * kSearchWidth + s * kSearchWidth * kSearchWidth] != 0 ) {
+				uint32_t index = mOutputBufferCPU[x + y * kSearchWidth + s * kSearchWidth * kSearchWidth];
+				if ( index != 0 ) {
 					float dx = static_cast<float>( x ) - kSearchWidth / 2;
 					float dy = static_cast<float>( y ) - kSearchWidth / 2;
 					float dist = std::sqrtf( dx * dx + dy * dy );
 					if ( dist < bestDistance ) {
-						best = mOutputBufferCPU[x + y * kSearchWidth + s * kSearchWidth * kSearchWidth];
+						best = index;
 						bestDistance = dist;
 					}
 				}
@@ -163,5 +142,42 @@ entt::entity Cyclone::Rendering::Shader::EntityIndexShader::ReadViewport( ID3D11
 		}
 	}
 
-	return static_cast<entt::entity>( static_cast<uint32_t>( entt::null ) - best );
+	return best;
+}
+
+std::vector<uint32_t> Cyclone::Rendering::Shader::EntityIndexShader::GetOrdered() const
+{
+	std::vector<std::pair<uint32_t, float>> counts;
+	counts.reserve( 16 );
+
+	for ( size_t x = 0; x < kSearchWidth; ++x ) {
+		for ( size_t y = 0; y < kSearchWidth; ++y ) {
+			for ( size_t s = 0; s < mSampleCount; ++s ) {
+				uint32_t index = mOutputBufferCPU[x + y * kSearchWidth + s * kSearchWidth * kSearchWidth];
+				if ( index != 0 ) {
+					float dx = static_cast<float>( x ) - kSearchWidth / 2;
+					float dy = static_cast<float>( y ) - kSearchWidth / 2;
+					float dist = std::sqrtf( dx * dx + dy * dy );
+					
+					auto it = std::find_if( counts.begin(), counts.end(), [index]( const auto &inPair ){ return inPair.first == index; } );
+					if ( it == counts.end() ) {
+						counts.emplace_back( index, dist );
+					}
+					else {
+						it->second = std::min( it->second, dist );
+					}
+				}
+			}
+		}
+	}
+
+	std::sort( counts.begin(), counts.end(), []( const auto &inLhs, const auto &inRhs ) { return inLhs.second < inRhs.second; } );
+
+	std::vector<uint32_t> sorted( counts.size() );
+
+	for ( size_t i = 0; i < counts.size(); ++i ) {
+		sorted[i] = counts[i].first;
+	}
+	
+	return sorted;
 }

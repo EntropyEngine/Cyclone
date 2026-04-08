@@ -57,7 +57,7 @@ void Cyclone::UI::Tool::SelectionTool::OnUpdatePerspective( Cyclone::Core::Level
 	entt::registry &registry = inLevelInterface->GetRegistry();
 	const entt::registry &cregistry = registry;
 
-	entt::entity hovered = inViewportData.mEntityIndexShader->ReadViewport( inViewportData.mDeviceContext, inViewportData.mEntitySRV, static_cast<size_t>( inViewportData.mAbsoluteMouse.x ), static_cast<size_t>( inViewportData.mAbsoluteMouse.y ) );
+	entt::entity hovered = inViewportData.mEntityIndexShader->ReadClosestEntity( inViewportData.mDeviceContext, inViewportData.mEntitySRV, static_cast<size_t>( inViewportData.mAbsoluteMouse.x ), static_cast<size_t>( inViewportData.mAbsoluteMouse.y ) );
 	if ( hovered != entt::null ) {
 		selectionCandidates.insert( hovered );
 	}
@@ -165,7 +165,7 @@ void Cyclone::UI::Tool::SelectionTool::OnUpdate( Cyclone::Core::LevelInterface *
 		}
 	}
 
-	entt::entity hovered = inViewportData.mEntityIndexShader->ReadViewport( inViewportData.mDeviceContext, inViewportData.mEntitySRV, static_cast<size_t>( inViewportData.mAbsoluteMouse.x ), static_cast<size_t>( inViewportData.mAbsoluteMouse.y ) );
+	entt::entity hovered = inViewportData.mEntityIndexShader->ReadClosestEntity( inViewportData.mDeviceContext, inViewportData.mEntitySRV, static_cast<size_t>( inViewportData.mAbsoluteMouse.x ), static_cast<size_t>( inViewportData.mAbsoluteMouse.y ) );
 	if ( hovered != entt::null ) {
 		selectionCandidates.insert( hovered );
 	}
