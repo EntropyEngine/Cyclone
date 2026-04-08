@@ -202,7 +202,6 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 		mWireframePrimitiveBatch->Begin();
 
 		auto draw = [&]( const entt::entity entity ) {
-			const auto &entityType = view.get<EntityType>( entity );
 			const auto &position = view.get<Position>( entity ).mValue;
 			const auto &rotation = view.get<Rotation>( entity ).mPitchYawRoll;
 			const PathCache &pathCache = view.get<PathCache>( entity );
@@ -220,6 +219,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
 			}
 			else {
+				const auto &entityType = view.get<EntityType>( entity );
 				entityColorU32 = entityManager.GetEntityTypeColor( entityType );
 			}
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
@@ -234,18 +234,18 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				DirectX::XMVECTOR PN = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mNormal, rotmatF ), 0.1f );
 				DirectX::XMVECTOR PB = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mTangent, rotmatF ), 0.5f );
 
-
-				linePoints[s] = { P, entityColorV, entity };
-
 				DirectX::XMVECTOR A = P - PB;
 				DirectX::XMVECTOR B = P + PB;
 				DirectX::XMVECTOR C = B - PN;
 				DirectX::XMVECTOR D = A - PN;
 
-				mWireframePrimitiveBatch->DrawLine( { A, entityColorV, entity }, { B, entityColorV, entity } );
-				mWireframePrimitiveBatch->DrawLine( { B, entityColorV, entity }, { C, entityColorV, entity } );
-				mWireframePrimitiveBatch->DrawLine( { C, entityColorV, entity }, { D, entityColorV, entity } );
-				mWireframePrimitiveBatch->DrawLine( { D, entityColorV, entity }, { A, entityColorV, entity } );
+				uint16_t idx = inTools.mCurrentCategory == Tool::ECategory::EditPath ? s : 0;
+
+				linePoints[s] = { P, entityColorV, entity, idx };
+				mWireframePrimitiveBatch->DrawLine( { A, entityColorV, entity, idx }, { B, entityColorV, entity, idx } );
+				mWireframePrimitiveBatch->DrawLine( { B, entityColorV, entity, idx }, { C, entityColorV, entity, idx } );
+				mWireframePrimitiveBatch->DrawLine( { C, entityColorV, entity, idx }, { D, entityColorV, entity, idx } );
+				mWireframePrimitiveBatch->DrawLine( { D, entityColorV, entity, idx }, { A, entityColorV, entity, idx } );
 			}
 
 			mWireframePrimitiveBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePoints.data(), linePoints.size() );
@@ -290,7 +290,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			mWireframeBoxShader->DrawInstances( inDeviceContext );
 		}
 		{
-			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, PathCache, PathData, DrawTag, entt::tag<"is_selected"_hs>>();
+			auto view = cregistry.view<EntityType, Position, Rotation, PathCache, PathData, DrawTag, entt::tag<"is_selected"_hs>>();
 			pathLambda( true, false, view );
 		}
 
@@ -317,7 +317,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			mWireframeBoxShader->DrawInstances( inDeviceContext );
 		}
 		{
-			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, PathCache, PathData, DrawTag, entt::tag<"is_selected"_hs>>();
+			auto view = cregistry.view<EntityType, Position, Rotation, PathCache, PathData, DrawTag, entt::tag<"is_selected"_hs>>();
 			pathLambda( false, true, view );
 		}
 
@@ -346,7 +346,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			mWireframeBoxShader->DrawInstances( inDeviceContext );
 		}
 		{
-			auto view = cregistry.view<EntityType, Position, Rotation, PathTag, PathCache, PathData, DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>> );
+			auto view = cregistry.view<EntityType, Position, Rotation, PathCache, PathData, DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>> );
 			pathLambda( false, false, view );
 		}
 	}

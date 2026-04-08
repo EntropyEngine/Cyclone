@@ -44,27 +44,41 @@ namespace Cyclone::Core::Component
 					Cyclone::Math::Matrix44D rotmat = Cyclone::Math::Matrix44D::sFromXMMATRIX( DirectX::XMMatrixRotationRollPitchYawFromVector( rotation.mPitchYawRoll ) );
 
 					for ( size_t i = 0; i < pathData.mKnots.size(); ++i ) {
+						using namespace DirectX;
+
 						const auto &segment = pathData.mKnots[i];
 
 						Cyclone::Math::Vector4D point = rotmat.TransformCoord3Unit( segment.mPoint );
 						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, point );
 						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, point );
 
-						Cyclone::Math::Vector4D inVec = rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( segment.mInVec ) );
-						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, inVec );
-						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, inVec );
+						if ( i != 0 ) {
+							Cyclone::Math::Vector4D inVec = rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( segment.mInVec ) );
+							bbMin = Cyclone::Math::Vector4D::sMin( bbMin, inVec );
+							bbMax = Cyclone::Math::Vector4D::sMax( bbMax, inVec );
+						}
 
-						Cyclone::Math::Vector4D outVec = rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( segment.mOutVec ) );
-						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, outVec );
-						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, outVec );
+						if ( i + 1 < pathData.mKnots.size() ) {
+							Cyclone::Math::Vector4D outVec = rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( segment.mOutVec ) );
+							bbMin = Cyclone::Math::Vector4D::sMin( bbMin, outVec );
+							bbMax = Cyclone::Math::Vector4D::sMax( bbMax, outVec );
+						}
 
-						Cyclone::Math::Vector4D bitangent = rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mBitangent ) );
+						Cyclone::Math::Vector4D bitangent = rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mBitangent * 0.5f ) );
 						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, bitangent );
 						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, bitangent );
 
-						Cyclone::Math::Vector4D normal = rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mNormal ) );
-						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, normal );
-						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, normal );
+						bitangent = rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mBitangent * -0.5f ) );
+						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, bitangent );
+						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, bitangent );
+
+						bitangent = rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mBitangent * 0.5f + pathData.mExtrusions[i].mNormal * -0.1f ) );
+						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, bitangent );
+						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, bitangent );
+
+						bitangent = rotmat.TransformCoord3Unit( segment.mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mBitangent * -0.5f + pathData.mExtrusions[i].mNormal * -0.1f ) );
+						bbMin = Cyclone::Math::Vector4D::sMin( bbMin, bitangent );
+						bbMax = Cyclone::Math::Vector4D::sMax( bbMax, bitangent );
 					}
 					
 					Cyclone::Math::Vector4D half = Cyclone::Math::Vector4D::sReplicate( 0.5 );
