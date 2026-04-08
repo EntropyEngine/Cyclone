@@ -7,6 +7,7 @@
 
 // STL
 #include <format>
+#include <ranges>
 
 void Cyclone::Rendering::Shader::EntityIndexShader::SetDevice( ID3D11Device *inDevice )
 {
@@ -111,6 +112,7 @@ entt::entity Cyclone::Rendering::Shader::EntityIndexShader::ReadViewport( ID3D11
 		memcpy( mOutputBufferCPU.data(), map.pData, mOutputBufferCPU.size() * sizeof( uint32_t ) );
 	}
 
+	/*
 	std::sort( mOutputBufferCPU.begin(), mOutputBufferCPU.end() );
 	auto first = std::upper_bound( mOutputBufferCPU.begin(), mOutputBufferCPU.end(), 0U );
 
@@ -118,6 +120,48 @@ entt::entity Cyclone::Rendering::Shader::EntityIndexShader::ReadViewport( ID3D11
 		return entt::null;
 	}
 	else {
-		return static_cast<entt::entity>( static_cast<uint32_t>( entt::null ) - *first );
+		uint32_t best = *first;
+		size_t bestCount = 1;
+		size_t currCount = 1;
+
+		for ( auto it = first + 1; it != mOutputBufferCPU.end(); ++it ) {
+			if ( *( it - 1 ) == *it ) {
+				++currCount;
+			}
+			else {
+				if ( currCount > bestCount ) {
+					bestCount = currCount;
+					best = *( it - 1 );
+				}
+				currCount = 1;
+			}
+		}
+		if ( currCount > bestCount ) {
+			best = mOutputBufferCPU.back();
+		}
+
+		return static_cast<entt::entity>( static_cast<uint32_t>( entt::null ) - best );
 	}
+	*/
+
+	uint32_t best = 0;
+	float bestDistance = kSearchWidth * kSearchWidth;
+
+	for ( size_t x = 0; x < kSearchWidth; ++x ) {
+		for ( size_t y = 0; y < kSearchWidth; ++y ) {
+			for ( size_t s = 0; s < mSampleCount; ++s ) {
+				if ( mOutputBufferCPU[x + y * kSearchWidth + s * kSearchWidth * kSearchWidth] != 0 ) {
+					float dx = static_cast<float>( x ) - kSearchWidth / 2;
+					float dy = static_cast<float>( y ) - kSearchWidth / 2;
+					float dist = std::sqrtf( dx * dx + dy * dy );
+					if ( dist < bestDistance ) {
+						best = mOutputBufferCPU[x + y * kSearchWidth + s * kSearchWidth * kSearchWidth];
+						bestDistance = dist;
+					}
+				}
+			}
+		}
+	}
+
+	return static_cast<entt::entity>( static_cast<uint32_t>( entt::null ) - best );
 }
