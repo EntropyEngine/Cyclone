@@ -5,6 +5,7 @@
 
 namespace Cyclone::UI::Tool {
 	class SelectionTool;
+	class PathSelectionTool;
 }
 
 namespace Cyclone::Core {
@@ -17,6 +18,7 @@ namespace Cyclone::Core::Tool
 	{
 	public:
 		friend Cyclone::UI::Tool::SelectionTool;
+		friend Cyclone::UI::Tool::PathSelectionTool;
 		friend Cyclone::Core::EntityManager;
 
 		entt::entity			GetSelectedEntity() const			{ return mSelectedEntity; }
