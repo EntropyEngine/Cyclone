@@ -149,21 +149,23 @@ void Cyclone::UI::MainUI::Update( ID3D11DeviceContext3 *inDeviceContext, float i
 
 			if ( ImGui::IsKeyChordPressed( ImGuiKey_A | ImGuiMod_Ctrl, ImGuiInputFlags_None, ImGuiKeyOwner_NoOwner ) ) mViewportManager->ResizeViewports();
 
-			if ( ImGui::IsKeyChordPressed( ImGuiKey_Delete, ImGuiInputFlags_None, ImGuiKeyOwner_NoOwner ) && !selectionContext.GetSelectedEntities().empty() ) {
-				entityManager.BeginAction();
-				for ( entt::entity entity : selectionContext.GetSelectedEntities() ) {
-					entityManager.DeleteEntity( entity, registry );
+			if ( mSidebar->GetTools().mCurrentCategory == Tool::ECategory::Object ) {
+				if ( ImGui::IsKeyChordPressed( ImGuiKey_Delete, ImGuiInputFlags_None, ImGuiKeyOwner_NoOwner ) && !selectionContext.GetSelectedEntities().empty() ) {
+					entityManager.BeginAction();
+					for ( entt::entity entity : selectionContext.GetSelectedEntities() ) {
+						entityManager.DeleteEntity( entity, registry );
+					}
+					entityManager.EndAction( registry );
 				}
-				entityManager.EndAction( registry );
-			}
 
-			if ( ImGui::IsKeyChordPressed( ImGuiKey_H | ImGuiMod_Ctrl, ImGuiInputFlags_None, ImGuiKeyOwner_NoOwner ) && !selectionContext.GetSelectedEntities().empty() ) {
-				entityManager.BeginAction();
-				for ( entt::entity entity : selectionContext.GetSelectedEntities() ) {
-					registry.get<Cyclone::Core::Component::Visible>( entity ) = static_cast<Cyclone::Core::Component::Visible>( false );
-					entityManager.UpdateEntity( entity, registry );
+				if ( ImGui::IsKeyChordPressed( ImGuiKey_H | ImGuiMod_Ctrl, ImGuiInputFlags_None, ImGuiKeyOwner_NoOwner ) && !selectionContext.GetSelectedEntities().empty() ) {
+					entityManager.BeginAction();
+					for ( entt::entity entity : selectionContext.GetSelectedEntities() ) {
+						registry.get<Cyclone::Core::Component::Visible>( entity ) = static_cast<Cyclone::Core::Component::Visible>( false );
+						entityManager.UpdateEntity( entity, registry );
+					}
+					entityManager.EndAction( registry );
 				}
-				entityManager.EndAction( registry );
 			}
 
 			for ( const auto &tool : mSidebar->GetTools().mTools ) {
