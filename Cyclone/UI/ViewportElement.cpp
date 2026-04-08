@@ -195,6 +195,11 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 	const DirectX::XMMATRIX viewMatrix = mViewportData.mViewMatrix;
 	const DirectX::XMMATRIX projMatrix = mViewportData.mProjMatrix;
 
+	const uint32_t colSelected = inTools.mCurrentCategory == Tool::ECategory::Object ? Cyclone::Util::ColorU32( 255, 255, 0, 255 ) : Cyclone::Util::ColorU32( 255, 128, 0, 255 );
+	const uint32_t colSelection = inTools.mCurrentCategory == Tool::ECategory::Object ? Cyclone::Util::ColorU32( 255, 128, 0, 255 ) : Cyclone::Util::ColorU32( 255, 0, 0, 255 );
+
+	const bool editPathMode = inTools.mCurrentCategory == Tool::ECategory::EditPath;
+
 	auto pathLambda = [&]( bool selected, bool selection, auto &view ) {
 		mWireframePrimitiveShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
 		mWireframePrimitiveShader->Apply( inDeviceContext );
@@ -213,10 +218,10 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 
 			uint32_t entityColorU32;
 			if ( entity == selectedEntity ) {
-				entityColorU32 = Cyclone::Util::ColorU32( 255, 255, 0, 255 );
+				entityColorU32 = editPathMode ? colSelection : colSelected;
 			}
 			else if ( selection ) {
-				entityColorU32 = Cyclone::Util::ColorU32( 255, 128, 0, 255 );
+				entityColorU32 = colSelection;
 			}
 			else {
 				const auto &entityType = view.get<EntityType>( entity );
@@ -239,7 +244,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				DirectX::XMVECTOR C = B - PN;
 				DirectX::XMVECTOR D = A - PN;
 
-				uint16_t idx = inTools.mCurrentCategory == Tool::ECategory::EditPath ? s : 0;
+				uint16_t idx = editPathMode ? s : 0;
 
 				linePoints[s] = { P, entityColorV, entity, idx };
 				mWireframePrimitiveBatch->DrawLine( { A, entityColorV, entity, idx }, { B, entityColorV, entity, idx } );
@@ -277,7 +282,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 
 			auto view = cregistry.view<Position, BoundingBox, DrawTag, entt::tag<"is_selected"_hs>>( entt::exclude<PathTag> );
 
-			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 255, 0, 255 ) );
+			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( colSelected );
 			if ( view.contains( selectedEntity ) ) {
 				const auto &position = view.get<Position>( selectedEntity ).mValue;
 				const auto &boundingBox = view.get<BoundingBox>( selectedEntity ).mValue;
@@ -302,7 +307,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 
 			auto view = cregistry.view<Position, BoundingBox, DrawTag, entt::tag<"is_selected"_hs>>( entt::exclude<PathTag> );
 
-			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
+			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( colSelection );
 			for ( const entt::entity entity : view ) {
 				if ( selectedEntity == entity ) continue;
 
@@ -319,6 +324,17 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 		{
 			auto view = cregistry.view<EntityType, Position, Rotation, PathCache, PathData, DrawTag, entt::tag<"is_selected"_hs>>();
 			pathLambda( false, true, view );
+		}
+
+		{
+			if ( editPathMode ) {
+				inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 1 );
+			}
+			else {
+				inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 0 );
+			}
+			auto view = cregistry.view<EntityType, Position, Rotation, PathCache, PathData, DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>> );
+			pathLambda( false, false, view );
 		}
 
 		inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 0 );
@@ -344,10 +360,6 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				mWireframeBoxShader->SetInstance( inDeviceContext, rebasedBoundingBoxPosition.ToXMVECTOR(), boundingBox.mExtent.ToXMVECTOR(), entityColorV, static_cast<uint32_t>( entity ) );
 			}
 			mWireframeBoxShader->DrawInstances( inDeviceContext );
-		}
-		{
-			auto view = cregistry.view<EntityType, Position, Rotation, PathCache, PathData, DrawTag>( entt::exclude<entt::tag<"is_selected"_hs>> );
-			pathLambda( false, false, view );
 		}
 	}
 

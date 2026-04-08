@@ -50,7 +50,7 @@ void Cyclone::UI::Tool::PathSelectionTool::OnUpdate( EViewportType inType, Cyclo
 		selectionCandidates.insert( static_cast<entt::entity>( entt::to_entity( hovered ) ) );
 	}
 
-	std::erase_if( selectionCandidates, [&cregistry, &entityManager]( entt::entity inEntity ) {
+	auto nuke = [&cregistry, &entityManager]( entt::entity inEntity ) {
 		if ( !static_cast<bool>( cregistry.get<Cyclone::Core::Component::Selectable>( inEntity ) ) ) return true;
 		if ( !static_cast<bool>( cregistry.get<Cyclone::Core::Component::Visible>( inEntity ) ) ) return true;
 
@@ -66,7 +66,9 @@ void Cyclone::UI::Tool::PathSelectionTool::OnUpdate( EViewportType inType, Cyclo
 		if ( !entityManager.GetEntityCategoryIsSelectable( entityCategory ) ) return true;
 
 		return false;
-	} );
+	};
+
+	std::erase_if( selectionCandidates, nuke );
 
 	if ( shiftHeld ) {
 		for ( auto e : selectionCandidates ) {
@@ -99,6 +101,18 @@ void Cyclone::UI::Tool::PathSelectionTool::OnUpdate( EViewportType inType, Cyclo
 	}
 
 	selectionContext.mPreviousCandidates = selectionCandidates;
+
+	std::erase_if( selectionContext.mSelectedEntities, nuke );
+	if ( !selectionContext.mSelectedEntities.contains( selectionContext.mSelectedEntity ) ) {
+		auto it = selectionContext.mSelectedEntities.begin();
+
+		if ( it != selectionContext.mSelectedEntities.end() ) {
+			selectionContext.mSelectedEntity = *it;
+		}
+		else {
+			selectionContext.mSelectedEntity = entt::null;
+		}
+	}
 
 	if ( selectionContext.mDirty && entityManager.IsSelectionModified() ) {
 		entityManager.BeginAction();
