@@ -28,7 +28,7 @@ void Cyclone::Rendering::Shader::WireframeBoxShader::SetDevice( ID3D11Device *in
 	DX::ThrowIfFailed( inDevice->CreateBuffer( &instanceDesc, nullptr, mInstanceBuffer.ReleaseAndGetAddressOf() ) );
 	mInstanceData = std::make_unique<InstanceBuffer[]>( kBatchSize );
 
-	const auto vsData = DX::ReadData( L"WireFrameBox_VS.cso" );
+	const auto vsData = DX::ReadData( L"WireframeBox_VS.cso" );
 	DX::ThrowIfFailed( inDevice->CreateVertexShader(
 		vsData.data(),
 		vsData.size(),
@@ -36,7 +36,7 @@ void Cyclone::Rendering::Shader::WireframeBoxShader::SetDevice( ID3D11Device *in
 		mVertexShader.ReleaseAndGetAddressOf()
 	) );
 
-	const auto psData = DX::ReadData( L"WireFrameBox_PS.cso" );
+	const auto psData = DX::ReadData( L"WireframeBox_PS.cso" );
 	DX::ThrowIfFailed( inDevice->CreatePixelShader(
 		psData.data(),
 		psData.size(),

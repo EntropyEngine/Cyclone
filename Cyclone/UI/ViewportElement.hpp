@@ -19,6 +19,7 @@
 
 // Rendering includes
 #include "Cyclone/Rendering/Shader/WireframeBoxShader.hpp"
+#include "Cyclone/Rendering/Shader/WireframePrimitiveShader.hpp"
 #include "Cyclone/Rendering/Shader/EntityIndexShader.hpp"
 
 namespace Cyclone::Core {
@@ -50,6 +51,8 @@ namespace Cyclone::UI
 
 		void ToggleAntialiasing( bool inEnabled );
 
+		using VertexPositionColorID = Cyclone::Rendering::Shader::WireframePrimitiveShader::VertexPositionColorID;
+
 	protected:
 		template<Cyclone::UI::EViewportType T>
 		void Render( ID3D11DeviceContext3 *inDeviceContext, Cyclone::Core::LevelInterface *inLevelInterface, const std::span<std::unique_ptr<Tool::BaseTool>> inTools );
@@ -59,13 +62,14 @@ namespace Cyclone::UI
 		std::unique_ptr<DX::RenderTexture>			mTargetRT;
 
 		std::unique_ptr<Cyclone::Rendering::Shader::WireframeBoxShader> mWireframeBoxShader;
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState> mWireframeRasterState;
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState> mWireframeRasterStateMSAA;
-
+		std::unique_ptr<Cyclone::Rendering::Shader::WireframePrimitiveShader> mWireframePrimitiveShader;
 		std::unique_ptr<Cyclone::Rendering::Shader::EntityIndexShader> mEntityIndexShader;
 
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState> mWireframeRasterState;
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState> mWireframeRasterStateMSAA;
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilState> mLayeredDepthState;
 
+		std::unique_ptr<DirectX::PrimitiveBatch<VertexPositionColorID>> mWireframePrimitiveBatch;
 		std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> mWireframeGridBatch;
 		std::unique_ptr<DirectX::BasicEffect>		mWireframeGridEffect;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	mWireframeGridInputLayout;

@@ -260,6 +260,9 @@
     <ClInclude Include="Rendering\Shader\EntityIndexShader.hpp">
       <Filter>Rendering\Shader</Filter>
     </ClInclude>
+    <ClInclude Include="Rendering\Shader\WireframePrimitiveShader.hpp">
+      <Filter>Rendering\Shader</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -377,6 +380,9 @@
     <ClCompile Include="Rendering\Shader\EntityIndexShader.cpp">
       <Filter>Rendering\Shader</Filter>
     </ClCompile>
+    <ClCompile Include="Rendering\Shader\WireframePrimitiveShader.cpp">
+      <Filter>Rendering\Shader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Cyclone.rc">
@@ -451,6 +457,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\EntityIndex_CS_4x.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\WireframePrimitive_PS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\WireframePrimitive_VS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

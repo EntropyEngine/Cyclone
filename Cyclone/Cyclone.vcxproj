@@ -186,6 +186,7 @@
     <ClInclude Include="Rendering\Primitives.hpp" />
     <ClInclude Include="Rendering\Shader\EntityIndexShader.hpp" />
     <ClInclude Include="Rendering\Shader\WireframeBoxShader.hpp" />
+    <ClInclude Include="Rendering\Shader\WireframePrimitiveShader.hpp" />
     <ClInclude Include="RenderTexture.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
@@ -279,6 +280,7 @@
     <ClCompile Include="Rendering\Primitives.cpp" />
     <ClCompile Include="Rendering\Shader\EntityIndexShader.cpp" />
     <ClCompile Include="Rendering\Shader\WireframeBoxShader.cpp" />
+    <ClCompile Include="Rendering\Shader\WireframePrimitiveShader.cpp" />
     <ClCompile Include="RenderTexture.cpp" />
     <ClCompile Include="UI\MainUI.cpp" />
     <ClCompile Include="UI\ObjectProperties.cpp" />
@@ -328,6 +330,22 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Shaders\WireframePrimitive_PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Shaders\WireframePrimitive_VS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">5.0</ShaderModel>
+    </FxCompile>
     <None Include="Shaders\EntityIndex_CS.hlsli">
       <FileType>Document</FileType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>

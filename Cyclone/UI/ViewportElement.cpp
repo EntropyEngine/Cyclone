@@ -29,6 +29,7 @@ Cyclone::UI::ViewportElement::ViewportElement( DXGI_FORMAT inBackBufferFormat, D
 	mClearColor = inClearColor;
 
 	mWireframeBoxShader = std::make_unique<Cyclone::Rendering::Shader::WireframeBoxShader>();
+	mWireframePrimitiveShader = std::make_unique<Cyclone::Rendering::Shader::WireframePrimitiveShader>();
 	mEntityIndexShader = std::make_unique<Cyclone::Rendering::Shader::EntityIndexShader>();
 
 	mWidth = 0;
@@ -49,6 +50,7 @@ void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 *inDevice )
 	mTargetRT->SetDevice( inDevice );
 
 	mWireframeBoxShader->SetDevice( inDevice );
+	mWireframePrimitiveShader->SetDevice( inDevice );
 
 	mEntityIndexShader->SetDevice( inDevice );
 	
@@ -95,6 +97,7 @@ void Cyclone::UI::ViewportElement::SetDevice( ID3D11Device3 *inDevice )
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext3> deviceContext;
 	inDevice->GetImmediateContext3( deviceContext.GetAddressOf() );
 	mWireframeGridBatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>( deviceContext.Get(), 16384 * 3, 16384 );
+	mWireframePrimitiveBatch = std::make_unique<DirectX::PrimitiveBatch<VertexPositionColorID>>( deviceContext.Get(), 16384 * 3, 16384 );
 }
 
 void Cyclone::UI::ViewportElement::UpdateViewportData( ID3D11DeviceContext *inContext )
@@ -193,11 +196,10 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 	const DirectX::XMMATRIX projMatrix = mViewportData.mProjMatrix;
 
 	auto pathLambda = [&]( bool selected, bool selection, auto &view ) {
-		inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
-		mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), viewMatrix, projMatrix );
-		mWireframeGridEffect->Apply( inDeviceContext );
+		mWireframePrimitiveShader->SetViewProj( inDeviceContext, viewMatrix, projMatrix );
+		mWireframePrimitiveShader->Apply( inDeviceContext );
 
-		mWireframeGridBatch->Begin();
+		mWireframePrimitiveBatch->Begin();
 
 		auto draw = [&]( const entt::entity entity ) {
 			const auto &entityType = view.get<EntityType>( entity );
@@ -222,7 +224,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			}
 			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
 
-			std::vector<DirectX::VertexPositionColor> linePoints( pathCache.mArray.size() );
+			std::vector<VertexPositionColorID> linePoints( pathCache.mArray.size() );
 			//std::vector<DirectX::VertexPositionColor> linePointsL( ( pathData.mKnots.size() - 1 ) * 17 );
 			//std::vector<DirectX::VertexPositionColor> linePointsR( ( pathData.mKnots.size() - 1 ) * 17 );
 			for ( size_t s = 0; s < pathCache.mArray.size(); ++s ) {
@@ -232,21 +234,21 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				DirectX::XMVECTOR PN = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mNormal, rotmatF ), 0.1f );
 				DirectX::XMVECTOR PB = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mTangent, rotmatF ), 0.5f );
 
-				DirectX::XMStoreFloat3( &linePoints[s].position, P );
-				DirectX::XMStoreFloat4( &linePoints[s].color, entityColorV );
+
+				linePoints[s] = { P, entityColorV, entity };
 
 				DirectX::XMVECTOR A = P - PB;
 				DirectX::XMVECTOR B = P + PB;
 				DirectX::XMVECTOR C = B - PN;
 				DirectX::XMVECTOR D = A - PN;
 
-				mWireframeGridBatch->DrawLine( { A, entityColorV }, { B, entityColorV } );
-				mWireframeGridBatch->DrawLine( { B, entityColorV }, { C, entityColorV } );
-				mWireframeGridBatch->DrawLine( { C, entityColorV }, { D, entityColorV } );
-				mWireframeGridBatch->DrawLine( { D, entityColorV }, { A, entityColorV } );
+				mWireframePrimitiveBatch->DrawLine( { A, entityColorV, entity }, { B, entityColorV, entity } );
+				mWireframePrimitiveBatch->DrawLine( { B, entityColorV, entity }, { C, entityColorV, entity } );
+				mWireframePrimitiveBatch->DrawLine( { C, entityColorV, entity }, { D, entityColorV, entity } );
+				mWireframePrimitiveBatch->DrawLine( { D, entityColorV, entity }, { A, entityColorV, entity } );
 			}
 
-			mWireframeGridBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePoints.data(), linePoints.size() );
+			mWireframePrimitiveBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePoints.data(), linePoints.size() );
 		};
 
 		if ( !selected ) {
@@ -259,7 +261,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			draw( selectedEntity );
 		}
 
-		mWireframeGridBatch->End();
+		mWireframePrimitiveBatch->End();
 	};
 
 	inDeviceContext->OMSetBlendState( mCommonStates->Opaque(), nullptr, 0xFFFFFFFF );
@@ -348,6 +350,10 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			pathLambda( false, false, view );
 		}
 	}
+
+	inDeviceContext->IASetInputLayout( mWireframeGridInputLayout.Get() );
+	mWireframeGridEffect->SetMatrices( DirectX::XMMatrixIdentity(), viewMatrix, projMatrix );
+	mWireframeGridEffect->Apply( inDeviceContext );
 
 	// Call all tool renders with depth enabled
 	inDeviceContext->OMSetDepthStencilState( mLayeredDepthState.Get(), 0 );
