@@ -55,7 +55,7 @@ void Cyclone::UI::Tool::PathSelectionTool::OnUpdate( EViewportType inType, Cyclo
 		const auto entityType = cregistry.get<Cyclone::Core::Component::EntityType>( inEntity );
 		const auto entityCategory = cregistry.get<Cyclone::Core::Component::EntityCategory>( inEntity );
 
-		if ( static_cast<entt::id_type>( entityCategory ) != "path"_hs.value() ) true;
+		if ( static_cast<entt::id_type>( entityCategory ) != "path"_hs.value() ) return true;
 
 		if ( !entityManager.GetEntityTypeIsVisible( entityType ) ) return true;
 		if ( !entityManager.GetEntityTypeIsSelectable( entityType ) ) return true;
@@ -83,6 +83,8 @@ void Cyclone::UI::Tool::PathSelectionTool::OnUpdate( EViewportType inType, Cyclo
 		}
 	}
 	else {
+		hovered.resize( 1 );
+
 		if ( !shiftHeld && !ctrlHeld ) {
 			selectionContext.ClearSelection();
 
@@ -102,10 +104,35 @@ void Cyclone::UI::Tool::PathSelectionTool::OnUpdate( EViewportType inType, Cyclo
 			}
 		}
 		else if ( shiftHeld ) {
+			entt::entity firstEntity = static_cast<entt::entity>( entt::to_entity( hovered[0] ) );
+			uint16_t firstKnot = entt::to_version( hovered[0] );
 
+			if ( view.get<Cyclone::Core::Component::PathSelection>( firstEntity ).AddSelectedKnot( firstKnot ) ) {
+				modifiedEntities.insert( firstEntity );
+			}
+			selectionContext.AddSelectedEntity( firstEntity );
 		}
 		else if ( ctrlHeld ) {
+			entt::entity firstEntity = static_cast<entt::entity>( entt::to_entity( hovered[0] ) );
+			uint16_t firstKnot = entt::to_version( hovered[0] );
 
+			auto &pathSelection = view.get<Cyclone::Core::Component::PathSelection>( firstEntity );
+
+			if ( pathSelection.mCurrentKnot == firstKnot && previousSelectedEntity == firstEntity ) {
+				pathSelection.DeselectKnot( firstKnot );
+				modifiedEntities.insert( firstEntity );
+			}
+			else {
+				pathSelection.AddSelectedKnot( firstKnot );
+				modifiedEntities.insert( firstEntity );
+			}
+
+			if ( pathSelection.mSelectedKnots.size() ) {
+				selectionContext.AddSelectedEntity( firstEntity );
+			}
+			else {
+				selectionContext.DeselectEntity( firstEntity );
+			}
 		}
 	}
 

@@ -212,6 +212,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			const auto &rotation = view.get<Rotation>( entity ).mPitchYawRoll;
 			const PathCache &pathCache = view.get<PathCache>( entity );
 			const PathData &pathData = view.get<PathData>( entity );
+			const PathSelection &pathSelection = cregistry.get<PathSelection>( entity );
 
 			DirectX::XMMATRIX rotmatF = DirectX::XMMatrixRotationRollPitchYawFromVector( rotation );
 			Matrix44D rotmatD = Matrix44D::sFromXMMATRIX( rotmatF );
@@ -234,21 +235,33 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			std::vector<VertexPositionColorID> linePoints( pathCache.mArray.size() );
 			//std::vector<DirectX::VertexPositionColor> linePointsL( ( pathData.mKnots.size() - 1 ) * 17 );
 			//std::vector<DirectX::VertexPositionColor> linePointsR( ( pathData.mKnots.size() - 1 ) * 17 );
+			std::vector<DirectX::XMVECTOR> lineColors( pathCache.mArray.size() / 17 + 1 );
+			if ( editPathMode ) {
+				for ( size_t i = 0; i < lineColors.size(); ++i ) {
+					if ( selected && pathSelection.mCurrentKnot == i ) {
+						lineColors[i] = Cyclone::Util::ColorU32ToXMVECTOR(Cyclone::Util::ColorU32(255, 255, 0, 255));
+					}
+					else if ( pathSelection.mSelectedKnots.contains( i ) ) {
+						lineColors[i] = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
+					}
+					else {
+						lineColors[i] = entityColorO;
+					}
+				}
+			}
+
 			for ( size_t s = 0; s < pathCache.mArray.size(); ++s ) {
 				using namespace DirectX;
 
-				if ( s % 17 == 0 && editPathMode && ( selected || selection ) ) {
-					const PathSelection &pathSelection = cregistry.get<PathSelection>( entity );
+				uint16_t knot = s / 17;
+				if ( editPathMode ) {
+					float factor = ( s % 17 ) / 17.0f;
+					float f2s = 4 * factor * factor;
+					float f2i = 2 - 2 * factor;
+					f2i *= f2i;
 
-					if ( selected && pathSelection.mCurrentKnot == s / 17 ) {
-						entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 255, 0, 255 ) );
-					}
-					else if ( pathSelection.mSelectedKnots.contains( s / 17 ) ) {
-						entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
-					}
-					else {
-						entityColorV = entityColorO;
-					}
+
+					entityColorV = DirectX::XMVectorLerp( lineColors[knot], lineColors[knot + 1], factor < 0.5 ? ( 1 - std::sqrtf( 1.0 - f2s ) ) / 2 : ( std::sqrtf( 1.0 - f2i ) + 1 ) / 2 );
 				}
 
 				DirectX::XMVECTOR P = ( rotmatD.TransformCoord3Unit( pathCache.mArray[s].mPosition ) + rebasedEntityPosition ).ToXMVECTOR();
@@ -260,7 +273,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				DirectX::XMVECTOR C = B - PN;
 				DirectX::XMVECTOR D = A - PN;
 
-				uint16_t idx = editPathMode ? s / 17 : 0;
+				uint16_t idx = editPathMode ? ( s + 8 ) / 17 : 0;
 
 				linePoints[s] = { P, entityColorV, entity, idx };
 				mWireframePrimitiveBatch->DrawLine( { A, entityColorV, entity, idx }, { B, entityColorV, entity, idx } );
