@@ -22,7 +22,7 @@ namespace Cyclone::Core::Entity
 		static constexpr entt::hashed_string kEntityType = "path_debug"_hs;
 		static constexpr entt::hashed_string kEntityCategory = "path"_hs;
 
-		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<Component::PathTag, Component::PathData>>;
+		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<Component::PathTag, Component::PathData, Component::PathSelection>>;
 
 		entt::entity Create( entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
 		{
