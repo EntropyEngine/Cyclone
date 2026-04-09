@@ -174,6 +174,7 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 
 		PathData &pathData = registry.get<PathData>( inEntity );
 		PathCache &pathCache = registry.get<PathCache>( inEntity );
+		PathSelection &pathSelection = registry.get<PathSelection>( inEntity );
 
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text( "Knot Count" );
@@ -228,8 +229,24 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 		ImGui::Separator();
 
 		for ( int i = 0; i < pathData.mKnots.size(); ++i ) {
+
+			ImGuiTreeNodeFlags rootFlags = ImGuiTreeNodeFlags_DrawLinesFull;
+
+			if ( pathSelection.mSelectedKnots.contains( i ) ) {
+				rootFlags |= ImGuiTreeNodeFlags_Selected;
+			}
+
+
 			ImGui::AlignTextToFramePadding();
-			if ( ImGui::TreeNodeEx( Cyclone::Util::PrefixString( "Knot ", i ), ImGuiTreeNodeFlags_DrawLinesFull | ImGuiTreeNodeFlags_Framed ) ) {
+			bool isKnotOpen = ImGui::TreeNodeEx( Cyclone::Util::PrefixString( "Knot ", i ), rootFlags );
+
+			if ( pathSelection.mCurrentKnot == i ) {
+				ImGui::SameLine();
+				ImGui::Bullet();
+				ImGui::Dummy( {} );
+			}
+
+			if ( isKnotOpen ) {
 
 				{
 					Vector4D &position = pathData.mKnots[i].mPoint;
