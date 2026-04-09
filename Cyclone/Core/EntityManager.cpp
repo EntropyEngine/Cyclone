@@ -142,6 +142,7 @@ void Cyclone::Core::EntityManager::BeginAction()
 
 	if ( mUndoStackEpoch + 1 != mUndoStack.size() ) {
 		mUndoStack.erase( mUndoStack.begin() + mUndoStackEpoch + 1, mUndoStack.end() );
+		mUndoStack.shrink_to_fit();
 	}
 
 	mUndoStack.emplace_back();
