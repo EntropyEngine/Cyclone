@@ -45,8 +45,6 @@ void Cyclone::UI::Tool::SelectionTool::OnUpdatePerspective( Cyclone::Core::Level
 	bool ctrlHeld = ImGui::IsKeyDown( ImGuiMod_Ctrl );
 	bool shiftHeld = ImGui::IsKeyDown( ImGuiMod_Shift );
 
-	if ( !( ctrlHeld || shiftHeld ) ) {}
-
 	auto &selectionContext = inLevelInterface->GetSelectionCtx();
 
 	// Not a reference; need original

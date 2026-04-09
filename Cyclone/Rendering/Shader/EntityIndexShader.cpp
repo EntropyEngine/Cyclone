@@ -83,6 +83,19 @@ entt::entity Cyclone::Rendering::Shader::EntityIndexShader::ReadClosestEntity( I
 	return static_cast<entt::entity>( static_cast<uint32_t>( entt::null ) - best );
 }
 
+std::vector<entt::entity> Cyclone::Rendering::Shader::EntityIndexShader::ReadOrderedEntities( ID3D11DeviceContext * inContext, ID3D11ShaderResourceView * inEntitySRV, size_t inMouseX, size_t inMouseY )
+{
+	DispatchAndMap( inContext, inEntitySRV, inMouseX, inMouseY );
+	std::vector<uint32_t> ordered = GetOrdered();
+	std::vector<entt::entity> orderedEntities( ordered.size() );
+	for ( size_t i = 0; i < ordered.size(); ++i ) {
+		orderedEntities[i] = static_cast<entt::entity>( static_cast<uint32_t>( entt::null ) - ordered[i] );
+	}
+	return orderedEntities;
+}
+
+
+
 void Cyclone::Rendering::Shader::EntityIndexShader::DispatchAndMap( ID3D11DeviceContext *inContext, ID3D11ShaderResourceView *inEntitySRV, size_t inMouseX, size_t inMouseY )
 {
 	mScreenData.SetData( inContext, { static_cast<uint32_t>( inMouseX ), static_cast<uint32_t>( inMouseY ), static_cast<uint32_t>( mWidth ), static_cast<uint32_t>( mHeight ) } );

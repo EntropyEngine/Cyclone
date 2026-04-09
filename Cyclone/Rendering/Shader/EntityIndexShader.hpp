@@ -15,6 +15,7 @@ namespace Cyclone::Rendering::Shader
 		void SizeResources( size_t inWidth, size_t inHeight, size_t inSamples );
 
 		entt::entity ReadClosestEntity( ID3D11DeviceContext *inContext, ID3D11ShaderResourceView *inEntitySRV, size_t inMouseX, size_t inMouseY );
+		std::vector<entt::entity> ReadOrderedEntities( ID3D11DeviceContext *inContext, ID3D11ShaderResourceView *inEntitySRV, size_t inMouseX, size_t inMouseY );
 
 	protected:
 		void DispatchAndMap( ID3D11DeviceContext *inContext, ID3D11ShaderResourceView *inEntitySRV, size_t inMouseX, size_t inMouseY );

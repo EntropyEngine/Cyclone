@@ -641,20 +641,28 @@ namespace Cyclone::Core::Component
 		uint16_t mCurrentKnot = static_cast<uint16_t>( -1 );
 		std::set<uint16_t> mSelectedKnots;
 
-		void SetSelectedKnot( uint16_t inKnot )
+		bool SetSelectedKnot( uint16_t inKnot )
 		{
-			mCurrentKnot = inKnot;
-			mSelectedKnots.clear();
-			mSelectedKnots.insert( inKnot );
+			if ( mCurrentKnot != inKnot || mSelectedKnots.size() != 1 || *mSelectedKnots.begin() != inKnot ) {
+				mCurrentKnot = inKnot;
+				mSelectedKnots.clear();
+				mSelectedKnots.insert( inKnot );
+				return true;
+			}
+			return false;
 		}
 
-		void AddSelectedKnot( uint16_t inKnot )
+		bool AddSelectedKnot( uint16_t inKnot )
 		{
-			mCurrentKnot = inKnot;
-			mSelectedKnots.insert( inKnot );
+			if ( mCurrentKnot != inKnot || !mSelectedKnots.contains( inKnot ) ) {
+				mCurrentKnot = inKnot;
+				mSelectedKnots.insert( inKnot );
+				return true;
+			}
+			return false;
 		}
 
-		void DeselectKnot( uint16_t inKnot )
+		bool DeselectKnot( uint16_t inKnot )
 		{
 			if ( mSelectedKnots.erase( inKnot ) ) {
 				if ( inKnot == mCurrentKnot || true ) {
@@ -670,15 +678,19 @@ namespace Cyclone::Core::Component
 						mCurrentKnot = *it;
 					}
 				}
+				return true;
 			}
+			return false;
 		}
 
-		void ClearSelection()
+		bool ClearSelection()
 		{
 			if ( mSelectedKnots.size() ) {
 				mSelectedKnots.clear();
 				mCurrentKnot = static_cast<uint16_t>( -1 );
+				return true;
 			}
+			return false;
 		}
 	};
 }
