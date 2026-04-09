@@ -34,5 +34,11 @@ namespace Cyclone::UI
 				-inClip.y * ( mViewSize.y / 2.0f ) + ( mViewSize.y / 2.0f ) + mViewOrigin.y
 			};
 		}
+
+		void ClipToScreen( DirectX::XMFLOAT3 &ioClip ) const
+		{
+			ioClip.x = ioClip.x * ( mViewSize.x / 2.0f ) + ( mViewSize.x / 2.0f ) + mViewOrigin.x;
+			ioClip.y = -ioClip.y * ( mViewSize.y / 2.0f ) + ( mViewSize.y / 2.0f ) + mViewOrigin.y;
+		}
 	};
 }
