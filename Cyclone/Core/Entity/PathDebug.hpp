@@ -40,15 +40,21 @@ namespace Cyclone::Core::Entity
 			Component::LocalBounds &localBounds = inRegistry.emplace<Cyclone::Core::Component::LocalBounds>( entity, DirectX::g_XMZero, DirectX::XMFLOAT3(), Cyclone::Core::Component::LocalBounds::EType::Path );
 
 			// Attach path tag and data
+			Component::PathSelection &pathSelection = inRegistry.emplace<Component::PathSelection>( entity );
 			inRegistry.emplace<Component::PathTag>( entity );
 			Component::PathData &pathData = inRegistry.emplace<Component::PathData>( entity );
 
+			pathData.AddKnot();
+			pathData.AddKnot();
 			pathData.AddKnot();
 			pathData.AddKnot();
 
 			pathData.ValidatePath();
 
 			localBounds.UpdateBoundingBox( entity, inRegistry );
+
+			pathSelection.AddSelectedKnot( 1 );
+			pathSelection.AddSelectedKnot( 2 );
 
 			return entity;
 		}

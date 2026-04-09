@@ -635,4 +635,50 @@ namespace Cyclone::Core::Component
 			}
 		}
 	};
+
+	struct PathSelection
+	{
+		uint16_t mCurrentKnot = static_cast<uint16_t>( -1 );
+		std::set<uint16_t> mSelectedKnots;
+
+		void SetSelectedKnot( uint16_t inKnot )
+		{
+			mCurrentKnot = inKnot;
+			mSelectedKnots.clear();
+			mSelectedKnots.insert( inKnot );
+		}
+
+		void AddSelectedKnot( uint16_t inKnot )
+		{
+			mCurrentKnot = inKnot;
+			mSelectedKnots.insert( inKnot );
+		}
+
+		void DeselectKnot( uint16_t inKnot )
+		{
+			if ( mSelectedKnots.erase( inKnot ) ) {
+				if ( inKnot == mCurrentKnot || true ) {
+					if ( mSelectedKnots.empty() ) mCurrentKnot = static_cast<uint16_t>( -1 );
+					else {
+						auto it = mSelectedKnots.upper_bound( inKnot );
+						if ( it == mSelectedKnots.end() ) {
+							it = mSelectedKnots.lower_bound( inKnot );
+						}
+						if ( it == mSelectedKnots.end() ) {
+							it = mSelectedKnots.begin();
+						}
+						mCurrentKnot = *it;
+					}
+				}
+			}
+		}
+
+		void ClearSelection()
+		{
+			if ( mSelectedKnots.size() ) {
+				mSelectedKnots.clear();
+				mCurrentKnot = static_cast<uint16_t>( -1 );
+			}
+		}
+	};
 }

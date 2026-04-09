@@ -178,6 +178,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 	using Cyclone::Core::Component::PathTag;
 	using Cyclone::Core::Component::PathData;
 	using Cyclone::Core::Component::PathCache;
+	using Cyclone::Core::Component::PathSelection;
 
 	using DrawTag = ViewportTypeTraits<T>::DrawTag;
 
@@ -237,10 +238,12 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				using namespace DirectX;
 
 				if ( s % 17 == 0 && editPathMode && ( selected || selection ) ) {
-					if ( entt::to_version( selectedEntity ) == 1 + s / 17 ) {
+					const PathSelection &pathSelection = cregistry.get<PathSelection>( entity );
+
+					if ( selected && pathSelection.mCurrentKnot == s / 17 ) {
 						entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 255, 0, 255 ) );
 					}
-					else if ( selectedEntities.contains( ( static_cast<entt::entity>( ( static_cast<uint32_t>( 1 + s / 17 ) << 20 ) + entt::to_entity( entity ) ) ) ) ) {
+					else if ( pathSelection.mSelectedKnots.contains( s / 17 ) ) {
 						entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
 					}
 					else {
@@ -257,7 +260,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				DirectX::XMVECTOR C = B - PN;
 				DirectX::XMVECTOR D = A - PN;
 
-				uint16_t idx = editPathMode ? s / 17 + 1 : 0;
+				uint16_t idx = editPathMode ? s / 17 : 0;
 
 				linePoints[s] = { P, entityColorV, entity, idx };
 				mWireframePrimitiveBatch->DrawLine( { A, entityColorV, entity, idx }, { B, entityColorV, entity, idx } );
