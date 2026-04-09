@@ -342,8 +342,9 @@ void Cyclone::UI::Outliner::SelectionListUpdate( Cyclone::Core::LevelInterface *
 			ImGui::PushStyleVar( ImGuiStyleVar_CellPadding, { 0.0f, 0.0f } );
 
 			// Explicitly create copy rather than ref
-			std::vector<entt::entity> previousSelection( selectionContext.GetSelectedEntities().size() );
-			std::copy( selectionContext.GetSelectedEntities().begin(), selectionContext.GetSelectedEntities().end(), previousSelection.begin() );
+			std::vector<entt::entity> previousSelection;
+			previousSelection.reserve( selectionContext.GetSelectedEntities().size() );
+			std::copy_if( selectionContext.GetSelectedEntities().begin(), selectionContext.GetSelectedEntities().end(), std::back_inserter( previousSelection ), []( auto i ){ return entt::to_version( i ) == 0; } );
 
 			ImGuiListClipper clipper;
 			clipper.Begin( static_cast<int>( previousSelection.size() ) );

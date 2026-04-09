@@ -425,12 +425,18 @@ void Cyclone::Core::EntityManager::ValidateSelection( entt::registry & inRegistr
 	auto view = inRegistry.view<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable>();
 	for ( const entt::entity entity : previousSelection ) {
 
-		if ( !view.contains( entity ) ) {
+		entt::entity rootEntity = static_cast<entt::entity>( entt::to_entity( entity ) );
+
+		if ( !previousSelection.contains( rootEntity ) ) {
+			mSelectionTool.DeselectEntity( entity );
+		}
+
+		if ( !view.contains( rootEntity ) ) {
 			mSelectionTool.DeselectEntity( entity );
 			continue;
 		}
 
-		const auto entityCategory = view.get<Component::EntityCategory>( entity );
+		const auto entityCategory = view.get<Component::EntityCategory>( rootEntity );
 
 		if ( !GetEntityCategoryIsVisible( entityCategory ) ) {
 			mSelectionTool.DeselectEntity( entity );
@@ -442,7 +448,7 @@ void Cyclone::Core::EntityManager::ValidateSelection( entt::registry & inRegistr
 			continue;
 		}
 
-		const auto entityType = view.get<Component::EntityType>( entity );
+		const auto entityType = view.get<Component::EntityType>( rootEntity );
 
 		if ( !GetEntityTypeIsVisible( entityType ) ) {
 			mSelectionTool.DeselectEntity( entity );
@@ -454,17 +460,17 @@ void Cyclone::Core::EntityManager::ValidateSelection( entt::registry & inRegistr
 			continue;
 		}
 
-		if ( !static_cast<bool>( view.get<Component::Visible>( entity ) ) ) {
+		if ( !static_cast<bool>( view.get<Component::Visible>( rootEntity ) ) ) {
 			mSelectionTool.DeselectEntity( entity );
 			continue;
 		}
 
-		if ( !static_cast<bool>( view.get<Component::Selectable>( entity ) ) ) {
+		if ( !static_cast<bool>( view.get<Component::Selectable>( rootEntity ) ) ) {
 			mSelectionTool.DeselectEntity( entity );
 			continue;
 		}
 
-		inRegistry.emplace<entt::tag<"is_selected"_hs>>( entity );
+		inRegistry.emplace_or_replace<entt::tag<"is_selected"_hs>>( rootEntity );
 	}
 }
 

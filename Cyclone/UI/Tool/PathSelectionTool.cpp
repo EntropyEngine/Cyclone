@@ -47,10 +47,11 @@ void Cyclone::UI::Tool::PathSelectionTool::OnUpdate( EViewportType inType, Cyclo
 
 	entt::entity hovered = inViewportData.mEntityIndexShader->ReadClosestEntity( inViewportData.mDeviceContext, inViewportData.mEntitySRV, static_cast<size_t>( inViewportData.mAbsoluteMouse.x ), static_cast<size_t>( inViewportData.mAbsoluteMouse.y ) );
 	if ( hovered != entt::null ) {
-		selectionCandidates.insert( static_cast<entt::entity>( entt::to_entity( hovered ) ) );
+		selectionCandidates.insert( hovered );
 	}
 
 	auto nuke = [&cregistry, &entityManager]( entt::entity inEntity ) {
+		inEntity = static_cast<entt::entity>( entt::to_entity( inEntity ) );
 		if ( !static_cast<bool>( cregistry.get<Cyclone::Core::Component::Selectable>( inEntity ) ) ) return true;
 		if ( !static_cast<bool>( cregistry.get<Cyclone::Core::Component::Visible>( inEntity ) ) ) return true;
 
@@ -85,19 +86,31 @@ void Cyclone::UI::Tool::PathSelectionTool::OnUpdate( EViewportType inType, Cyclo
 	}
 
 	if ( !selectionCandidates.empty() ) {
+		
 		if ( selectionCandidates == selectionContext.mPreviousCandidates ) {
 			auto it = selectionCandidates.upper_bound( previousSelectedEntity );
 			if ( it == selectionCandidates.end() ) {
 				it = selectionCandidates.begin();
 			}
 
-			if ( ctrlHeld && previousSelectedEntities.contains( *it ) ) selectionContext.DeselectEntity( *it );
-			else selectionContext.AddSelectedEntity( *it );
+			if ( ctrlHeld && previousSelectedEntities.contains( *it ) ) {
+				selectionContext.DeselectEntity( *it );
+			}
+			else {
+				selectionContext.AddSelectedEntity( static_cast<entt::entity>( entt::to_entity( *it ) ) );
+				selectionContext.AddSelectedEntity( *it );
+			}
 		}
 		else {
-			if ( ctrlHeld && previousSelectedEntities.contains( *selectionCandidates.begin() ) ) selectionContext.DeselectEntity( *selectionCandidates.begin() );
-			else selectionContext.AddSelectedEntity( *selectionCandidates.begin() );
+			if ( ctrlHeld && previousSelectedEntities.contains( *selectionCandidates.begin() ) ) {
+				selectionContext.DeselectEntity( *selectionCandidates.begin() );
+			}
+			else {
+				selectionContext.AddSelectedEntity( static_cast<entt::entity>( entt::to_entity( *selectionCandidates.begin() ) ) );
+				selectionContext.AddSelectedEntity( *selectionCandidates.begin() );
+			}
 		}
+		
 	}
 
 	selectionContext.mPreviousCandidates = selectionCandidates;
@@ -121,9 +134,10 @@ void Cyclone::UI::Tool::PathSelectionTool::OnUpdate( EViewportType inType, Cyclo
 		auto &transfromContext = inLevelInterface->GetSelectionTransformCtx();
 		transfromContext.OnPreUpdate();
 		for ( const entt::entity entity : selectionContext.GetSelectedEntities() ) {
-			const auto &[position, box] = registry.get<Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>( entity );
-
-			transfromContext.IncludeSelectedEntity( position, box );
+			if ( entt::to_version( entity ) == 0 ) {
+				const auto &[position, box] = registry.get<Cyclone::Core::Component::Position, Cyclone::Core::Component::BoundingBox>( entity );
+				transfromContext.IncludeSelectedEntity( position, box );
+			}
 		}
 	}
 }

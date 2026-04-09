@@ -217,23 +217,36 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			Vector4D rebasedEntityPosition = ( position - cameraP );
 
 			uint32_t entityColorU32;
-			if ( entity == selectedEntity ) {
+			if ( !editPathMode && entity == selectedEntity ) {
 				entityColorU32 = editPathMode ? colSelection : colSelected;
 			}
-			else if ( selection ) {
+			else if ( !editPathMode && selection ) {
 				entityColorU32 = colSelection;
 			}
 			else {
 				const auto &entityType = view.get<EntityType>( entity );
 				entityColorU32 = entityManager.GetEntityTypeColor( entityType );
 			}
-			DirectX::XMVECTOR entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
+			DirectX::XMVECTOR entityColorO = Cyclone::Util::ColorU32ToXMVECTOR( entityColorU32 );
+			DirectX::XMVECTOR entityColorV = entityColorO;
 
 			std::vector<VertexPositionColorID> linePoints( pathCache.mArray.size() );
 			//std::vector<DirectX::VertexPositionColor> linePointsL( ( pathData.mKnots.size() - 1 ) * 17 );
 			//std::vector<DirectX::VertexPositionColor> linePointsR( ( pathData.mKnots.size() - 1 ) * 17 );
 			for ( size_t s = 0; s < pathCache.mArray.size(); ++s ) {
 				using namespace DirectX;
+
+				if ( s % 17 == 0 && editPathMode && ( selected || selection ) ) {
+					if ( entt::to_version( selectedEntity ) == 1 + s / 17 ) {
+						entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 255, 0, 255 ) );
+					}
+					else if ( selectedEntities.contains( ( static_cast<entt::entity>( ( static_cast<uint32_t>( 1 + s / 17 ) << 20 ) + entt::to_entity( entity ) ) ) ) ) {
+						entityColorV = Cyclone::Util::ColorU32ToXMVECTOR( Cyclone::Util::ColorU32( 255, 128, 0, 255 ) );
+					}
+					else {
+						entityColorV = entityColorO;
+					}
+				}
 
 				DirectX::XMVECTOR P = ( rotmatD.TransformCoord3Unit( pathCache.mArray[s].mPosition ) + rebasedEntityPosition ).ToXMVECTOR();
 				DirectX::XMVECTOR PN = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mNormal, rotmatF ), 0.1f );
@@ -244,7 +257,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				DirectX::XMVECTOR C = B - PN;
 				DirectX::XMVECTOR D = A - PN;
 
-				uint16_t idx = editPathMode ? s : 0;
+				uint16_t idx = editPathMode ? s / 17 + 1 : 0;
 
 				linePoints[s] = { P, entityColorV, entity, idx };
 				mWireframePrimitiveBatch->DrawLine( { A, entityColorV, entity, idx }, { B, entityColorV, entity, idx } );
