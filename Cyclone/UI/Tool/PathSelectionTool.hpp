@@ -16,8 +16,6 @@ namespace Cyclone::UI::Tool
 		virtual ECategory	GetCategory() const override { return ECategory::EditPath; }
 		virtual ESelectMode	GetSelectMode() const override { return ESelectMode::SelectInCategory; }
 
-		virtual void		OnUpdate( EViewportType inType, Cyclone::Core::LevelInterface *inLevelInterface, const ViewportData &inViewportData ) override;
-
 	protected:
 	};
 }
