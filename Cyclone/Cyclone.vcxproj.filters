@@ -383,6 +383,9 @@
     <ClCompile Include="Rendering\Shader\WireframePrimitiveShader.cpp">
       <Filter>Rendering\Shader</Filter>
     </ClCompile>
+    <ClCompile Include="Core\EntityManagerRegistry.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Cyclone.rc">

@@ -4,9 +4,6 @@
 #include "Cyclone/Util/NonCopyable.hpp"
 #include "Cyclone/Util/HashMap.hpp"
 
-// STL
-#include <optional>
-
 namespace Cyclone::Core
 {
 	struct HistoryAction

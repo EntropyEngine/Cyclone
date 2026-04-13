@@ -218,6 +218,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\EntityManager.cpp" />
+    <ClCompile Include="Core\EntityManagerRegistry.cpp" />
     <ClCompile Include="Core\HistoryAction.cpp" />
     <ClCompile Include="Core\LevelInterface.cpp" />
     <ClCompile Include="Core\Level.cpp" />
