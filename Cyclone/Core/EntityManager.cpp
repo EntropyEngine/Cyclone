@@ -140,6 +140,8 @@ void Cyclone::Core::EntityManager::BeginAction()
 	assert( !mUndoStackLock && "Cannot begin action while stack lock is held!" );
 	mUndoStackLock = std::unique_lock( mUndoStackMutex );
 
+	assert( mUpdatedEntities.empty() && "Updated Entities queue must be empty!" );
+
 	if ( mUndoStackEpoch + 1 != mUndoStack.size() ) {
 		mUndoStack.erase( mUndoStack.begin() + mUndoStackEpoch + 1, mUndoStack.end() );
 		mUndoStack.shrink_to_fit();
@@ -151,6 +153,11 @@ void Cyclone::Core::EntityManager::BeginAction()
 void Cyclone::Core::EntityManager::EndAction( entt::registry &inRegistry )
 {
 	assert( mUndoStackLock && "Cannot end action with no stack lock held!" );
+
+	for ( entt::entity entity : mUpdatedEntities ) {
+		UpdateEntityInternal( entity, inRegistry );
+	}
+	mUpdatedEntities.clear();
 
 	ValidateSelection( inRegistry );
 	UpdateVisibilityTags( inRegistry );
@@ -280,6 +287,11 @@ entt::entity Cyclone::Core::EntityManager::CreateEntity( entt::id_type inType, e
 }
 
 void Cyclone::Core::EntityManager::UpdateEntity( entt::entity inEntity, entt::registry &inRegistry )
+{
+	mUpdatedEntities.insert( inEntity );
+}
+
+void Cyclone::Core::EntityManager::UpdateEntityInternal( entt::entity inEntity, entt::registry &inRegistry )
 {
 	assert( mUndoStackLock && "Can only update entities within Begin()/End()" );
 
