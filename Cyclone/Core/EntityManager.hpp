@@ -70,6 +70,14 @@ namespace Cyclone::Core
 
 		bool					IsSelectionModified() const;
 
+		template<typename T>
+		const T &				GetCanonicalComponent( entt::entity inEntity, const entt::registry &inRegistry ) const
+		{
+			size_t lastModifiedEpochIdx = inRegistry.get<Component::EpochNumber>( inEntity );
+			const entt::registry &lastModifiedEpochRegistry = mUndoStack[lastModifiedEpochIdx].mRegistry;
+			return lastModifiedEpochRegistry.get<T>( inEntity );
+		}
+
 	protected:
 		template<typename T>
 		void RegisterEntityClass();

@@ -53,9 +53,6 @@ namespace Cyclone::Core::Entity
 
 			localBounds.UpdateBoundingBox( entity, inRegistry );
 
-			pathSelection.AddSelectedKnot( 1 );
-			pathSelection.AddSelectedKnot( 2 );
-
 			return entity;
 		}
 

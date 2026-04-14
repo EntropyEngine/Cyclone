@@ -56,58 +56,22 @@ namespace Cyclone::Core::Component
 			Mirrored
 		};
 
-		static constexpr const char * kSegmentTypes[] = { "Custom", "HalfLoop", "FullLoop" };
+		static constexpr const char * kSegmentTypes[] = { "Custom", "Straight", "Curve", "HalfLoop", "FullLoop", "Child" };
 		enum class ESegmentType : uint8_t
 		{
 			Custom,
+			Straight,
+			Curve,
 			HalfLoop,
 			FullLoop,
 			Child
-		};
-
-		struct Segment
-		{
-			Cyclone::Math::Vector4D mP0;
-			Cyclone::Math::Vector4D mP1;
-			Cyclone::Math::Vector4D mP2;
-			Cyclone::Math::Vector4D mP3;
-
-			Cyclone::Math::Vector4D XM_CALLCONV GetPoint( double u ) const
-			{
-				const double u2 = u * u;
-				const double u3 = u2 * u;
-
-				const double iu = 1.0 - u;
-				const double iu2 = iu * iu;
-				const double iu3 = iu2 * iu;
-
-				const Cyclone::Math::Vector4D b0 = Cyclone::Math::Vector4D::sReplicate( iu3 );
-				const Cyclone::Math::Vector4D b1 = Cyclone::Math::Vector4D::sReplicate( 3.0 * u * iu2 );
-				const Cyclone::Math::Vector4D b2 = Cyclone::Math::Vector4D::sReplicate( 3.0 * u2 * iu );
-				const Cyclone::Math::Vector4D b3 = Cyclone::Math::Vector4D::sReplicate( u3 );
-
-				return mP0 * b0 + mP1 * b1 + mP2 * b2 + mP3 * b3;
-			}
-
-			Cyclone::Math::Vector4D XM_CALLCONV GetDerivative( double u ) const
-			{
-				const double u2 = u * u;
-
-				const double iu = 1.0 - u;
-				const double iu2 = iu * iu;
-
-				const Cyclone::Math::Vector4D b0 = Cyclone::Math::Vector4D::sReplicate( 3.0 * iu2 );
-				const Cyclone::Math::Vector4D b1 = Cyclone::Math::Vector4D::sReplicate( 6.0 * u * iu );
-				const Cyclone::Math::Vector4D b2 = Cyclone::Math::Vector4D::sReplicate( 3.0 * u2 );
-
-				return ( mP1 - mP0 ) * b0 + ( mP2 - mP1 ) * b1 + ( mP3 - mP2 ) * b2;
-			}
 		};
 
 		std::vector<Knot>			mKnots;
 		std::vector<Extrusion>		mExtrusions;
 		std::vector<uint8_t>		mExtrusionTypes;
 		std::vector<ETangentType>	mTangentType;
+		std::vector<ESegmentType>	mSegmentType;
 
 		void AddKnot()
 		{
@@ -123,6 +87,8 @@ namespace Cyclone::Core::Component
 				mExtrusions.emplace_back( mExtrusions[i].mNormal, mExtrusions[i].mBitangent );
 				mExtrusionTypes.push_back( EExtrusionType::Tilt );
 				mTangentType.push_back( ETangentType::Aligned );
+
+				mSegmentType.push_back( ESegmentType::Custom );
 			}
 		}
 
@@ -311,6 +277,9 @@ namespace Cyclone::Core::Component
 
 			for ( size_t c = 0; c < 4; ++c ) {
 				AddKnot();
+				mSegmentType[knot0 + c] = c == 0 ? ESegmentType::FullLoop : ESegmentType::Child;
+
+
 
 				mTangentType[knot0 + 1 + c] = ETangentType::Aligned;
 				mExtrusions[knot0 + 1 + c].mBitangent = mExtrusions[knot0].mBitangent;

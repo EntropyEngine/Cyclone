@@ -133,10 +133,12 @@ void Cyclone::UI::MainUI::Update( ID3D11DeviceContext3 *inDeviceContext, float i
 	{
 		bool isOpen = registry.all_of<Core::Component::EntityType>( entity );
 		ImGui::SetNextWindowSizeConstraints( { 480, 480 }, { FLT_MAX, FLT_MAX } );
-		if ( isOpen && ImGui::Begin( Cyclone::Util::PrefixString( "Entity: ", entity ), &isOpen, ImGuiWindowFlags_AlwaysVerticalScrollbar ) ) {
-			ObjectProperties().ShowWindow( inLevelInterface, entity );
+		if ( isOpen ) {
+			if ( ImGui::Begin( Cyclone::Util::PrefixString( "Entity: ", entity ), &isOpen, ImGuiWindowFlags_AlwaysVerticalScrollbar ) ) {
+				ObjectProperties().ShowWindow( inLevelInterface, entity );
+			}
+			ImGui::End();
 		}
-		if ( isOpen ) ImGui::End();
 		if ( !isOpen ) entityManager.CloseEntityProperties( entity );
 	}
 

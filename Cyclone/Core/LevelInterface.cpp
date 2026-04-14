@@ -35,6 +35,7 @@ void Cyclone::Core::LevelInterface::Initialize()
 
 	mEntityManager.EndAction( GetRegistry() );
 
+	/*
 	mEntityManager.BeginAction();
 
 #ifdef _DEBUG
@@ -49,7 +50,7 @@ void Cyclone::Core::LevelInterface::Initialize()
 		}
 	}
 	mEntityManager.EndAction( GetRegistry() );
-	
+	*/
 
 	mEntityManager.BeginAction();
 	auto i = mEntityManager.CreateEntity( "path_debug"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
