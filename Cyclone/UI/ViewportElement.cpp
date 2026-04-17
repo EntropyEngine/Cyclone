@@ -233,6 +233,8 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			DirectX::XMVECTOR entityColorV = entityColorO;
 
 			std::vector<VertexPositionColorID> linePoints( pathCache.mArray.size() );
+			std::vector<VertexPositionColorID> linePointsT( pathCache.mArray.size() );
+			std::vector<VertexPositionColorID> linePointsN( pathCache.mArray.size() );
 			//std::vector<DirectX::VertexPositionColor> linePointsL( ( pathData.mKnots.size() - 1 ) * 17 );
 			//std::vector<DirectX::VertexPositionColor> linePointsR( ( pathData.mKnots.size() - 1 ) * 17 );
 			std::vector<DirectX::XMVECTOR> lineColors( pathCache.mArray.size() / 17 + 1 );
@@ -265,24 +267,26 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				}
 
 				DirectX::XMVECTOR P = ( rotmatD.TransformCoord3Unit( pathCache.mArray[s].mPosition ) + rebasedEntityPosition ).ToXMVECTOR();
-				DirectX::XMVECTOR PN = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mNormal, rotmatF ), 0.1f );
-				DirectX::XMVECTOR PB = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mTangent, rotmatF ), 0.5f );
+				DirectX::XMVECTOR PN = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mNormal, rotmatF ), 1.0f );
+				DirectX::XMVECTOR PB = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mTangent, rotmatF ), 1.0f );
 
-				DirectX::XMVECTOR A = P - PB;
-				DirectX::XMVECTOR B = P + PB;
-				DirectX::XMVECTOR C = B - PN;
-				DirectX::XMVECTOR D = A - PN;
+				DirectX::XMVECTOR A = P + PB;
+				DirectX::XMVECTOR B = P + PN;
 
 				uint16_t idx = editPathMode ? ( s + 8 ) / 17 : 0;
 
 				linePoints[s] = { P, entityColorV, entity, idx };
-				mWireframePrimitiveBatch->DrawLine( { A, entityColorV, entity, idx }, { B, entityColorV, entity, idx } );
-				mWireframePrimitiveBatch->DrawLine( { B, entityColorV, entity, idx }, { C, entityColorV, entity, idx } );
-				mWireframePrimitiveBatch->DrawLine( { C, entityColorV, entity, idx }, { D, entityColorV, entity, idx } );
-				mWireframePrimitiveBatch->DrawLine( { D, entityColorV, entity, idx }, { A, entityColorV, entity, idx } );
+				linePointsT[s] = { A, entityColorV, entity, idx };
+				linePointsN[s] = { B, entityColorV, entity, idx };
+				//mWireframePrimitiveBatch->DrawLine( { A, entityColorV, entity, idx }, { B, entityColorV, entity, idx } );
+				//mWireframePrimitiveBatch->DrawLine( { B, entityColorV, entity, idx }, { C, entityColorV, entity, idx } );
+				//mWireframePrimitiveBatch->DrawLine( { C, entityColorV, entity, idx }, { D, entityColorV, entity, idx } );
+				//mWireframePrimitiveBatch->DrawLine( { D, entityColorV, entity, idx }, { A, entityColorV, entity, idx } );
 			}
 
 			mWireframePrimitiveBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePoints.data(), linePoints.size() );
+			mWireframePrimitiveBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePointsT.data(), linePointsT.size() );
+			mWireframePrimitiveBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePointsN.data(), linePointsN.size() );
 		};
 
 		if ( !selected ) {

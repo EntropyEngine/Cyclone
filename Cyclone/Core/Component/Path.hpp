@@ -3,6 +3,8 @@
 #include "Cyclone/Math/Vector.hpp"
 #include "Cyclone/Math/Matrix.hpp"
 
+#include <format>
+
 namespace Cyclone::Core::Component
 {
 	using PathTag = entt::tag<"path_tag"_hs>;
@@ -220,33 +222,10 @@ namespace Cyclone::Core::Component
 				C[2] = C[3] - delta * T1;
 			};
 
-			Vector4D C0[4] = {
-				{ 0.000000, 0.000000, -1.000000 },
-				{ 0.523599, 0.000000, -1.000000 },
-				{ 1.000000, 0.053887, -0.523599 },
-				{ 1.000000, 0.146447, 0.000000 },
-			};
-
-			Vector4D C1[4] = {
-				{ 1.000000, 0.146447, 0.000000 },
-				{ 1.000000, 0.239007, 0.523599 },
-				{ 0.523599, 0.369100, 1.000000 },
-				{ 0.000000, 0.500000, 1.000000 },
-			};
-
-			Vector4D C2[4] = {
-				{ 0.000000, 0.500000, 1.000000 },
-				{ -0.523599, 0.630900, 1.000000 },
-				{ -1.000000, 0.760993, 0.523599 },
-				{ -1.000000, 0.853553, 0.000000 },
-			};
-
-			Vector4D C3[4] = {
-				{ -1.000000, 0.853553, 0.000000 },
-				{ -1.000000, 0.946113, -0.523599 },
-				{ -0.523599, 1.000000, -1.000000 },
-				{ 0.000000, 1.000000, -1.000000 },
-			};
+			Vector4D C0[4] = { Vector4D{ nullptr }, Vector4D{ nullptr }, Vector4D{ nullptr }, Vector4D{ nullptr } };
+			Vector4D C1[4] = { Vector4D{ nullptr }, Vector4D{ nullptr }, Vector4D{ nullptr }, Vector4D{ nullptr } };
+			Vector4D C2[4] = { Vector4D{ nullptr }, Vector4D{ nullptr }, Vector4D{ nullptr }, Vector4D{ nullptr } };
+			Vector4D C3[4] = { Vector4D{ nullptr }, Vector4D{ nullptr }, Vector4D{ nullptr }, Vector4D{ nullptr } };
 
 			c_bezier( 0.0 / 4, 1.0 / 4, C0 );
 			c_bezier( 1.0 / 4, 2.0 / 4, C1 );
@@ -298,6 +277,111 @@ namespace Cyclone::Core::Component
 			}
 		}
 
+		static Cyclone::Math::Vector4D XM_CALLCONV sInterpolate( const Cyclone::Math::Vector4D inP0, const Cyclone::Math::Vector4D inP3, DirectX::FXMVECTOR inH1, DirectX::FXMVECTOR inH2, double inU )
+		{
+			using Cyclone::Math::Vector4D;
+
+			const Vector4D P1 = inP0 + Vector4D::sFromXMVECTOR( inH1 );
+			const Vector4D P2 = inP3 + Vector4D::sFromXMVECTOR( inH2 );
+
+			const double u2 = inU * inU;
+			const double u3 = u2 * inU;
+
+			const double iu = 1.0 - inU;
+			const double iu2 = iu * iu;
+			const double iu3 = iu2 * iu;
+
+			const Vector4D b0 = Vector4D::sReplicate( iu3 );
+			const Vector4D b1 = Vector4D::sReplicate( 3 * inU * iu2 );
+			const Vector4D b2 = Vector4D::sReplicate( 3 * u2 * iu );
+			const Vector4D b3 = Vector4D::sReplicate( u3 );
+
+			Vector4D result = inP0 * b0;
+			result = Vector4D::sFusedMultiplyAdd( P1, b1, result );
+			result = Vector4D::sFusedMultiplyAdd( P2, b2, result );
+			result = Vector4D::sFusedMultiplyAdd( inP3, b3, result );
+
+			return result;
+		}
+
+		Cyclone::Math::Vector4D XM_CALLCONV Interpolate( size_t inRoot, double inU ) const
+		{
+			return sInterpolate( mKnots[inRoot].mPoint, mKnots[inRoot + 1].mPoint, mKnots[inRoot].mOutVec, mKnots[inRoot + 1].mInVec, inU );
+		}
+
+		Cyclone::Math::Vector4D XM_CALLCONV Differentiate( size_t inRoot, double inU ) const
+		{
+			using Cyclone::Math::Vector4D;
+
+			const size_t knot0 = inRoot;
+			const size_t knot1 = knot0 + 1;
+
+			const double u2 = inU * inU;
+
+			const double iu = 1.0 - inU;
+			const double iu2 = iu * iu;
+
+			const Vector4D b0 = Vector4D::sReplicate( 3 * iu2 );
+			const Vector4D b1 = Vector4D::sReplicate( 6 * inU * iu );
+			const Vector4D b2 = Vector4D::sReplicate( 3 * u2 );
+
+			const Vector4D outVec = Vector4D::sFromXMVECTOR( mKnots[knot0].mOutVec );
+			const Vector4D inVec = Vector4D::sFromXMVECTOR( mKnots[knot1].mInVec );
+
+			Vector4D result = outVec * b0;
+			result = Vector4D::sFusedMultiplyAdd( mKnots[knot1].mPoint - mKnots[knot0].mPoint + inVec - outVec, b1, result );
+			result = Vector4D::sFusedMultiplyAdd( -inVec, b2, result );
+
+			return result;
+		}
+
+		Cyclone::Math::Vector4D XM_CALLCONV Differentiate2( size_t inRoot, double inU ) const
+		{
+			using Cyclone::Math::Vector4D;
+
+			const size_t knot0 = inRoot;
+			const size_t knot1 = knot0 + 1;
+
+			const Vector4D outVec = Vector4D::sFromXMVECTOR( mKnots[knot0].mOutVec );
+			const Vector4D inVec = Vector4D::sFromXMVECTOR( mKnots[knot1].mInVec );
+
+			const Vector4D PD = mKnots[knot1].mPoint - mKnots[knot0].mPoint;
+			const Vector4D n2 = Vector4D::sReplicate( -2.0 );
+
+			const Vector4D C0 = Vector4D::sFusedMultiplyAdd( outVec, n2, inVec + PD );
+			const Vector4D C1 = Vector4D::sFusedMultiplyAdd( inVec, n2, outVec - PD );
+
+			const Vector4D b0 = Vector4D::sReplicate( 6 * ( 1 - inU ) );
+			const Vector4D b1 = Vector4D::sReplicate( 6 * inU );
+
+			Vector4D result = C0 * b0;
+			result = Vector4D::sFusedMultiplyAdd( C1, b1, result);
+
+			return result;
+		}
+
+		Cyclone::Math::Vector4D XM_CALLCONV ComputeKappaVector( size_t inRoot, double inU ) const
+		{
+			using Cyclone::Math::Vector4D;
+
+			const Vector4D rPrime = Differentiate( inRoot, inU );
+			const Vector4D rDPrime = Differentiate2( inRoot, inU );
+			const Vector4D tHat = rPrime.GetNorm3();
+
+			return ( rDPrime - Vector4D::sReplicate( rDPrime.Dot3( tHat ) ) * tHat ) / Vector4D::sReplicate( rPrime.Dot3() );
+		}
+
+		static double XM_CALLCONV sComputeScale( Cyclone::Math::Vector4D inKappa, Cyclone::Math::Vector4D inDisplacement )
+		{
+			const Cyclone::Math::Vector4D direction = inDisplacement.GetNorm3();
+			const double distance = inDisplacement.GetLength3();
+
+			const double kSigned = -inKappa.Dot3( direction );
+
+			return 1.0 + distance * kSigned;
+		}
+
+	#if 0
 		Cyclone::Math::Vector4D XM_CALLCONV Interpolate( size_t root, float u ) const
 		{
 			const size_t knot0 = root;
@@ -328,6 +412,35 @@ namespace Cyclone::Core::Component
 			result = DirectX::XMVectorMultiplyAdd( P3, b3, result );
 
 			return Cyclone::Math::Vector4D::sFromXMVECTOR( result ) + mKnots[knot0].mPoint;
+		}
+
+		Cyclone::Math::Vector4D XM_CALLCONV sInterpolate( Cyclone::Math::Vector4D inP0, Cyclone::Math::Vector4D inP1, DirectX::XMVECTOR inH0, DirectX::XMVECTOR inH1, float u ) const
+		{
+			using namespace DirectX;
+
+			DirectX::XMVECTOR P0 = g_XMZero;
+			DirectX::XMVECTOR P1 = inH0;
+			DirectX::XMVECTOR P3 = ( inP1 - inP0 ).ToXMVECTOR();
+			DirectX::XMVECTOR P2 = P3 + inH1;
+
+			const float u2 = u * u;
+			const float u3 = u2 * u;
+
+			const float iu = 1.0f - u;
+			const float iu2 = iu * iu;
+			const float iu3 = iu2 * iu;
+
+			DirectX::XMVECTOR b0 = DirectX::XMVectorReplicate( iu3 );
+			DirectX::XMVECTOR b1 = DirectX::XMVectorReplicate( 3 * u * iu2 );
+			DirectX::XMVECTOR b2 = DirectX::XMVectorReplicate( 3 * u2 * iu );
+			DirectX::XMVECTOR b3 = DirectX::XMVectorReplicate( u3 );
+
+			DirectX::XMVECTOR result = DirectX::XMVectorMultiply( P0, b0 );
+			result = DirectX::XMVectorMultiplyAdd( P1, b1, result );
+			result = DirectX::XMVectorMultiplyAdd( P2, b2, result );
+			result = DirectX::XMVectorMultiplyAdd( P3, b3, result );
+
+			return Cyclone::Math::Vector4D::sFromXMVECTOR( result ) + inP0;
 		}
 
 		DirectX::XMVECTOR XM_CALLCONV Differentiate( size_t root, float u ) const
@@ -375,97 +488,165 @@ namespace Cyclone::Core::Component
 			return result;
 		}
 
-		DirectX::XMVECTOR XM_CALLCONV InterpolateBitangent( size_t root, float u ) const
+		DirectX::XMVECTOR XM_CALLCONV LerpNormal( size_t root, float u ) const
+		{
+			return DirectX::XMVectorLerp( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal, u );
+		}
+
+		DirectX::XMVECTOR XM_CALLCONV LerpBitangent( size_t root, float u ) const
 		{
 			return DirectX::XMVectorLerp( mExtrusions[root].mBitangent, mExtrusions[root + 1].mBitangent, u );
 		}
 
-		DirectX::XMVECTOR XM_CALLCONV InterpolateNormal( size_t root, float u ) const
+		DirectX::XMVECTOR XM_CALLCONV SLerpNormal( size_t root, float u ) const
 		{
-			using namespace DirectX;
+			double acostheta = DirectX::XMVectorGetX( DirectX::XMVector3Dot( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal ) );
 
-			//DirectX::XMVECTOR N0 = mExtrusions[root].mNormal;
-			//DirectX::XMVECTOR N1 = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal, 1.0f / 3.0f ) );
-			//DirectX::XMVECTOR N2 = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal, 2.0f / 3.0f ) );
-			//DirectX::XMVECTOR N3 = mExtrusions[root + 1].mNormal;
-			//
-			//DirectX::XMVECTOR A = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( N0, N1, u ) );
-			//DirectX::XMVECTOR B = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( N1, N2, u ) );
-			//DirectX::XMVECTOR C = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( N2, N3, u ) );
-			//
-			//DirectX::XMVECTOR D = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( A, B, u ) );
-			//DirectX::XMVECTOR E = DirectX::XMVector3Normalize( DirectX::XMVectorLerp( B, C, u ) );
+			if ( acostheta > 1.0 - 1e-3 ) return LerpNormal( root, u );
 
+			double theta = std::acos( acostheta );
+			double sintheta = std::sin( theta );
 
-			/*
-			return mExtrusions[root].mNormal * std::cos( u * DirectX::XM_PIDIV2 ) + mExtrusions[root + 1].mNormal * std::sin( u * DirectX::XM_PIDIV2 );
-			*/
+			float coeff1 = static_cast<float>( std::sin( ( 1.0 - u ) * theta ) / sintheta );
+			float coeff2 = static_cast<float>( std::sin( u * theta ) / sintheta );
 
-			return DirectX::XMVectorLerp( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal, u );
-
-			/*
-			DirectX::XMVECTOR quat1 = DirectX::XMVector3Cross( mExtrusions[root + 1].mNormal, mExtrusions[root].mNormal );
-			quat1 = DirectX::XMVectorSetW( quat1, DirectX::XMVectorGetX( DirectX::XMVector3Length( mExtrusions[root].mNormal ) * DirectX::XMVector3Length( mExtrusions[root + 1].mNormal ) * DirectX::XMVector3Dot( mExtrusions[root].mNormal, mExtrusions[root + 1].mNormal ) ) );
-			quat1 = DirectX::XMQuaternionNormalize( quat1 );
-
-			DirectX::XMVECTOR quats = DirectX::XMQuaternionNormalize( DirectX::XMQuaternionSlerp( DirectX::XMQuaternionIdentity(), quat1, -u / 2 ) );
-
-			return DirectX::XMVector3Rotate( mExtrusions[root].mNormal, quats );
-			*/
+			return DirectX::XMVectorAdd( DirectX::XMVectorScale( mExtrusions[root].mNormal, coeff1 ), DirectX::XMVectorScale( mExtrusions[root + 1].mNormal, coeff2 ) );
 		}
+
+		DirectX::XMVECTOR XM_CALLCONV SLerpBitangent( size_t root, float u ) const
+		{
+			double acostheta = DirectX::XMVectorGetX( DirectX::XMVector3Dot( mExtrusions[root].mBitangent, mExtrusions[root + 1].mBitangent ) );
+
+			if ( acostheta > 1.0 - 1e-3 ) return LerpBitangent( root, u );
+
+			double theta = std::acos( acostheta );
+			double sintheta = std::sin( theta );
+
+			float coeff1 = static_cast<float>( std::sin( ( 1.0 - u ) * theta ) / sintheta );
+			float coeff2 = static_cast<float>( std::sin( u * theta ) / sintheta );
+
+			return DirectX::XMVectorAdd( DirectX::XMVectorScale( mExtrusions[root].mBitangent, coeff1 ), DirectX::XMVectorScale( mExtrusions[root + 1].mBitangent, coeff2 ) );
+		}
+
+		DirectX::XMVECTOR XM_CALLCONV CLerpNormal( size_t root, float u ) const
+		{
+			return SLerpNormal( root, u * u * ( 3 - 2 * u ) );
+		}
+
+		DirectX::XMVECTOR XM_CALLCONV CLerpBitangent( size_t root, float u ) const
+		{
+			return SLerpBitangent( root, u * u * ( 3 - 2 * u ) );
+		}
+
+		
 
 		Cyclone::Math::Vector4D XM_CALLCONV InterpolateNormalBitangent( size_t root, float u, DirectX::XMVECTOR &outNormal, DirectX::XMVECTOR &outBitangent ) const
 		{
 			using Cyclone::Math::Vector4D;
 
 			Vector4D p = Interpolate( root, u );
+			
+			//Vector4D t = Vector4D::sFromXMVECTOR( Differentiate( root, u ) ).GetNorm3();
+			//
+			//Vector4D normalExpl = Vector4D::sFromXMVECTOR( LerpNormal( root, u ) ).GetNorm3(); // NormalExplict
+			//Vector4D bitangentExpl = Vector4D::sFromXMVECTOR( LerpBitangent( root, u ) ).GetNorm3(); // BitangentExplicit
+			//
+			//Vector4D normalImpl = Vector4D::sCross3( t, bitangentExpl ).GetNorm3(); // NormalTilt
+			//Vector4D bitangentImpl = -Vector4D::sCross3( t, normalExpl ).GetNorm3(); // BitangentTwist
+			//
+			//if ( std::abs( t.Dot3( normalExpl ) ) > 1.0f - 0.1e-7 ) {
+			//	bitangentImpl = bitangentExpl;
+			//}
+			//
+			//if ( std::abs( t.Dot3( bitangentExpl ) ) > 1.0f - 0.1e-7 ) {
+			//	normalImpl = normalExpl;
+			//}
+			//
+			//Vector4D normalImpl2 = Vector4D::sCross3( t, bitangentImpl ).GetNorm3(); // NormalTwist
+			//Vector4D bitangentImpl2 = -Vector4D::sCross3( t, normalImpl ).GetNorm3(); // BitangentTilt
+			//
+			////assert( std::abs( normalExpl.Dot3( bitangentExpl ) ) < 0.1e-7 );
+			////assert( std::abs( normalImpl.Dot3( bitangentImpl2 ) ) < 0.1e-7 );
+			////assert( std::abs( normalImpl2.Dot3( bitangentImpl ) ) < 0.1e-7 );
+			//
+			//Vector4D normal{ nullptr };
+			//Vector4D bitangent{ nullptr };
+			//
+			//switch ( mExtrusionTypes[root] & NORMAL_MASK ) {
+			//	case NormalExplicit: normal = normalExpl; break;
+			//	case NormalTwist:  normal = normalImpl2; break;
+			//	case NormalTilt:	 normal = normalImpl; break;
+			//	default:
+			//		assert( false );
+			//		__assume( false );
+			//}
+			//
+			//switch ( mExtrusionTypes[root] & BITANGENT_MASK ) {
+			//	case BitangentExplicit:	bitangent = bitangentExpl; break;
+			//	case BitangentTwist:	bitangent = bitangentImpl; break;
+			//	case BitangentTilt:		bitangent = bitangentImpl2; break;
+			//	default:
+			//		assert( false );
+			//		__assume( false );
+			//}
+			//
+			//outNormal = normal.ToXMVECTOR();
+			//outBitangent = bitangent.ToXMVECTOR();
+			
 
-			Vector4D t = Vector4D::sFromXMVECTOR( Differentiate( root, u ) ).GetNorm3();
+			double distance = -0.5;
 
-			Vector4D normalExpl = Vector4D::sFromXMVECTOR( InterpolateNormal( root, u ) ).GetNorm3(); // NormalExplict
-			Vector4D bitangentExpl = Vector4D::sFromXMVECTOR( InterpolateBitangent( root, u ) ).GetNorm3(); // BitangentExplicit
+			Vector4D tPrime0 = Vector4D::sFromXMVECTOR( Differentiate( root, 0.0f ) );
+			Vector4D tDPrime0 = Vector4D::sFromXMVECTOR( Differentiate2( root, 0.0f ) );
+			Vector4D tHat0 = tPrime0.GetNorm3();
 
-			Vector4D normalImpl = Vector4D::sCross3( t, bitangentExpl ).GetNorm3(); // NormalTilt
-			Vector4D bitangentImpl = -Vector4D::sCross3( t, normalExpl ).GetNorm3(); // BitangentTwist
+			Vector4D tPrime1 = Vector4D::sFromXMVECTOR( Differentiate( root, 1.0f ) );
+			Vector4D tDPrime1 = Vector4D::sFromXMVECTOR( Differentiate2( root, 1.0f ) );
+			Vector4D tHat1 = tPrime1.GetNorm3();
 
-			if ( std::abs( t.Dot3( normalExpl ) ) > 1.0f - 0.1e-7 ) {
-				bitangentImpl = bitangentExpl;
-			}
+			Vector4D kVec0 = ( tDPrime0 - Vector4D::sReplicate( tDPrime0.Dot3( tHat0 ) ) * tHat0 ) / Vector4D::sReplicate( tPrime0.Dot3() );
+			Vector4D kVec1 = ( tDPrime1 - Vector4D::sReplicate( tDPrime1.Dot3( tHat1 ) ) * tHat1 ) / Vector4D::sReplicate( tPrime1.Dot3() );
 
-			if ( std::abs( t.Dot3( bitangentExpl ) ) > 1.0f - 0.1e-7 ) {
-				normalImpl = normalExpl;
-			}
+			double kSigned0B = kVec0.Dot3( -Vector4D::sFromXMVECTOR( mExtrusions[root].mBitangent ) );
+			double scale0B = 1.0 + distance * kSigned0B;
 
-			Vector4D normalImpl2 = Vector4D::sCross3( t, bitangentImpl ).GetNorm3(); // NormalTwist
-			Vector4D bitangentImpl2 = -Vector4D::sCross3( t, normalImpl ).GetNorm3(); // BitangentTilt
+			double kSigned1B = kVec1.Dot3( -Vector4D::sFromXMVECTOR( mExtrusions[root + 1].mBitangent ) );
+			double scale1B = 1.0 + distance * kSigned1B;
 
-			//assert( std::abs( normalExpl.Dot3( bitangentExpl ) ) < 0.1e-7 );
-			assert( std::abs( normalImpl.Dot3( bitangentImpl2 ) ) < 0.1e-7 );
-			assert( std::abs( normalImpl2.Dot3( bitangentImpl ) ) < 0.1e-7 );
+			Vector4D bitangent = sInterpolate(
+				mKnots[root].mPoint + Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( mExtrusions[root].mBitangent, distance ) ),
+				mKnots[root + 1].mPoint + Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( mExtrusions[root + 1].mBitangent, distance ) ),
+				DirectX::XMVectorScale( mKnots[root].mOutVec, scale0B ),
+				DirectX::XMVectorScale( mKnots[root + 1].mInVec, scale1B ),
+				u
+			);
 
-			Vector4D normal{ nullptr };
-			Vector4D bitangent{ nullptr };
+			double kSigned0N = kVec0.Dot3( -Vector4D::sFromXMVECTOR( mExtrusions[root].mNormal ) );
+			double scale0N = 1.0 + distance * kSigned0N;
 
-			switch ( mExtrusionTypes[root] & NORMAL_MASK ) {
-				case NormalExplicit: normal = normalExpl; break;
-				case NormalTwist:  normal = normalImpl2; break;
-				case NormalTilt:	 normal = normalImpl; break;
-				default:
-					assert( false );
-					__assume( false );
-			}
+			double kSigned1N = kVec1.Dot3( -Vector4D::sFromXMVECTOR( mExtrusions[root + 1].mNormal ) );
+			double scale1N = 1.0 + distance * kSigned1N;
 
-			switch ( mExtrusionTypes[root] & BITANGENT_MASK ) {
-				case BitangentExplicit:	bitangent = bitangentExpl; break;
-				case BitangentTwist:	bitangent = bitangentImpl; break;
-				case BitangentTilt:		bitangent = bitangentImpl2; break;
-				default:
-					assert( false );
-					__assume( false );
-			}
+			Vector4D normal = sInterpolate(
+				mKnots[root].mPoint + Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( mExtrusions[root].mNormal, distance ) ),
+				mKnots[root + 1].mPoint + Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( mExtrusions[root + 1].mNormal, distance ) ),
+				DirectX::XMVectorScale( mKnots[root].mOutVec, scale0N ),
+				DirectX::XMVectorScale( mKnots[root + 1].mInVec, scale1N ),
+				u
+			);
 
-			outNormal = normal.ToXMVECTOR();
-			outBitangent = bitangent.ToXMVECTOR();
+			outBitangent = ( bitangent - p ).ToXMVECTOR();
+			outNormal = ( normal - p ).ToXMVECTOR();
+
+			//OutputDebugStringA( std::format( "scale: N0={:.2f} N1={:.2f} B0={:.2f} B1={:.2f}\n", scale0N, scale1N, scale0B, scale1B ).c_str() );
+			OutputDebugStringA( std::format(
+				"root={}, u={:.2f}, dot: T.N={:.2f} T.B={:.2f} N.B={:.2f}\n",
+				root,
+				u,
+				DirectX::XMVectorGetX( DirectX::XMVector3Dot( DirectX::XMVector3Normalize( Differentiate( root, u ) ), DirectX::XMVector3Normalize( outNormal ) ) ),
+				DirectX::XMVectorGetX( DirectX::XMVector3Dot( DirectX::XMVector3Normalize( Differentiate( root, u ) ), DirectX::XMVector3Normalize( outBitangent ) ) ),
+				DirectX::XMVectorGetX( DirectX::XMVector3Dot( DirectX::XMVector3Normalize( outNormal ), DirectX::XMVector3Normalize( outBitangent ) ) )
+			).c_str() );
 
 			return p;
 		}
@@ -478,6 +659,7 @@ namespace Cyclone::Core::Component
 
 			return p + Cyclone::Math::Vector4D::sFromXMVECTOR( DirectX::XMVectorAdd( DirectX::XMVectorScale( bitangent, v ), DirectX::XMVectorScale( normal, w ) ) );
 		}
+	#endif
 
 		void UpdateTangentType( size_t root, bool priorityOutVec )
 		{
@@ -585,6 +767,8 @@ namespace Cyclone::Core::Component
 
 		void Rebuild( const entt::registry &inRegistry, entt::entity inEntity )
 		{
+			using Cyclone::Math::Vector4D;
+
 			const PathData &pathData = inRegistry.get<PathData>( inEntity );
 
 			const size_t subdivisionScale = 16;
@@ -594,12 +778,44 @@ namespace Cyclone::Core::Component
 			mArray.reserve( ( pathData.mKnots.size() - 1 ) * ( subdivisionScale + 1 ) );
 
 			for ( size_t i = 0; i + 1 < pathData.mKnots.size(); ++i ) {
-				for ( size_t u = 0; u <= subdivisionScale; ++u ) {
-					DirectX::XMVECTOR normal;
-					DirectX::XMVECTOR bitangent;
-					Cyclone::Math::Vector4D p = pathData.InterpolateNormalBitangent( i, static_cast<double>( u ) / subdivisionScale, normal, bitangent );
 
-					mArray.emplace_back( p, normal, bitangent );
+				const Vector4D dispB0 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i].mBitangent, 0.5f ) );
+				const Vector4D dispB1 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i + 1].mBitangent, 0.5f ) );
+
+				const Vector4D dispN0 = -dispB0; // Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mNormal );
+				const Vector4D dispN1 = -dispB1; // Vector4D::sFromXMVECTOR( pathData.mExtrusions[i + 1].mNormal );
+
+				const Vector4D kVec0 = pathData.ComputeKappaVector( i, 0.0 );
+				const Vector4D kVec1 = pathData.ComputeKappaVector( i, 1.0 );
+
+				const double scaleN0 = PathData::sComputeScale( kVec0, dispN0 );
+				const double scaleN1 = PathData::sComputeScale( kVec1, dispN1 );
+
+				const double scaleB0 = PathData::sComputeScale( kVec0, dispB0 );
+				const double scaleB1 = PathData::sComputeScale( kVec1, dispB1 );
+
+				for ( size_t t = 0; t <= subdivisionScale; ++t ) {
+					double u = static_cast<double>( t ) / subdivisionScale;
+
+					Vector4D normal = PathData::sInterpolate(
+						pathData.mKnots[i].mPoint + dispN0,
+						pathData.mKnots[i + 1].mPoint + dispN1,
+						DirectX::XMVectorScale( pathData.mKnots[i].mOutVec, scaleN0 ),
+						DirectX::XMVectorScale( pathData.mKnots[i + 1].mInVec, scaleN1 ),
+						u
+					);
+
+					Vector4D bitangent = PathData::sInterpolate(
+						pathData.mKnots[i].mPoint + dispB0,
+						pathData.mKnots[i + 1].mPoint + dispB1,
+						DirectX::XMVectorScale( pathData.mKnots[i].mOutVec, scaleB0 ),
+						DirectX::XMVectorScale( pathData.mKnots[i + 1].mInVec, scaleB1 ),
+						u
+					);
+
+					Vector4D p = pathData.Interpolate( i, u );
+
+					mArray.emplace_back( p, ( normal - p ).ToXMVECTOR(), ( bitangent - p ).ToXMVECTOR() );
 				}
 			}
 		}

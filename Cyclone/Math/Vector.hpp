@@ -131,12 +131,12 @@ namespace Cyclone::Math
 			return HSum4( _mm256_mul_pd( mVector, xyz ) );
 		}
 
-		__m128d Dot4V() const
+		__m128d XM_CALLCONV Dot4V() const
 		{
 			return HSum4( _mm256_mul_pd( mVector, mVector ) );
 		}
 
-		__m128d Dot3V() const
+		__m128d XM_CALLCONV Dot3V() const
 		{
 			__m256d xyz = _mm256_blend_pd( mVector, _mm256_setzero_pd(), 0b1000 );
 			return HSum4( _mm256_mul_pd( xyz, xyz ) );
@@ -173,6 +173,8 @@ namespace Cyclone::Math
 
 			return vResult;
 		}
+
+		static Vector4D XM_CALLCONV sFusedMultiplyAdd( Vector4D inLhs, Vector4D inRhs, Vector4D inV ) { return _mm256_fmadd_pd( inLhs, inRhs, inV ); }
 
 		/// @name Cast Operators
 		/// @{
