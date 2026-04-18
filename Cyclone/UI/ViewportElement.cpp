@@ -284,6 +284,10 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				linePointsR[s] = { B, entityColorV, entity, idx };
 				linePointsLU[s] = { C, entityColorV, entity, idx };
 				linePointsRU[s] = { D, entityColorV, entity, idx };
+
+				mWireframePrimitiveBatch->DrawLine( linePointsL[s], linePointsR[s] );
+				mWireframePrimitiveBatch->DrawLine( linePointsL[s], linePointsLU[s] );
+				mWireframePrimitiveBatch->DrawLine( linePointsR[s], linePointsRU[s] );
 			}
 
 			mWireframePrimitiveBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePoints.data(), linePoints.size() );

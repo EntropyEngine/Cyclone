@@ -847,8 +847,8 @@ namespace Cyclone::Core::Component
 					const Vector4D dispB0 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i].mBitangent, 0.5f ) );
 					const Vector4D dispB1 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i + 1].mBitangent, 0.5f ) );
 
-					const Vector4D dispN0 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i].mNormal, -0.25f ) );
-					const Vector4D dispN1 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i + 1].mNormal, -0.25f ) );
+					const Vector4D dispN0 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i].mNormal, -0.1f ) );
+					const Vector4D dispN1 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i + 1].mNormal, -0.1f ) );
 
 					const Vector4D kVec0 = pathData.ComputeKappaVector( i, 0.0 );
 					const Vector4D kVec1 = pathData.ComputeKappaVector( i, 1.0 );
@@ -903,6 +903,12 @@ namespace Cyclone::Core::Component
 						Vector4D p = pathData.Interpolate( i, u );
 
 						mArray.emplace_back( p, ( left - p ).ToXMVECTOR(), ( right - p ).ToXMVECTOR(), ( leftU - p ).ToXMVECTOR(), ( rightU - p ).ToXMVECTOR() );
+
+						//float ldlu = std::abs( DirectX::XMVectorGetX( DirectX::XMVector3Dot( DirectX::XMVector3Normalize( mArray.back().mDeltaL ), DirectX::XMVector3Normalize( DirectX::XMVectorSubtract( mArray.back().mDeltaL, mArray.back().mDeltaLU ) ) ) ) );
+						//float rdru = std::abs( DirectX::XMVectorGetX( DirectX::XMVector3Dot( DirectX::XMVector3Normalize( mArray.back().mDeltaR ), DirectX::XMVector3Normalize( DirectX::XMVectorSubtract( mArray.back().mDeltaR, mArray.back().mDeltaRU ) ) ) ) );
+						//
+						//assert( ldlu < 1e-2f );
+						//assert( rdru < 1e-2f );
 					}
 				}
 				else {
