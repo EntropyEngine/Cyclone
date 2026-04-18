@@ -48,6 +48,10 @@ namespace Cyclone::Core::Entity
 			pathData.AddKnot();
 			pathData.AddKnot();
 			pathData.AddFullLoop( DirectX::XM_2PI, 2.0, 2.0 );
+			pathData.AddKnot();
+			pathData.AddFullLoop( DirectX::XM_2PI, 0.0, 1.5 );
+			pathData.AddKnot();
+			pathData.AddFullLoop( DirectX::XM_2PI, 0.0, -2.0 );
 
 			pathData.ValidatePath();
 

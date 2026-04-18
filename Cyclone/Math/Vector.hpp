@@ -175,6 +175,7 @@ namespace Cyclone::Math
 		}
 
 		static Vector4D XM_CALLCONV sFusedMultiplyAdd( Vector4D inLhs, Vector4D inRhs, Vector4D inV ) { return _mm256_fmadd_pd( inLhs, inRhs, inV ); }
+		static Vector4D XM_CALLCONV sFusedNegativeMultiplyAdd( Vector4D inLhs, Vector4D inRhs, Vector4D inV ) { return _mm256_fnmadd_pd( inLhs, inRhs, inV ); }
 
 		/// @name Cast Operators
 		/// @{

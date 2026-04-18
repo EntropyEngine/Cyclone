@@ -360,6 +360,24 @@ namespace Cyclone::Core::Component
 			return result;
 		}
 
+		Cyclone::Math::Vector4D XM_CALLCONV Differentiate3( size_t inRoot ) const
+		{
+			using Cyclone::Math::Vector4D;
+
+			const size_t knot0 = inRoot;
+			const size_t knot1 = knot0 + 1;
+
+			const Vector4D d12 = Vector4D::sReplicate( 12.0 );
+			const Vector4D d18 = Vector4D::sReplicate( 18.0 );
+
+			Vector4D result = mKnots[knot0].mPoint * d12;
+			result = Vector4D::sFusedMultiplyAdd( Vector4D::sFromXMVECTOR( mKnots[knot0].mOutVec ), d18, result );
+			result = Vector4D::sFusedNegativeMultiplyAdd( Vector4D::sFromXMVECTOR( mKnots[knot1].mInVec ), d18, result );
+			result = Vector4D::sFusedNegativeMultiplyAdd( mKnots[knot1].mPoint, d12, result );
+
+			return result;
+		}
+
 		Cyclone::Math::Vector4D XM_CALLCONV ComputeKappaVector( size_t inRoot, double inU ) const
 		{
 			using Cyclone::Math::Vector4D;
@@ -379,6 +397,50 @@ namespace Cyclone::Core::Component
 			const double kSigned = -inKappa.Dot3( direction );
 
 			return 1.0 + distance * kSigned;
+		}
+
+		static void XM_CALLCONV sComputeKappaTauCoeffs( const Cyclone::Math::Vector4D inR1, const Cyclone::Math::Vector4D inR2, const Cyclone::Math::Vector4D inR3, double &outKappa, double &outTau )
+		{
+			using Cyclone::Math::Vector4D;
+
+			const Vector4D cross12 = Vector4D::sCross3( inR1, inR2 );
+
+			double r1Len = inR1.GetLength3();
+			double c12Len = cross12.GetLength3();
+
+			outKappa = c12Len / ( r1Len * r1Len * r1Len );
+
+			if ( c12Len > 1e-7 ) {
+				outTau = cross12.Dot3( inR3 ) / cross12.Dot3();
+			}
+			else {
+				outTau = 0.0;
+			}
+		}
+
+		static Cyclone::Math::Vector4D XM_CALLCONV sComputeDisplacementDerivative(
+			const Cyclone::Math::Vector4D inR1,
+			const Cyclone::Math::Vector4D inR2,
+			const Cyclone::Math::Vector4D inTHat,
+			const Cyclone::Math::Vector4D inNHat,
+			const Cyclone::Math::Vector4D inBHat,
+			double inKappa,
+			double inTau,
+			double inNDist,
+			double inBDist
+		)
+		{
+			using Cyclone::Math::Vector4D;
+
+			const Vector4D r2Perp = inR2 - Vector4D::sReplicate( inR2.Dot3( inTHat ) ) * inTHat;
+			const double sigma = inNHat.Dot3( r2Perp ) < 0.0 ? -1.0 : 1.0;
+
+			const Vector4D speed = inR1.GetLength3V();
+			return speed * (
+				Vector4D::sReplicate( inNDist * inKappa * sigma ) * inTHat +
+				Vector4D::sReplicate( inBDist * inTau ) * inNHat +
+				Vector4D::sReplicate( -inNDist * inTau ) * inBHat
+				);
 		}
 
 	#if 0
@@ -759,8 +821,10 @@ namespace Cyclone::Core::Component
 		struct Interpolation
 		{
 			Cyclone::Math::Vector4D mPosition;
-			DirectX::XMVECTOR		mNormal;
-			DirectX::XMVECTOR		mTangent;
+			DirectX::XMVECTOR		mDeltaL;
+			DirectX::XMVECTOR		mDeltaR;
+			DirectX::XMVECTOR		mDeltaLU;
+			DirectX::XMVECTOR		mDeltaRU;
 		};
 
 		std::vector<Interpolation>	mArray;
@@ -779,43 +843,118 @@ namespace Cyclone::Core::Component
 
 			for ( size_t i = 0; i + 1 < pathData.mKnots.size(); ++i ) {
 
-				const Vector4D dispB0 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i].mBitangent, 0.5f ) );
-				const Vector4D dispB1 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i + 1].mBitangent, 0.5f ) );
+				if constexpr ( true ) {
+					const Vector4D dispB0 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i].mBitangent, 0.5f ) );
+					const Vector4D dispB1 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i + 1].mBitangent, 0.5f ) );
 
-				const Vector4D dispN0 = -dispB0; // Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mNormal );
-				const Vector4D dispN1 = -dispB1; // Vector4D::sFromXMVECTOR( pathData.mExtrusions[i + 1].mNormal );
+					const Vector4D dispN0 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i].mNormal, -0.25f ) );
+					const Vector4D dispN1 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i + 1].mNormal, -0.25f ) );
 
-				const Vector4D kVec0 = pathData.ComputeKappaVector( i, 0.0 );
-				const Vector4D kVec1 = pathData.ComputeKappaVector( i, 1.0 );
+					const Vector4D kVec0 = pathData.ComputeKappaVector( i, 0.0 );
+					const Vector4D kVec1 = pathData.ComputeKappaVector( i, 1.0 );
 
-				const double scaleN0 = PathData::sComputeScale( kVec0, dispN0 );
-				const double scaleN1 = PathData::sComputeScale( kVec1, dispN1 );
+					const double scaleL0 = PathData::sComputeScale( kVec0, dispB0 );
+					const double scaleL1 = PathData::sComputeScale( kVec1, dispB1 );
 
-				const double scaleB0 = PathData::sComputeScale( kVec0, dispB0 );
-				const double scaleB1 = PathData::sComputeScale( kVec1, dispB1 );
+					const double scaleR0 = PathData::sComputeScale( kVec0, -dispB0 );
+					const double scaleR1 = PathData::sComputeScale( kVec1, -dispB1 );
 
-				for ( size_t t = 0; t <= subdivisionScale; ++t ) {
-					double u = static_cast<double>( t ) / subdivisionScale;
+					const double scaleLU0 = PathData::sComputeScale( kVec0, dispB0 + dispN0 );
+					const double scaleLU1 = PathData::sComputeScale( kVec1, dispB1 + dispN1 );
 
-					Vector4D normal = PathData::sInterpolate(
-						pathData.mKnots[i].mPoint + dispN0,
-						pathData.mKnots[i + 1].mPoint + dispN1,
-						DirectX::XMVectorScale( pathData.mKnots[i].mOutVec, scaleN0 ),
-						DirectX::XMVectorScale( pathData.mKnots[i + 1].mInVec, scaleN1 ),
-						u
-					);
+					const double scaleRU0 = PathData::sComputeScale( kVec0, -dispB0 + dispN0 );
+					const double scaleRU1 = PathData::sComputeScale( kVec1, -dispB1 + dispN1 );
 
-					Vector4D bitangent = PathData::sInterpolate(
-						pathData.mKnots[i].mPoint + dispB0,
-						pathData.mKnots[i + 1].mPoint + dispB1,
-						DirectX::XMVectorScale( pathData.mKnots[i].mOutVec, scaleB0 ),
-						DirectX::XMVectorScale( pathData.mKnots[i + 1].mInVec, scaleB1 ),
-						u
-					);
+					for ( size_t t = 0; t <= subdivisionScale; ++t ) {
+						double u = static_cast<double>( t ) / subdivisionScale;
 
-					Vector4D p = pathData.Interpolate( i, u );
+						Vector4D left = PathData::sInterpolate(
+							pathData.mKnots[i].mPoint + dispB0,
+							pathData.mKnots[i + 1].mPoint + dispB1,
+							DirectX::XMVectorScale( pathData.mKnots[i].mOutVec, scaleL0 ),
+							DirectX::XMVectorScale( pathData.mKnots[i + 1].mInVec, scaleL1 ),
+							u
+						);
 
-					mArray.emplace_back( p, ( normal - p ).ToXMVECTOR(), ( bitangent - p ).ToXMVECTOR() );
+						Vector4D right = PathData::sInterpolate(
+							pathData.mKnots[i].mPoint - dispB0,
+							pathData.mKnots[i + 1].mPoint - dispB1,
+							DirectX::XMVectorScale( pathData.mKnots[i].mOutVec, scaleR0 ),
+							DirectX::XMVectorScale( pathData.mKnots[i + 1].mInVec, scaleR1 ),
+							u
+						);
+
+						Vector4D leftU = PathData::sInterpolate(
+							pathData.mKnots[i].mPoint + dispB0 + dispN0,
+							pathData.mKnots[i + 1].mPoint + dispB1 + dispN1,
+							DirectX::XMVectorScale( pathData.mKnots[i].mOutVec, scaleLU0 ),
+							DirectX::XMVectorScale( pathData.mKnots[i + 1].mInVec, scaleLU1 ),
+							u
+						);
+
+						Vector4D rightU = PathData::sInterpolate(
+							pathData.mKnots[i].mPoint - dispB0 + dispN0,
+							pathData.mKnots[i + 1].mPoint - dispB1 + dispN1,
+							DirectX::XMVectorScale( pathData.mKnots[i].mOutVec, scaleRU0 ),
+							DirectX::XMVectorScale( pathData.mKnots[i + 1].mInVec, scaleRU1 ),
+							u
+						);
+
+						Vector4D p = pathData.Interpolate( i, u );
+
+						mArray.emplace_back( p, ( left - p ).ToXMVECTOR(), ( right - p ).ToXMVECTOR(), ( leftU - p ).ToXMVECTOR(), ( rightU - p ).ToXMVECTOR() );
+					}
+				}
+				else {
+					const Vector4D r1_0 = pathData.Differentiate( i, 0.0 );
+					const Vector4D r1_1 = pathData.Differentiate( i, 1.0 );
+
+					const Vector4D tHat_0 = r1_0.GetNorm3();
+					const Vector4D tHat_1 = r1_1.GetNorm3();
+
+					const Vector4D r2_0 = pathData.Differentiate2( i, 0.0 );
+					const Vector4D r2_1 = pathData.Differentiate2( i, 1.0 );
+
+					const Vector4D r3 = pathData.Differentiate3( i );
+
+					double kappa0, kappa1;
+					double tau0, tau1;
+
+					PathData::sComputeKappaTauCoeffs( r1_0, r2_0, r3, kappa0, tau0 );
+					PathData::sComputeKappaTauCoeffs( r1_1, r2_1, r3, kappa1, tau1 );
+
+					const Vector4D dispB0Hat = Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mBitangent );
+					const Vector4D dispB1Hat = Vector4D::sFromXMVECTOR( pathData.mExtrusions[i + 1].mBitangent );
+
+					const Vector4D dispN0Hat = Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mNormal );
+					const Vector4D dispN1Hat = Vector4D::sFromXMVECTOR( pathData.mExtrusions[i + 1].mNormal );
+
+					const Vector4D dPrime0 = PathData::sComputeDisplacementDerivative( r1_0, r2_0, tHat_0, dispN0Hat, dispB0Hat, kappa0, tau0, 1.0, 1.0 ) * Vector4D::sReplicate( 1.0 / 3.0 );
+					const Vector4D dPrime1 = PathData::sComputeDisplacementDerivative( r1_1, r2_1, tHat_1, dispN1Hat, dispB1Hat, kappa1, tau1, 1.0, 1.0 ) * Vector4D::sReplicate( 1.0 / 3.0 );
+
+					for ( size_t t = 0; t <= subdivisionScale; ++t ) {
+						double u = static_cast<double>( t ) / subdivisionScale;
+
+						Vector4D bitangent = PathData::sInterpolate(
+							pathData.mKnots[i].mPoint + dispN0Hat + dispB0Hat,
+							pathData.mKnots[i + 1].mPoint + dispN1Hat + dispB1Hat,
+							DirectX::XMVectorSubtract( pathData.mKnots[i].mOutVec, dPrime0.ToXMVECTOR() ),
+							DirectX::XMVectorAdd( pathData.mKnots[i + 1].mInVec, dPrime1.ToXMVECTOR() ),
+							u
+						);
+
+						OutputDebugStringA( std::format(
+							"root={}, u={:.2f}: out={:.2f} in={:.2f}\n",
+							i,
+							u,
+							DirectX::XMVectorGetX( DirectX::XMVector3Dot( DirectX::XMVector3Normalize( pathData.mKnots[i].mOutVec ), DirectX::XMVector3Normalize( dPrime0.ToXMVECTOR() ) ) ),
+							DirectX::XMVectorGetX( DirectX::XMVector3Dot( DirectX::XMVector3Normalize( pathData.mKnots[i + 1].mInVec ), DirectX::XMVector3Normalize( dPrime1.ToXMVECTOR() ) ) )
+						).c_str() );
+
+						Vector4D p = pathData.Interpolate( i, u );
+
+						mArray.emplace_back( p, DirectX::g_XMZero.v, ( bitangent - p ).ToXMVECTOR() );
+					}
 				}
 			}
 		}

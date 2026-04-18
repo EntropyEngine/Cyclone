@@ -230,7 +230,7 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 		ImGui::Text( "Add Half-Loop" );
 		LineSpace();
 		if ( ImGui::Button( "+##AddHalfLoop", { ImGui::GetFrameHeight(), ImGui::GetFrameHeight() } ) ) {
-			pathData.AddHalfLoop( DirectX::XM_PI / 2, 1.0f, 2.0f );
+			pathData.AddHalfLoop( DirectX::XM_PI, 1.0f, 2.0f );
 			dirty = true;
 		}
 		
