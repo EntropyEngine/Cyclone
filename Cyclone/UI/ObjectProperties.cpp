@@ -278,6 +278,20 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 					}
 					ImGui::EndDisabled();
 
+					/* Path Width */ {
+						float width = pathData.mPathWidths[i];
+						LeafNode( "Path Width", 1.0f / 3.0f );
+						ImGui::DragFloat( "##PathWidth", &width, 0.01f, 0.1f, FLT_MAX, "%.3f", ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoRoundToFormat );
+
+						if ( ImGui::IsItemEdited() ) {
+							pathData.mPathWidths[i] = width;
+							pathCache.Rebuild( registry, inEntity );
+						}
+						if ( ImGui::IsItemDeactivatedAfterEdit() ) {
+							dirty = true;
+						}
+					}
+
 					/* Tangent Type */ {
 						PathData::ETangentType &tangentType = pathData.mTangentType[i];
 						int tidx = static_cast<int>( tangentType );
