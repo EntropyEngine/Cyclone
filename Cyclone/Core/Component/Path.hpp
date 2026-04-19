@@ -983,11 +983,19 @@ namespace Cyclone::Core::Component
 						Vector4D inDelta = ( side[i].mPoint - side[i - 1].mPoint );
 						Vector4D outDelta = ( side[i + 1].mPoint - side[i].mPoint );
 
+						if ( false ) {
+							inDelta -= Vector4D::sReplicate( inDelta.Dot3( Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mNormal ) ) ) * Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mNormal );
+							outDelta -= Vector4D::sReplicate( outDelta.Dot3( Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mNormal ) ) ) * Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mNormal );
+						}
+
 						Vector4D inPlane = Vector4D::sCross3( inDelta.GetNorm3(), Vector4D::sCross3( Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mBitangent ), inDelta.GetNorm3() ).GetNorm3() ).GetNorm3();
 						Vector4D outPlane = -Vector4D::sCross3( outDelta.GetNorm3(), Vector4D::sCross3( Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mBitangent ), outDelta.GetNorm3() ).GetNorm3() ).GetNorm3();
 
 						//inDelta = inDelta - Vector4D::sReplicate( inDelta.Dot3( inPlane ) ) * inPlane;
 						//outDelta = outDelta - Vector4D::sReplicate( outDelta.Dot3( outPlane ) ) * outPlane;
+
+						//inDelta -= Vector4D::sReplicate( inDelta.Dot3( inPlane ) ) * inPlane;
+						//outDelta -= Vector4D::sReplicate( outDelta.Dot3( outPlane ) ) * outPlane;
 
 						Vector4D inDir = inDelta.GetNorm3();
 						Vector4D outDir = outDelta.GetNorm3();
@@ -1003,6 +1011,10 @@ namespace Cyclone::Core::Component
 
 						side[i].mInVec = ( inVec ).ToXMVECTOR();
 						side[i].mOutVec = ( outVec ).ToXMVECTOR();
+
+						//if ( i == 12 ) {
+						//	__debugbreak();
+						//}
 					}
 				}
 			}
