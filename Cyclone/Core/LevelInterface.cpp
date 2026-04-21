@@ -31,7 +31,7 @@ void Cyclone::Core::LevelInterface::Initialize()
 	mEntityManager.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 0.0, 2.0 } );
 	mEntityManager.CreateEntity( "info_debug"_hs, GetRegistry(), { -4.0, 2.0, 0.0 } );
 
-	mEntityManager.CreateEntity( "player_spawn"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
+	mEntityManager.CreateEntity( "player_spawn"_hs, GetRegistry(), { 0.0, 0.0, -2.0 } );
 
 	mEntityManager.EndAction( GetRegistry() );
 
@@ -53,7 +53,11 @@ void Cyclone::Core::LevelInterface::Initialize()
 	*/
 
 	mEntityManager.BeginAction();
-	auto i = mEntityManager.CreateEntity( "path_debug"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
+	mEntityManager.CreateEntity( "path_debug"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
+	mEntityManager.EndAction( GetRegistry() );
+
+	mEntityManager.BeginAction();
+	auto i = mEntityManager.CreateEntity( "terrain_path_span"_hs, GetRegistry(), { 0.0, 0.0, 0.0 } );
 	mEntityManager.EndAction( GetRegistry() );
 
 	mEntityManager.OpenEntityProperties( i );

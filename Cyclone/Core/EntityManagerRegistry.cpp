@@ -6,6 +6,7 @@
 #include "Cyclone/Core/Entity/InfoDebug.hpp"
 #include "Cyclone/Core/Entity/PlayerSpawn.hpp"
 #include "Cyclone/Core/Entity/PathDebug.hpp"
+#include "Cyclone/Core/Entity/TerrainPathSpan.hpp"
 
 using Cyclone::Util::HashPair;
 
@@ -32,6 +33,7 @@ constexpr uint32_t GetDebugColor()
 			case "player"_hs.value():	return Cyclone::Util::ColorU32( 0x00, 0xFF, 0x00 );
 			case "point"_hs.value():	return Cyclone::Util::ColorU32( 0xDD, 0x18, 0xDD );
 			case "prop"_hs.value():		return {};
+			case "terrain"_hs.value():	return Cyclone::Util::ColorU32( 0x00, 0xFF, 0xFF );
 			case "trigger"_hs.value():	return Cyclone::Util::ColorU32( 0xF8, 0x9A, 0x00 );
 		}
 	}
@@ -57,6 +59,7 @@ void Cyclone::Core::EntityManager::Register()
 	RegisterEntityClass<Entity::InfoDebug>();
 	RegisterEntityClass<Entity::PlayerSpawn>();
 	RegisterEntityClass<Entity::PathDebug>();
+	RegisterEntityClass<Entity::TerrainPathSpan>();
 
 	// Sort lists into entity order
 	mEntityTypeNameMap.Sort();

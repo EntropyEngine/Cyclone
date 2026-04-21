@@ -10,7 +10,7 @@ namespace Cyclone::Core::Component
 {
 	struct LocalBounds
 	{
-		enum class EType { Radius, BoundingBox, Path };
+		enum class EType { Radius, BoundingBox, Path, LocalMesh, GlobalMesh };
 
 		DirectX::XMVECTOR mCenter;
 		DirectX::XMFLOAT3 mExtent;

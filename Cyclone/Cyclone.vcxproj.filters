@@ -263,6 +263,12 @@
     <ClInclude Include="Rendering\Shader\WireframePrimitiveShader.hpp">
       <Filter>Rendering\Shader</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Entity\TerrainPathSpan.hpp">
+      <Filter>Core\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Component\Mesh.hpp">
+      <Filter>Core\Component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">

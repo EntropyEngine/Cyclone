@@ -155,6 +155,7 @@
     <ClInclude Include="Core\Component\EntityType.hpp" />
     <ClInclude Include="Core\Component\EpochNumber.hpp" />
     <ClInclude Include="Core\Component\LocalBounds.hpp" />
+    <ClInclude Include="Core\Component\Mesh.hpp" />
     <ClInclude Include="Core\Component\Path.hpp" />
     <ClInclude Include="Core\Component\Position.hpp" />
     <ClInclude Include="Core\Component\Rotation.hpp" />
@@ -169,6 +170,7 @@
     <ClInclude Include="Core\Entity\PathDebug.hpp" />
     <ClInclude Include="Core\Entity\PlayerSpawn.hpp" />
     <ClInclude Include="Core\Entity\PointDebug.hpp" />
+    <ClInclude Include="Core\Entity\TerrainPathSpan.hpp" />
     <ClInclude Include="Core\HistoryAction.hpp" />
     <ClInclude Include="Core\LevelInterface.hpp" />
     <ClInclude Include="Core\Level.hpp" />
