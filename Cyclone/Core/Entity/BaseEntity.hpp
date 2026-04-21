@@ -41,8 +41,8 @@ namespace Cyclone::Core::Entity
 			auto entity = T().Create( inRegistry, inPosition );
 			assert( [&] <typename... Types>( entt::type_list<Types...> ) { return inRegistry.template all_of<Types...>( entity ); }( typename T::history_components{} ) );
 
-			if constexpr ( requires { T().SynchroniseOptionalComponents( inRegistry, entity ); } ) {
-				T().SynchroniseOptionalComponents( inRegistry, entity );
+			if constexpr ( requires { T().SynchroniseAuxiliaryComponents( inRegistry, entity ); } ) {
+				T().SynchroniseAuxiliaryComponents( inRegistry, entity );
 			}
 
 			return entity;
@@ -65,8 +65,8 @@ namespace Cyclone::Core::Entity
 			// Copy back from inRegistryHistory -> inRegistry
 			Cyclone::Util::ApplyOverTypeList<T::history_components>( CopyComponentFunctor{}, inHistoryRegistry, inRegistry, inEntity );
 			
-			if constexpr ( requires { T().SynchroniseOptionalComponents( inRegistry, inEntity ); } ) {
-				T().SynchroniseOptionalComponents( inRegistry, inEntity );
+			if constexpr ( requires { T().SynchroniseAuxiliaryComponents( inRegistry, inEntity ); } ) {
+				T().SynchroniseAuxiliaryComponents( inRegistry, inEntity );
 			}
 		}
 
@@ -76,7 +76,7 @@ namespace Cyclone::Core::Entity
 			Cyclone::Util::ApplyOverTypeList<T::history_components>( CopyEntityFunctor{}, inRegistry, inSrc, inDst );
 			
 			if constexpr ( requires { T().SynchroniseOptionalComponents( inRegistry, inDst ); } ) {
-				T().SynchroniseOptionalComponents( inRegistry, inDst );
+				T().SynchroniseAuxiliaryComponents( inRegistry, inDst );
 			}
 		}
 

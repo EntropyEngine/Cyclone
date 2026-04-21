@@ -604,17 +604,17 @@ namespace Cyclone::Core::Component
 				const Vector4D kVec0 = pathData.ComputeKappaVector( i, 0.0 );
 				const Vector4D kVec1 = pathData.ComputeKappaVector( i, 1.0 );
 
-				const double scaleL0 = 1 + PathData::sComputeScale( kVec0, dispB0 * corr0B );
-				const double scaleL1 = 1 + PathData::sComputeScale( kVec1, dispB1 * corr1B );
+				const float scaleL0 = static_cast<float>( 1 + PathData::sComputeScale( kVec0, dispB0 * corr0B ) );
+				const float scaleL1 = static_cast<float>( 1 + PathData::sComputeScale( kVec1, dispB1 * corr1B ) );
 
-				const double scaleR0 = 1 + PathData::sComputeScale( kVec0, -dispB0 * corr0B );
-				const double scaleR1 = 1 + PathData::sComputeScale( kVec1, -dispB1 * corr1B );
+				const float scaleR0 = static_cast<float>( 1 + PathData::sComputeScale( kVec0, -dispB0 * corr0B ) );
+				const float scaleR1 = static_cast<float>( 1 + PathData::sComputeScale( kVec1, -dispB1 * corr1B ) );
 
-				const double scaleLU0 = 1 + PathData::sComputeScale( kVec0, dispB0 * corr0B + dispN0 * corr0N );
-				const double scaleLU1 = 1 + PathData::sComputeScale( kVec1, dispB1 * corr1B + dispN1 * corr1N );
+				const float scaleLU0 = static_cast<float>( 1 + PathData::sComputeScale( kVec0, dispB0 * corr0B + dispN0 * corr0N ) );
+				const float scaleLU1 = static_cast<float>( 1 + PathData::sComputeScale( kVec1, dispB1 * corr1B + dispN1 * corr1N ) );
 
-				const double scaleRU0 = 1 + PathData::sComputeScale( kVec0, -dispB0 * corr0B + dispN0 * corr0N );
-				const double scaleRU1 = 1 + PathData::sComputeScale( kVec1, -dispB1 * corr1B + dispN1 * corr1N );
+				const float scaleRU0 = static_cast<float>( 1 + PathData::sComputeScale( kVec0, -dispB0 * corr0B + dispN0 * corr0N ) );
+				const float scaleRU1 = static_cast<float>( 1 + PathData::sComputeScale( kVec1, -dispB1 * corr1B + dispN1 * corr1N ) );
 
 				OutputDebugStringA( std::format( "Segment={} | L0={:.2f}, R0={:.2f}, L1={:.2f}, R1={:.2f}\n", i, scaleL0, scaleR0, scaleL1, scaleR1 ).c_str() );
 
@@ -774,5 +774,13 @@ namespace Cyclone::Core::Component
 			}
 			return false;
 		}
+	};
+
+	struct PathChildren {};
+
+	struct PathDependency
+	{
+		uint16_t mStartKnot;
+		uint16_t mEndKnot;
 	};
 }

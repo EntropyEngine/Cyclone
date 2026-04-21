@@ -31,19 +31,19 @@ namespace Cyclone::Core::Entity
 			entt::handle handle = { inRegistry, entity };
 
 			// Attach a Position component
-			inRegistry.emplace<Cyclone::Core::Component::Position>( entity, inPosition );
+			handle.emplace<Cyclone::Core::Component::Position>( inPosition );
 
 			// Attach a Rotation component
-			inRegistry.emplace<Cyclone::Core::Component::Rotation>( entity, DirectX::g_XMZero );
+			handle.emplace<Cyclone::Core::Component::Rotation>( DirectX::g_XMZero );
 
 			// Attach empty BB and local bounds
-			inRegistry.emplace<Cyclone::Core::Component::BoundingBox>( entity, Cyclone::Math::Vector4D::sZero(), Cyclone::Math::Vector4D::sZero() );
-			Component::LocalBounds &localBounds = inRegistry.emplace<Cyclone::Core::Component::LocalBounds>( entity, DirectX::g_XMZero, DirectX::XMFLOAT3(), Cyclone::Core::Component::LocalBounds::EType::Path );
+			handle.emplace<Cyclone::Core::Component::BoundingBox>( Cyclone::Math::Vector4D::sZero(), Cyclone::Math::Vector4D::sZero() );
+			Component::LocalBounds &localBounds = handle.emplace<Cyclone::Core::Component::LocalBounds>( DirectX::g_XMZero, DirectX::XMFLOAT3(), Cyclone::Core::Component::LocalBounds::EType::Path );
 
 			// Attach path tag and data
-			Component::PathSelection &pathSelection = inRegistry.emplace<Component::PathSelection>( entity );
-			inRegistry.emplace<Component::PathTag>( entity );
-			Component::PathData &pathData = inRegistry.emplace<Component::PathData>( entity );
+			handle.emplace<Component::PathSelection>();
+			handle.emplace<Component::PathTag>();
+			Component::PathData &pathData = handle.emplace<Component::PathData>();
 
 			pathData.AddKnot();
 			pathData.AddKnot();
@@ -79,10 +79,15 @@ namespace Cyclone::Core::Entity
 			return entity;
 		}
 
-		void SynchroniseOptionalComponents( entt::registry &inRegistry, entt::entity inEntity )
+		void SynchroniseAuxiliaryComponents( entt::registry &inRegistry, entt::entity inEntity )
 		{
 			entt::handle handle = { inRegistry, inEntity };
 			handle.get_or_emplace<Component::PathCache>().Rebuild( handle );
+		}
+
+		void SynchroniseChildren( entt::registry &inRegistry, entt::entity inEntity )
+		{
+
 		}
 	};
 }
