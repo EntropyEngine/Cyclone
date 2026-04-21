@@ -43,9 +43,14 @@ void Cyclone::UI::Sidebar::Update( Cyclone::Core::LevelInterface *inLevelInterfa
 
 	ImGui::PushStyleVar( ImGuiStyleVar_SelectableTextAlign, { 0.5f, 0.5f } );
 
+	bool first = true;
 	for ( auto &category : mToolCategories ) {
-		ImGui::Separator();
-		ImGui::Dummy( {} );
+		if ( !first ) {
+			ImGui::Separator();
+			ImGui::Dummy( {} );
+		}
+		first = false;
+
 		for ( auto tool : category ) {
 			if ( ImGui::Selectable( tool->GetDebugName(), true, tool->mIsSelected ? ImGuiSelectableFlags_Highlight : 0, { buttonSize, buttonSize } ) ) {
 				SelectTool( tool );

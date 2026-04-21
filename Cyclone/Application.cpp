@@ -62,6 +62,10 @@ void Cyclone::Application::Initialize( HWND inWindow, int inWidth, int inHeight 
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	io.Fonts->AddFontFromFileTTF( "Assets/unispace.bold.otf", 13.0f );
 	io.Fonts->AddFontFromFileTTF( "Assets/unispace.regular.otf", 13.0f );
+
+	ImGui::GetStyle().FrameRounding = 4.0f;
+	ImGui::GetStyle().GrabRounding = 4.0f;
+	ImGui::GetStyle().WindowBorderSize = 0.0f;
 	
 	// Setup Platform/Renderer backends
 	ImGui_ImplWin32_Init( inWindow );
