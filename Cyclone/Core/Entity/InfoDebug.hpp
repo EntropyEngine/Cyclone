@@ -27,6 +27,7 @@ namespace Cyclone::Core::Entity
 		{
 			// Allocates in the entity storage of the registry
 			entt::entity entity = BaseEntity::sCreate( inRegistry );
+			entt::handle handle = { inRegistry, entity };
 
 			// Attach a Position component
 			inRegistry.emplace<Cyclone::Core::Component::Position>( entity, inPosition );
@@ -38,7 +39,7 @@ namespace Cyclone::Core::Entity
 			inRegistry.emplace<Cyclone::Core::Component::BoundingBox>( entity, Cyclone::Math::Vector4D::sZero(), Cyclone::Math::Vector4D::sZero() );
 
 			// Attach corresponding local bounds
-			inRegistry.emplace<Cyclone::Core::Component::LocalBounds>( entity, DirectX::g_XMZero, DirectX::XMFLOAT3( 0.25, 0.25, 0.25 ), Cyclone::Core::Component::LocalBounds::EType::Radius ).UpdateBoundingBox( entity, inRegistry );
+			inRegistry.emplace<Cyclone::Core::Component::LocalBounds>( entity, DirectX::g_XMZero, DirectX::XMFLOAT3( 0.25, 0.25, 0.25 ), Cyclone::Core::Component::LocalBounds::EType::Radius ).UpdateBoundingBox( handle );
 
 			return entity;
 		}

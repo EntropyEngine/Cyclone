@@ -27,18 +27,19 @@ namespace Cyclone::Core::Entity
 		{
 			// Allocates in the entity storage of the registry
 			entt::entity entity = BaseEntity::sCreate( inRegistry );
+			entt::handle handle = { inRegistry, entity };
 
 			// Attach a Position component
-			inRegistry.emplace<Cyclone::Core::Component::Position>( entity, inPosition );
+			handle.emplace<Cyclone::Core::Component::Position>( inPosition );
 
 			// Attach a Rotation component
-			inRegistry.emplace<Cyclone::Core::Component::Rotation>( entity, DirectX::g_XMZero );
+			handle.emplace<Cyclone::Core::Component::Rotation>( DirectX::g_XMZero );
 
 			// Attach default center and extents (25cm radius)
-			auto& box = inRegistry.emplace<Cyclone::Core::Component::BoundingBox>( entity, Cyclone::Math::Vector4D( 0.0, 0.5, 0.0 ), Cyclone::Math::Vector4D::sReplicate( 0.5 ) );
+			auto& box = handle.emplace<Cyclone::Core::Component::BoundingBox>( Cyclone::Math::Vector4D( 0.0, 0.5, 0.0 ), Cyclone::Math::Vector4D::sReplicate( 0.5 ) );
 
 			// Attach corresponding local bounds
-			inRegistry.emplace<Cyclone::Core::Component::LocalBounds>( entity, box.mValue.mCenter.ToXMVECTOR(), DirectX::XMFLOAT3( 0.5, 0.5, 0.5 ), Cyclone::Core::Component::LocalBounds::EType::Radius ).UpdateBoundingBox( entity, inRegistry );
+			handle.emplace<Cyclone::Core::Component::LocalBounds>( box.mValue.mCenter.ToXMVECTOR(), DirectX::XMFLOAT3( 0.5, 0.5, 0.5 ), Cyclone::Core::Component::LocalBounds::EType::Radius ).UpdateBoundingBox( handle );
 
 			return entity;
 		}

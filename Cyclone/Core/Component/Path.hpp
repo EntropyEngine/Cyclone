@@ -567,11 +567,11 @@ namespace Cyclone::Core::Component
 
 		std::vector<Interpolation>	mArray;
 
-		void Rebuild( const entt::registry &inRegistry, entt::entity inEntity )
+		void Rebuild( entt::handle &inHandle )
 		{
 			using Cyclone::Math::Vector4D;
 
-			const PathData &pathData = inRegistry.get<PathData>( inEntity );
+			const PathData &pathData = inHandle.get<PathData>();
 
 			const size_t subdivisionScale = 16;
 

@@ -28,6 +28,7 @@ namespace Cyclone::Core::Entity
 		{
 			// Allocates in the entity storage of the registry
 			entt::entity entity = BaseEntity::sCreate( inRegistry );
+			entt::handle handle = { inRegistry, entity };
 
 			// Attach a Position component
 			inRegistry.emplace<Cyclone::Core::Component::Position>( entity, inPosition );
@@ -73,14 +74,15 @@ namespace Cyclone::Core::Entity
 
 			pathData.ValidatePath();
 
-			localBounds.UpdateBoundingBox( entity, inRegistry );
+			localBounds.UpdateBoundingBox( handle );
 
 			return entity;
 		}
 
 		void SynchroniseOptionalComponents( entt::registry &inRegistry, entt::entity inEntity )
 		{
-			inRegistry.get_or_emplace<Component::PathCache>( inEntity ).Rebuild( inRegistry, inEntity );
+			entt::handle handle = { inRegistry, inEntity };
+			handle.get_or_emplace<Component::PathCache>().Rebuild( handle );
 		}
 	};
 }

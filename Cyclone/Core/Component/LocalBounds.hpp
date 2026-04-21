@@ -16,15 +16,15 @@ namespace Cyclone::Core::Component
 		DirectX::XMFLOAT3 mExtent;
 		EType mType;
 
-		void UpdateBoundingBox( entt::entity inEntity, entt::registry &inRegistry ) const
+		void UpdateBoundingBox( entt::handle &inHandle ) const
 		{
 			switch ( mType ) {
 				case EType::Radius: {
-					const Rotation &rotation = inRegistry.get<Rotation>( inEntity );
+					const Rotation &rotation = inHandle.get<Rotation>();
 					DirectX::XMMATRIX rotmat = DirectX::XMMatrixRotationRollPitchYawFromVector( rotation.mPitchYawRoll );
 					DirectX::XMVECTOR newcenter = DirectX::XMVector3TransformCoord( mCenter, rotmat );
 					Cyclone::Math::Vector4D newextent = Cyclone::Math::Vector4D::sReplicate( mExtent.x );
-					inRegistry.patch<BoundingBox>( inEntity, [newcenter, newextent]( auto &inV ) {
+					inHandle.patch<BoundingBox>( [newcenter, newextent]( auto &inV ) {
 						inV.mValue.mCenter = Cyclone::Math::Vector4D::sFromXMVECTOR( newcenter );
 						inV.mValue.mExtent = newextent;
 					} );
@@ -34,9 +34,9 @@ namespace Cyclone::Core::Component
 					return;
 				}
 				case EType::Path: {
-					const Rotation &rotation = inRegistry.get<Rotation>( inEntity );
+					const Rotation &rotation = inHandle.get<Rotation>();
 
-					const PathData &pathData = inRegistry.get<PathData>( inEntity );
+					const PathData &pathData = inHandle.get<PathData>();
 
 					Cyclone::Math::Vector4D bbMin = Cyclone::Math::Vector4D::sPosInf();
 					Cyclone::Math::Vector4D bbMax = Cyclone::Math::Vector4D::sNegInf();
@@ -85,7 +85,7 @@ namespace Cyclone::Core::Component
 					Cyclone::Math::Vector4D bbCenter = ( bbMax + bbMin ) * half;
 					Cyclone::Math::Vector4D bbExtent = ( bbMax - bbMin ) * half;
 					
-					inRegistry.patch<BoundingBox>( inEntity, [bbCenter, bbExtent]( auto &inV ) {
+					inHandle.patch<BoundingBox>( [bbCenter, bbExtent]( auto &inV ) {
 						inV.mValue.mCenter = bbCenter;
 						inV.mValue.mExtent = bbExtent;
 					} );

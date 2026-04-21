@@ -715,8 +715,9 @@ void XM_CALLCONV Cyclone::UI::Tool::GizmoTransformTool::UpdateRotate( Cyclone::C
 
 	DirectX::XMVECTOR deltaQuat = DirectX::XMQuaternionMultiply( DirectX::XMQuaternionInverse( origQuat ), newQuat );
 
-	registry.get<Rotation>( selectedEntity ).mPitchYawRoll = QuatToPitchYawRoll( rotationQuat );
-	registry.get<LocalBounds>( selectedEntity ).UpdateBoundingBox( selectedEntity, registry );
+	entt::handle selectedHandle = { registry, selectedEntity };
+	selectedHandle.get<Rotation>().mPitchYawRoll = QuatToPitchYawRoll( rotationQuat );
+	selectedHandle.get<LocalBounds>().UpdateBoundingBox( selectedHandle );
 
 	DirectX::XMMATRIX deltaMatrix = DirectX::XMMatrixRotationQuaternion( deltaQuat );
 
@@ -724,8 +725,10 @@ void XM_CALLCONV Cyclone::UI::Tool::GizmoTransformTool::UpdateRotate( Cyclone::C
 
 	for ( entt::entity entity : selectedEntities ) {
 		if ( entity != selectedEntity ) {
-			auto &currP = registry.get<Position>( entity );
-			auto &currR = registry.get<Rotation>( entity );
+			entt::handle handle = { registry, entity };
+
+			auto &currP = handle.get<Position>();
+			auto &currR = handle.get<Rotation>();
 
 			Vector4D deltaP = currP.mValue - gizmoContext.mInitialEntityPosition;
 			Vector4D deltaPResult = deltaMatrixD.TransformCoord3Unit( deltaP );
@@ -736,7 +739,7 @@ void XM_CALLCONV Cyclone::UI::Tool::GizmoTransformTool::UpdateRotate( Cyclone::C
 			DirectX::XMVECTOR newRQ = DirectX::XMQuaternionMultiply( deltaQuat, currRQ );
 			currR.mPitchYawRoll = QuatToPitchYawRoll( { .v = newRQ } );
 
-			registry.get<LocalBounds>( entity ).UpdateBoundingBox( entity, registry );
+			handle.get<LocalBounds>().UpdateBoundingBox( handle );
 		}
 	}
 }
