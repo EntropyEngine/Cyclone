@@ -461,6 +461,20 @@ namespace Cyclone::Core::Component
 			return distance > 0 ? distance * kSigned : 0;
 		}
 
+		double GravesenLength( size_t inRoot ) const
+		{
+			using Cyclone::Math::Vector4D;
+
+			const Vector4D pointDelta = mKnots[inRoot + 1].mPoint - mKnots[inRoot].mPoint;
+			const Vector4D outVec = Vector4D::sFromXMVECTOR( mKnots[inRoot].mOutVec );
+			const Vector4D inVec = Vector4D::sFromXMVECTOR( mKnots[inRoot].mInVec );
+
+			const double lowerBound = pointDelta.GetLength3();
+			const double upperBound = inVec.GetLength3() + ( pointDelta + outVec - inVec ).GetLength3() + outVec.GetLength3();
+
+			return lowerBound * 0.25 + upperBound * 0.75;
+		}
+
 		void UpdateTangentType( size_t root, bool priorityOutVec )
 		{
 			if ( mTangentType[root] != ETangentType::Split ) {
@@ -565,7 +579,10 @@ namespace Cyclone::Core::Component
 			DirectX::XMVECTOR		mDeltaRU;
 		};
 
+		static constexpr double		kSubdivisionFactor = 10.0; ///< Subdivisions per meter
+
 		std::vector<Interpolation>	mArray;
+		std::vector<uint32_t>		mCumulativeSubdivisions;
 
 		void Rebuild( entt::handle &inHandle )
 		{
@@ -573,11 +590,10 @@ namespace Cyclone::Core::Component
 
 			const PathData &pathData = inHandle.get<PathData>();
 
-			const size_t subdivisionScale = 16;
-
 			assert( pathData.mKnots.size() > 0 );
-			mArray.clear();
-			mArray.reserve( ( pathData.mKnots.size() - 1 ) * ( subdivisionScale + 1 ) );
+
+			mCumulativeSubdivisions.resize( pathData.mKnots.size() );
+			mCumulativeSubdivisions[0] = 0;
 
 			std::vector<PathData::Knot> sideL = pathData.mKnots;
 			std::vector<PathData::Knot> sideR = pathData.mKnots;
@@ -585,6 +601,7 @@ namespace Cyclone::Core::Component
 			std::vector<PathData::Knot> sideRU = pathData.mKnots;
 
 			for ( size_t i = 0; i + 1 < pathData.mKnots.size(); ++i ) {
+				mCumulativeSubdivisions[i + 1] = mCumulativeSubdivisions[i] + std::max( 2U, 1 + static_cast<uint32_t>( std::lround( pathData.GravesenLength( i ) ) ) );
 
 				float halfWidth0 = pathData.mPathWidths[i] / 2;
 				float halfWidth1 = pathData.mPathWidths[i + 1] / 2;
@@ -695,9 +712,18 @@ namespace Cyclone::Core::Component
 				}
 			}
 
+			mArray.clear();
+			mArray.reserve( mCumulativeSubdivisions.back() );
+
+			uint32_t prevSubdivisions = mCumulativeSubdivisions.front();
+
 			for ( size_t i = 0; i + 1 < pathData.mKnots.size(); ++i ) {
-				for ( size_t t = 0; t <= subdivisionScale; ++t ) {
-					double u = static_cast<double>( t ) / subdivisionScale;
+				uint32_t cumSubdivisions = mCumulativeSubdivisions[i + 1];
+				uint32_t numSubdivisions = cumSubdivisions - prevSubdivisions;
+				prevSubdivisions = cumSubdivisions;
+
+				for ( size_t t = 0; t < numSubdivisions; ++t ) {
+					double u = static_cast<double>( t ) / ( numSubdivisions - 1 );
 
 					Vector4D left = PathData::sInterpolate( sideL[i].mPoint, sideL[i + 1].mPoint, sideL[i].mOutVec, sideL[i + 1].mInVec, u );
 					Vector4D right = PathData::sInterpolate( sideR[i].mPoint, sideR[i + 1].mPoint, sideR[i].mOutVec, sideR[i + 1].mInVec, u );

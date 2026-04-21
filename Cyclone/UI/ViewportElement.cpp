@@ -237,7 +237,7 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 			std::vector<VertexPositionColorID> linePointsR( pathCache.mArray.size() );
 			std::vector<VertexPositionColorID> linePointsLU( pathCache.mArray.size() );
 			std::vector<VertexPositionColorID> linePointsRU( pathCache.mArray.size() );
-			std::vector<DirectX::XMVECTOR> lineColors( pathCache.mArray.size() / 17 + 1 );
+			std::vector<DirectX::XMVECTOR> lineColors( pathData.mKnots.size() );
 			if ( editPathMode ) {
 				for ( size_t i = 0; i < lineColors.size(); ++i ) {
 					if ( selected && pathSelection.mCurrentKnot == i ) {
@@ -252,42 +252,50 @@ void Cyclone::UI::ViewportElement::Render( ID3D11DeviceContext3 *inDeviceContext
 				}
 			}
 
-			for ( size_t s = 0; s < pathCache.mArray.size(); ++s ) {
-				using namespace DirectX;
+			uint32_t prevSubdivisions = pathCache.mCumulativeSubdivisions.front();
 
-				uint16_t knot = s / 17;
-				if ( editPathMode ) {
-					float factor = ( s % 17 ) / 17.0f;
-					float f2s = 4 * factor * factor;
-					float f2i = 2 - 2 * factor;
-					f2i *= f2i;
+			for ( size_t i = 0; i + 1 < pathData.mKnots.size(); ++i ) {
+				uint32_t cumSubdivisions = pathCache.mCumulativeSubdivisions[i + 1];
+				uint32_t numSubdivisions = cumSubdivisions - prevSubdivisions;
 
+				for ( size_t t = 0; t < numSubdivisions; ++t ) {
+					using namespace DirectX;
 
-					entityColorV = DirectX::XMVectorLerp( lineColors[knot], lineColors[knot + 1], factor < 0.5 ? ( 1 - std::sqrtf( 1.0 - f2s ) ) / 2 : ( std::sqrtf( 1.0 - f2i ) + 1 ) / 2 );
+					size_t s = prevSubdivisions + t;
+
+					if ( editPathMode ) {
+						float factor = static_cast<float>( t ) / ( numSubdivisions - 1 );
+						float f2s = 4 * factor * factor;
+						float f2i = 2 - 2 * factor;
+						f2i *= f2i;
+
+						entityColorV = DirectX::XMVectorLerp( lineColors[i], lineColors[i + 1], factor < 0.5 ? ( 1 - std::sqrtf( 1.0 - f2s ) ) / 2 : ( std::sqrtf( 1.0 - f2i ) + 1 ) / 2 );
+					}
+
+					DirectX::XMVECTOR P = ( rotmatD.TransformCoord3Unit( pathCache.mArray[s].mPosition ) + rebasedEntityPosition ).ToXMVECTOR();
+					DirectX::XMVECTOR PL = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mDeltaL, rotmatF ), 1.0f );
+					DirectX::XMVECTOR PR = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mDeltaR, rotmatF ), 1.0f );
+					DirectX::XMVECTOR PLU = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mDeltaLU, rotmatF ), 1.0f );
+					DirectX::XMVECTOR PRU = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mDeltaRU, rotmatF ), 1.0f );
+
+					DirectX::XMVECTOR A = P + PL;
+					DirectX::XMVECTOR B = P + PR;
+					DirectX::XMVECTOR C = P + PLU;
+					DirectX::XMVECTOR D = P + PRU;
+
+					uint16_t idx = editPathMode ? i + 2 * t / numSubdivisions : 0;
+
+					linePoints[s] = { P, entityColorV, entity, idx };
+					linePointsL[s] = { A, entityColorV, entity, idx };
+					linePointsR[s] = { B, entityColorV, entity, idx };
+					linePointsLU[s] = { C, entityColorV, entity, idx };
+					linePointsRU[s] = { D, entityColorV, entity, idx };
+
+					mWireframePrimitiveBatch->DrawLine( linePointsL[s], linePointsR[s] );
+					mWireframePrimitiveBatch->DrawLine( linePointsL[s], linePointsLU[s] );
+					mWireframePrimitiveBatch->DrawLine( linePointsR[s], linePointsRU[s] );
 				}
-
-				DirectX::XMVECTOR P = ( rotmatD.TransformCoord3Unit( pathCache.mArray[s].mPosition ) + rebasedEntityPosition ).ToXMVECTOR();
-				DirectX::XMVECTOR PL = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mDeltaL, rotmatF ), 1.0f );
-				DirectX::XMVECTOR PR = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mDeltaR, rotmatF ), 1.0f );
-				DirectX::XMVECTOR PLU = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mDeltaLU, rotmatF ), 1.0f );
-				DirectX::XMVECTOR PRU = DirectX::XMVectorScale( DirectX::XMVector3TransformCoord( pathCache.mArray[s].mDeltaRU, rotmatF ), 1.0f );
-
-				DirectX::XMVECTOR A = P + PL;
-				DirectX::XMVECTOR B = P + PR;
-				DirectX::XMVECTOR C = P + PLU;
-				DirectX::XMVECTOR D = P + PRU;
-
-				uint16_t idx = editPathMode ? ( s + 8 ) / 17 : 0;
-
-				linePoints[s] = { P, entityColorV, entity, idx };
-				linePointsL[s] = { A, entityColorV, entity, idx };
-				linePointsR[s] = { B, entityColorV, entity, idx };
-				linePointsLU[s] = { C, entityColorV, entity, idx };
-				linePointsRU[s] = { D, entityColorV, entity, idx };
-
-				mWireframePrimitiveBatch->DrawLine( linePointsL[s], linePointsR[s] );
-				mWireframePrimitiveBatch->DrawLine( linePointsL[s], linePointsLU[s] );
-				mWireframePrimitiveBatch->DrawLine( linePointsR[s], linePointsRU[s] );
+				prevSubdivisions = cumSubdivisions;
 			}
 
 			mWireframePrimitiveBatch->Draw( D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, linePoints.data(), linePoints.size() );
