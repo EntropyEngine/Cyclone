@@ -23,7 +23,7 @@ namespace Cyclone::Core::Entity
 		static constexpr entt::hashed_string kEntityType = "terrain_path_span"_hs;
 		static constexpr entt::hashed_string kEntityCategory = "terrain"_hs;
 
-		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<Component::MeshTag>>;
+		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<Component::MeshTag, Component::PathDependency>>;
 
 		// TODO: add tag list and auto apply
 
@@ -48,7 +48,25 @@ namespace Cyclone::Core::Entity
 			// Attach mesh tag
 			handle.emplace<Component::MeshTag>();
 
+			// Attach path dependency
+			handle.emplace<Component::PathDependency>();
+
 			return entity;
+		}
+
+		void OnDelete( entt::registry &inRegistry, entt::entity inEntity, std::set<entt::entity> &ioDirtyEntities )
+		{
+			entt::handle handle = { inRegistry, inEntity };
+			auto &pathDependency = handle.get<Component::PathDependency>();
+
+			if ( pathDependency.mPathEntity == entt::null ) return;
+
+			auto view = inRegistry.view<Component::PathChildren>();
+			assert( view.contains( pathDependency.mPathEntity ) );
+
+			if ( view.get<Component::PathChildren>( pathDependency.mPathEntity ).RemoveChild( inEntity ) ) {
+				ioDirtyEntities.insert( pathDependency.mPathEntity );
+			}
 		}
 	};
 }

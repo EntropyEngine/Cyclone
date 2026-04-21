@@ -84,6 +84,7 @@ namespace Cyclone::Core
 
 		entt::entity			CopyEntity( entt::entity inEntity, entt::registry &inRegistry );
 		void					UpdateEntityInternal( entt::entity inEntity, entt::registry &inRegistry );
+		void					DeleteEntityInternal( entt::entity inEntity, entt::registry &inRegistry );
 
 		void RestoreContextStatePreUndo(); ///< We need to do an extra step for undo actions which flips the context state
 		void RestoreContextStatePostAction();
@@ -117,5 +118,6 @@ namespace Cyclone::Core
 		std::set<entt::entity>				mOpenedProperties;
 
 		std::set<entt::entity>				mUpdatedEntities;
+		std::set<entt::entity>				mDeletedEntities;
 	};
 }

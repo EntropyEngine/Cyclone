@@ -802,11 +802,53 @@ namespace Cyclone::Core::Component
 		}
 	};
 
-	struct PathChildren {};
-
 	struct PathDependency
 	{
-		uint16_t mStartKnot;
-		uint16_t mEndKnot;
+		entt::entity mPathEntity{ entt::null };
+		uint16_t	 mStartKnot = static_cast<uint16_t>( -1 );
+		uint16_t	 mEndKnot = static_cast<uint16_t>( -1 );
+
+		bool Reset()
+		{
+			bool dirty = false;
+			dirty |= mPathEntity != entt::null;
+			dirty |= mStartKnot != static_cast<uint16_t>( -1 );
+			dirty |= mEndKnot != static_cast<uint16_t>( -1 );
+
+			mPathEntity = entt::null;
+			mStartKnot = static_cast<uint16_t>( -1 );
+			mEndKnot = static_cast<uint16_t>( -1 );
+
+			return dirty;
+		}
+	};
+
+	struct PathChildren
+	{
+		std::set<entt::entity> mChildren;
+
+		void FindChildren( entt::handle &inHandle )
+		{
+			mChildren.clear();
+
+			auto view = inHandle.registry()->view<PathDependency>();
+			for ( entt::entity entity : view ) {
+				auto &pathDependency = view.get<PathDependency>( entity );
+
+				if ( pathDependency.mPathEntity == inHandle.entity() ) {
+					mChildren.insert( entity );
+				}
+			}
+		}
+
+		bool AddChild( entt::entity inChild )
+		{
+			return mChildren.insert( inChild ).second;
+		}
+
+		bool RemoveChild( entt::entity inChild )
+		{
+			return mChildren.erase( inChild );
+		}
 	};
 }

@@ -83,11 +83,32 @@ namespace Cyclone::Core::Entity
 		{
 			entt::handle handle = { inRegistry, inEntity };
 			handle.get_or_emplace<Component::PathCache>().Rebuild( handle );
+			handle.get_or_emplace<Component::PathChildren>().FindChildren( handle );
 		}
 
 		void SynchroniseChildren( entt::registry &inRegistry, entt::entity inEntity )
 		{
 
+		}
+
+		void OnDelete( entt::registry &inRegistry, entt::entity inEntity, std::set<entt::entity> &ioDirtyEntities )
+		{
+			entt::handle handle = { inRegistry, inEntity };
+			auto &pathChildren = handle.get<Component::PathChildren>();
+
+			auto view = inRegistry.view<Component::PathDependency>();
+
+			for ( entt::entity child : pathChildren.mChildren ) {
+				assert( view.contains( child ) );
+
+				auto &pathDependency = view.get<Component::PathDependency>( child );
+
+				assert( pathDependency.mPathEntity == inEntity );
+
+				if ( pathDependency.Reset() ) {
+					ioDirtyEntities.insert( child );
+				}
+			}
 		}
 	};
 }

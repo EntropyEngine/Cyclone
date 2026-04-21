@@ -77,6 +77,11 @@ void Cyclone::Core::EntityManager::EndAction( entt::registry &inRegistry )
 	}
 	mUpdatedEntities.clear();
 
+	for ( entt::entity entity : mDeletedEntities ) {
+		DeleteEntityInternal( entity, inRegistry );
+	}
+	mDeletedEntities.clear();
+
 	ValidateSelection( inRegistry );
 	UpdateVisibilityTags( inRegistry );
 
@@ -116,6 +121,13 @@ void Cyclone::Core::EntityManager::UndoAction( entt::registry &inRegistry )
 		inRegistry.emplace_or_replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( lastModifiedEpochIdx ) );
 	}
 
+	for ( const entt::entity entity : currentTopView ) {
+		auto func = entt::resolve( mEntityMetaContext, static_cast<entt::id_type>( inRegistry.get<Component::EntityType>( entity ) ) ).func( "synchronise_auxiliary_components"_hs );
+		if ( func ) {
+			func.invoke( {}, entt::forward_as_meta( inRegistry ), entity );
+		}
+	}
+
 	const auto &currentTopViewDelete = currentTop.view<Component::EntityType>( entt::exclude<Component::EpochNumber> );
 	for ( const entt::entity entity : currentTopViewDelete ) {
 		inRegistry.destroy( entity );
@@ -152,6 +164,13 @@ void Cyclone::Core::EntityManager::RedoAction( entt::registry & inRegistry )
 		const auto nextType = static_cast<entt::id_type>( nextTopView.get<Component::EntityType>( entity ) );
 		entt::resolve( mEntityMetaContext, nextType ).func( "restore_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( nextTop ), entity );
 		inRegistry.emplace_or_replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( nextTopEpoch ) );
+	}
+
+	for ( const entt::entity entity : nextTopView ) {
+		auto func = entt::resolve( mEntityMetaContext, static_cast<entt::id_type>( inRegistry.get<Component::EntityType>( entity ) ) ).func( "synchronise_auxiliary_components"_hs );
+		if ( func ) {
+			func.invoke( {}, entt::forward_as_meta( inRegistry ), entity );
+		}
 	}
 
 	const auto nextTopDeletedView = nextTop.view<Component::EpochNumber>( entt::exclude<Component::EntityType> );
@@ -201,18 +220,22 @@ entt::entity Cyclone::Core::EntityManager::CreateEntity( entt::id_type inType, e
 	type.func( "save_history"_hs ).invoke( {}, entt::forward_as_meta( inRegistry ), entt::forward_as_meta( mUndoStack[epochToUpdate].mRegistry ), entity);
 	inRegistry.emplace_or_replace<Component::EpochNumber>( entity, static_cast<Component::EpochNumber>( epochToUpdate ) );
 
+	auto syncFunc = entt::resolve( mEntityMetaContext, static_cast<entt::id_type>( inRegistry.get<Component::EntityType>( entity ) ) ).func( "synchronise_auxiliary_components"_hs );
+	if ( syncFunc ) {
+		syncFunc.invoke( {}, entt::forward_as_meta( inRegistry ), entity );
+	}
+
 	return entity;
 }
 
 void Cyclone::Core::EntityManager::UpdateEntity( entt::entity inEntity, entt::registry &inRegistry )
 {
+	assert( mUndoStackLock && "Can only update entities within Begin()/End()" );
 	mUpdatedEntities.insert( inEntity );
 }
 
 void Cyclone::Core::EntityManager::UpdateEntityInternal( entt::entity inEntity, entt::registry &inRegistry )
 {
-	assert( mUndoStackLock && "Can only update entities within Begin()/End()" );
-
 	size_t epochToUpdate = mUndoStackEpoch + 1;
 
 	const auto type = static_cast<entt::id_type>( inRegistry.get<Component::EntityType>( inEntity ) );
@@ -227,22 +250,32 @@ void Cyclone::Core::EntityManager::UpdateEntityInternal( entt::entity inEntity, 
 	}
 }
 
-void Cyclone::Core::EntityManager::DeleteEntity( entt::entity inEntity, entt::registry & inRegistry )
+void Cyclone::Core::EntityManager::DeleteEntity( entt::entity inEntity, entt::registry &inRegistry )
 {
 	assert( mUndoStackLock && "Can only delete entities within Begin()/End()" );
 
+	mDeletedEntities.insert( inEntity );
+
+	auto func = entt::resolve( mEntityMetaContext, static_cast<entt::id_type>( inRegistry.get<Component::EntityType>( inEntity ) ) ).func( "on_delete"_hs );
+	if ( func ) {
+		func.invoke( {}, entt::forward_as_meta( inRegistry ), inEntity, entt::forward_as_meta( mUpdatedEntities ) );
+	}
+}
+
+void Cyclone::Core::EntityManager::DeleteEntityInternal( entt::entity inEntity, entt::registry &inRegistry )
+{
 	size_t epochToUpdate = mUndoStackEpoch + 1;
 
 	entt::registry &currentTop = mUndoStack[epochToUpdate].mRegistry; 
 
-	// Create in undo stack if non existent
+	// Create "tombston" in undo stack if non existent
 	if ( !currentTop.valid( inEntity ) ) {
 		[[maybe_unused]] entt::entity retEntity = currentTop.create( inEntity );
 		assert( retEntity == inEntity );
 	}
 
-	// Only provide epoch number
-	mUndoStack[epochToUpdate].mRegistry.emplace_or_replace<Component::EpochNumber>( inEntity, inRegistry.get<Component::EpochNumber>( inEntity ) );
+	// Add epoch number to tombstone
+	currentTop.emplace_or_replace<Component::EpochNumber>( inEntity, inRegistry.get<Component::EpochNumber>( inEntity ) );
 
 	// Ensure entity stays orphaned, not deleted
 	inRegistry.destroy( inEntity );
@@ -267,6 +300,13 @@ void Cyclone::Core::EntityManager::BeginCloneAction( entt::registry &inRegistry 
 		}
 
 		clonedEntities.push_back( newEntity );
+	}
+
+	for ( entt::entity entity : clonedEntities ) {
+		auto func = entt::resolve( mEntityMetaContext, static_cast<entt::id_type>( inRegistry.get<Component::EntityType>( entity ) ) ).func( "synchronise_auxiliary_components"_hs );
+		if ( func ) {
+			func.invoke( {}, entt::forward_as_meta( inRegistry ), entity );
+		}
 	}
 
 	mSelectionTool.ClearSelection();

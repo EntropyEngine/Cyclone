@@ -125,6 +125,8 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 
 	entt::handle handle = { inLevelInterface->GetRegistry(), inEntity };
 
+	std::set<entt::entity> entitiesToUpdate;
+
 	bool dirty = false;
 
 	EntityType entityType = handle.get<EntityType>();
@@ -581,10 +583,95 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 		}
 	}
 
+	if ( handle.all_of<PathDependency>() ) {
+		ImGui::SeparatorText( "Placeholder" );
 
-	if ( dirty ) {
+		PathDependency &pathDependency = handle.get<PathDependency>();
+		auto pathDataView = handle.registry()->view<PathData>();
+		auto pathChildView = handle.registry()->view<PathChildren>();
+
+		{
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text( "Target Path" );
+			LineSpace();
+
+			ImGui::SetNextItemWidth( ImGui::GetContentRegionAvail().x );
+			if ( ImGui::BeginCombo( "##TargetPathCombo", pathDependency.mPathEntity == entt::null ? "" : Cyclone::Util::PrefixString( "", pathDependency.mPathEntity ), ImGuiComboFlags_None ) ) {
+				static ImGuiTextFilter filter;
+				if ( ImGui::IsWindowAppearing() ) {
+					ImGui::SetKeyboardFocusHere();
+					filter.Clear();
+				}
+
+				filter.Draw( "##Filter" );
+
+				
+				for ( entt::entity entity : pathDataView ) {
+					const bool isSelected = entity == pathDependency.mPathEntity;
+					Cyclone::Util::PrefixString entityString( "", entity );
+					if ( filter.PassFilter( entityString ) ) {
+						if ( ImGui::Selectable( entityString, isSelected ) ) {
+							if ( pathDependency.mPathEntity != entity ) {
+								if ( pathChildView.get<PathChildren>( entity ).AddChild( inEntity ) ) {
+									entitiesToUpdate.insert( entity );
+								}
+								if ( pathDependency.mPathEntity != entt::null && pathChildView.get<PathChildren>( pathDependency.mPathEntity ).RemoveChild( inEntity ) ) {
+									entitiesToUpdate.insert( pathDependency.mPathEntity );
+								}
+								pathDependency.mPathEntity = entity;
+								pathDependency.mStartKnot = static_cast<uint16_t>( -1 );
+								pathDependency.mEndKnot = static_cast<uint16_t>( -1 );
+
+
+								dirty = true;
+							}
+						}
+					}
+				}
+
+				ImGui::EndCombo();
+			}
+		}
+
+		{
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text( "Target Knots" );
+			LineSpace();
+
+			float availWidth = ImGui::GetContentRegionAvail().x;
+			ImGui::SetNextItemWidth( availWidth );
+
+			int startKnot = pathDependency.mStartKnot;
+			int endKnot = pathDependency.mEndKnot;
+
+			int maxKnot = 0;
+
+			if ( pathDependency.mPathEntity != entt::null || pathDataView.contains( pathDependency.mPathEntity ) ) {
+				maxKnot = static_cast<int>( pathDataView.get<PathData>( pathDependency.mPathEntity ).mKnots.size() ) - 1;
+				//startKnot = startKnot == static_cast<uint16_t>( -1 ) ? 0 : startKnot;
+				//endKnot = std::min( endKnot, maxKnot );
+
+				// TODO: verification
+			}
+
+			ImGui::DragIntRange2( "##TargetKnotsRange", &startKnot, &endKnot, 0.05, 0, maxKnot, maxKnot ? "%d" : "", nullptr, ImGuiSliderFlags_AlwaysClamp);
+			if ( ImGui::IsItemEdited() && maxKnot != 0 ) {
+				pathDependency.mStartKnot = static_cast<uint16_t>( startKnot );
+				pathDependency.mEndKnot = static_cast<uint16_t>( endKnot );
+			}
+			if ( ImGui::IsItemDeactivatedAfterEdit() && maxKnot != 0 ) {
+				dirty = true;
+			}
+
+		}
+	}
+
+	if ( dirty || entitiesToUpdate.size() ) {
 		handle.get<LocalBounds>().UpdateBoundingBox( handle );
 		entityManager.BeginAction();
+		for ( entt::entity entity : entitiesToUpdate ) {
+			entityManager.UpdateEntity( entity, *handle.registry() );
+		}
 		entityManager.UpdateEntity( handle, *handle.registry() );
 		entityManager.EndAction( *handle.registry() );
 	}

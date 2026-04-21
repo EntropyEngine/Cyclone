@@ -16,6 +16,16 @@
 
 namespace Cyclone::Core::Entity
 {
+	template<class T>
+	concept HasOnDelete = requires( entt::registry &inRegistry, entt::entity inEntity, std::set<entt::entity> &ioDirtyEntities ) {
+		T().OnDelete( inRegistry, inEntity, ioDirtyEntities );
+	};
+
+	template<class T>
+	concept HasSynchroniseAuxiliaryComponents = requires( entt::registry &inRegistry, entt::entity inEntity ) {
+		T().SynchroniseAuxiliaryComponents( inRegistry, inEntity );
+	};
+
 	template<typename T>
 	class BaseEntity
 	{
@@ -34,6 +44,24 @@ namespace Cyclone::Core::Entity
 			entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sRestoreHistory>( "restore_history"_hs );
 
 			entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sCloneEntity>( "clone_entity"_hs );
+
+			if constexpr ( HasOnDelete<T> ) {
+				entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sOnDelete>( "on_delete"_hs );
+			}
+
+			if constexpr ( HasSynchroniseAuxiliaryComponents<T> ) {
+				entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sSynchroniseAuxiliaryComponents>( "synchronise_auxiliary_components"_hs );
+			}
+		}
+
+		static void sSynchroniseAuxiliaryComponents( entt::registry &inRegistry, entt::entity inEntity ) requires HasSynchroniseAuxiliaryComponents<T>
+		{
+			T().SynchroniseAuxiliaryComponents( inRegistry, inEntity );
+		}
+
+		static void sOnDelete( entt::registry &inRegistry, entt::entity inEntity, std::set<entt::entity> &ioDirtyEntities ) requires HasOnDelete<T>
+		{
+			T().OnDelete( inRegistry, inEntity, ioDirtyEntities );
 		}
 
 		static entt::entity sCreateEntity( entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
@@ -41,9 +69,9 @@ namespace Cyclone::Core::Entity
 			auto entity = T().Create( inRegistry, inPosition );
 			assert( [&] <typename... Types>( entt::type_list<Types...> ) { return inRegistry.template all_of<Types...>( entity ); }( typename T::history_components{} ) );
 
-			if constexpr ( requires { T().SynchroniseAuxiliaryComponents( inRegistry, entity ); } ) {
-				T().SynchroniseAuxiliaryComponents( inRegistry, entity );
-			}
+			//if constexpr ( requires { T().SynchroniseAuxiliaryComponents( inRegistry, entity ); } ) {
+			//	T().SynchroniseAuxiliaryComponents( inRegistry, entity );
+			//}
 
 			return entity;
 		}
@@ -65,9 +93,9 @@ namespace Cyclone::Core::Entity
 			// Copy back from inRegistryHistory -> inRegistry
 			Cyclone::Util::ApplyOverTypeList<T::history_components>( CopyComponentFunctor{}, inHistoryRegistry, inRegistry, inEntity );
 			
-			if constexpr ( requires { T().SynchroniseAuxiliaryComponents( inRegistry, inEntity ); } ) {
-				T().SynchroniseAuxiliaryComponents( inRegistry, inEntity );
-			}
+			//if constexpr ( requires { T().SynchroniseAuxiliaryComponents( inRegistry, inEntity ); } ) {
+			//	T().SynchroniseAuxiliaryComponents( inRegistry, inEntity );
+			//}
 		}
 
 		static void sCloneEntity( entt::registry &inRegistry, entt::entity inSrc, entt::entity inDst )
@@ -75,9 +103,9 @@ namespace Cyclone::Core::Entity
 			// Copy back from inRegistryHistory -> inRegistry
 			Cyclone::Util::ApplyOverTypeList<T::history_components>( CopyEntityFunctor{}, inRegistry, inSrc, inDst );
 			
-			if constexpr ( requires { T().SynchroniseOptionalComponents( inRegistry, inDst ); } ) {
-				T().SynchroniseAuxiliaryComponents( inRegistry, inDst );
-			}
+			//if constexpr ( requires { T().SynchroniseAuxiliaryComponents( inRegistry, inDst ); } ) {
+			//	T().SynchroniseAuxiliaryComponents( inRegistry, inDst );
+			//}
 		}
 
 	protected:
