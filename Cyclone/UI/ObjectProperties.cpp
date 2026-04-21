@@ -310,31 +310,54 @@ void Cyclone::UI::ObjectProperties::ShowWindow( Cyclone::Core::LevelInterface *i
 						dirty |= HandleTangents( registry, inEntity, pathData, pathCache, i, true );
 					}
 
-					/* Normal Alignment */ {
-						LeafNode( "Align Normal" );
+					/* Curvature */ {
+						LeafNode( "Side Curvature", 0.5f );
 
-						int nidx = ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::NORMAL_MASK ) - 1;
-						if ( ImGui::Combo( "##AlignNormal", &nidx, PathData::kExtrusionTypes, std::size( PathData::kExtrusionTypes ) ) ) {
-							pathData.mExtrusionTypes[i] &= ~PathData::EExtrusionType::NORMAL_MASK;
-							pathData.mExtrusionTypes[i] |= nidx + 1;
+						//int nidx = ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::NORMAL_MASK ) - 1;
+						//if ( ImGui::Combo( "##AlignNormal", &nidx, PathData::kExtrusionTypes, std::size( PathData::kExtrusionTypes ) ) ) {
+						//	pathData.mExtrusionTypes[i] &= ~PathData::EExtrusionType::NORMAL_MASK;
+						//	pathData.mExtrusionTypes[i] |= nidx + 1;
+						//	dirty = true;
+						//
+						//	pathCache.Rebuild( registry, inEntity );
+						//
+						//	// TODO: what the fuck?
+						//}
+
+						bool normal = pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CurveNormal;
+						bool bitangent = pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CurveBitangent;
+
+						if ( ImGui::Checkbox( "Normal##Curve", &normal ) ) {
+							pathData.mExtrusionTypes[i] &= ~PathData::EExtrusionType::CurveNormal;
+							if ( normal ) pathData.mExtrusionTypes[i] |= PathData::EExtrusionType::CurveNormal;
 							dirty = true;
+						}
 
-							pathCache.Rebuild( registry, inEntity );
-
-							// TODO: what the fuck?
+						ImGui::SameLine();
+						if ( ImGui::Checkbox( "Bitangent##Curve", &bitangent ) ) {
+							pathData.mExtrusionTypes[i] &= ~PathData::EExtrusionType::CurveBitangent;
+							if ( bitangent ) pathData.mExtrusionTypes[i] |= PathData::EExtrusionType::CurveBitangent;
+							dirty = true;
 						}
 					}
 
-					/* Bitangent Alignment */ {
-						LeafNode( "Align Bitangent" );
+					/* Side Easing */ {
+						LeafNode( "Side Easing" );
 
-						int bidx = ( ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::BITANGENT_MASK ) >> 2 ) - 1;
-						if ( ImGui::Combo( "##AlignBitangent", &bidx, PathData::kExtrusionTypes, std::size( PathData::kExtrusionTypes ) ) ) {
-							pathData.mExtrusionTypes[i] &= ~PathData::EExtrusionType::BITANGENT_MASK;
-							pathData.mExtrusionTypes[i] |= ( bidx + 1 ) << 2;
+						bool in = pathData.mExtrusionTypes[i] & PathData::EExtrusionType::EaseIn;
+						bool out = pathData.mExtrusionTypes[i] & PathData::EExtrusionType::EaseOut;
+
+						if ( ImGui::Checkbox( "Ease In##Side", &in ) ) {
+							pathData.mExtrusionTypes[i] &= ~PathData::EExtrusionType::EaseIn;
+							if ( in ) pathData.mExtrusionTypes[i] |= PathData::EExtrusionType::EaseIn;
 							dirty = true;
+						}
 
-							pathCache.Rebuild( registry, inEntity );
+						ImGui::SameLine();
+						if ( ImGui::Checkbox( "Ease Out##Side", &out ) ) {
+							pathData.mExtrusionTypes[i] &= ~PathData::EExtrusionType::EaseOut;
+							if ( out ) pathData.mExtrusionTypes[i] |= PathData::EExtrusionType::EaseOut;
+							dirty = true;
 						}
 					}
 

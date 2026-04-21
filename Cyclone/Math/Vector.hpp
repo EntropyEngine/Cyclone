@@ -31,6 +31,7 @@ namespace Cyclone::Math
 		/// @name Special Constructors
 		/// @{
 		static Vector4D XM_CALLCONV sZero() { return _mm256_setzero_pd(); }
+		static Vector4D XM_CALLCONV sOne() { return _mm256_set1_pd( 1.0 ); }
 		static Vector4D XM_CALLCONV sPosInf() { return _mm256_set1_pd( std::numeric_limits<double>::infinity() ); }
 		static Vector4D XM_CALLCONV sNegInf() { return _mm256_set1_pd( -std::numeric_limits<double>::infinity() ); }
 

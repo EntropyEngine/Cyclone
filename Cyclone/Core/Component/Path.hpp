@@ -29,25 +29,16 @@ namespace Cyclone::Core::Component
 		static constexpr const char * kExtrusionTypes[] = { "Explicit", "Twist", "Tilt" };
 		enum EExtrusionType : uint8_t
 		{
-			NormalExplicit		= ( 1 << 0 ),
-			NormalTwist			= ( 2 << 0 ),
-			NormalTilt			= ( 3 << 0 ),
+			CurveNormal		= ( 1 << 0 ),
+			CurveBitangent	= ( 1 << 1 ),
+			CurveBoth		= CurveNormal | CurveBitangent, 
 
-			BitangentExplicit	= ( 1 << 2 ),
-			BitangentTwist		= ( 2 << 2 ),
-			BitangentTilt		= ( 3 << 2 ),
+			EaseIn			= ( 1 << 2 ),
+			EaseOut			= ( 1 << 3 ),
+			EaseInOut		= EaseIn | EaseOut,
 
-			Explicit			= NormalExplicit | BitangentExplicit,
-			Twist				= NormalTwist | BitangentTwist,
-			Tilt				= NormalTilt | BitangentTilt,
-
-			TYPE_MASK			= ( 0b11 << 0 ),
-			TYPE_SHIFT			= 2,
-			NORMAL_MASK			= TYPE_MASK,
-			BITANGENT_MASK		= TYPE_MASK << 2,
-
-			CustomNormal		= ( 0b01 << ( TYPE_SHIFT + TYPE_SHIFT ) ),
-			CustomBitangent		= ( 0b10 << ( TYPE_SHIFT + TYPE_SHIFT ) )
+			CustomNormal	= ( 1 << 4 ),
+			CustomBitangent	= ( 1 << 5 )
 		};
 
 		static constexpr const char * kTangentTypes[] = { "Split", "Aligned", "Mirrored" };
@@ -81,7 +72,7 @@ namespace Cyclone::Core::Component
 			if ( mKnots.size() == 0 ) {
 				mKnots.emplace_back( Cyclone::Math::Vector4D::sZero(), DirectX::XMVectorSet( 0.0f, 0.0f, -1.0f, 0.0f ), DirectX::XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f ) );
 				mExtrusions.emplace_back( DirectX::XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f ), DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 0.0f ) );
-				mExtrusionTypes.push_back( EExtrusionType::Tilt );
+				mExtrusionTypes.push_back( EExtrusionType::CurveBoth | EExtrusionType::EaseInOut );
 				mTangentType.push_back( ETangentType::Aligned );
 				mPathWidths.push_back( 2.0f );
 			}
@@ -89,7 +80,7 @@ namespace Cyclone::Core::Component
 				size_t i = mKnots.size() - 1;
 				mKnots.emplace_back( mKnots[i].mPoint + Cyclone::Math::Vector4D::sFromXMVECTOR( mKnots[i].mOutVec ) * Cyclone::Math::Vector4D::sReplicate( 3.0f ), DirectX::XMVectorNegate( mKnots[i].mOutVec ), mKnots[i].mOutVec);
 				mExtrusions.emplace_back( mExtrusions[i].mNormal, mExtrusions[i].mBitangent );
-				mExtrusionTypes.push_back( EExtrusionType::Tilt );
+				mExtrusionTypes.push_back( EExtrusionType::CurveBoth | EExtrusionType::EaseInOut );
 				mTangentType.push_back( ETangentType::Aligned );
 				mPathWidths.push_back( mPathWidths.back() );
 
@@ -467,7 +458,7 @@ namespace Cyclone::Core::Component
 
 			const double kSigned = -inKappa.Dot3( direction );
 
-			return distance * kSigned;
+			return distance > 0 ? distance * kSigned : 0;
 		}
 
 		static void XM_CALLCONV sComputeKappaTauCoeffs( const Cyclone::Math::Vector4D inR1, const Cyclone::Math::Vector4D inR2, const Cyclone::Math::Vector4D inR3, double &outKappa, double &outTau )
@@ -922,8 +913,11 @@ namespace Cyclone::Core::Component
 				float halfWidth0 = pathData.mPathWidths[i] / 2;
 				float halfWidth1 = pathData.mPathWidths[i + 1] / 2;
 
-				double corr0 = ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::BITANGENT_MASK ) == PathData::EExtrusionType::BitangentExplicit ? 0.0 : 1.0;
-				double corr1 = ( pathData.mExtrusionTypes[i + 1] & PathData::EExtrusionType::BITANGENT_MASK ) == PathData::EExtrusionType::BitangentExplicit ? 0.0 : 1.0;
+				const Vector4D corr0B = !( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CurveBitangent ) ? Vector4D::sZero() : Vector4D::sOne();
+				const Vector4D corr1B = !( pathData.mExtrusionTypes[i + 1] & PathData::EExtrusionType::CurveBitangent ) ? Vector4D::sZero() : Vector4D::sOne();
+
+				const Vector4D corr0N = !( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::CurveNormal ) ? Vector4D::sZero() : Vector4D::sOne();
+				const Vector4D corr1N = !( pathData.mExtrusionTypes[i + 1] & PathData::EExtrusionType::CurveNormal ) ? Vector4D::sZero() : Vector4D::sOne();
 
 				const Vector4D dispB0 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i].mBitangent, halfWidth0 ) );
 				const Vector4D dispB1 = Vector4D::sFromXMVECTOR( DirectX::XMVectorScale( pathData.mExtrusions[i + 1].mBitangent, halfWidth1 ) );
@@ -934,17 +928,17 @@ namespace Cyclone::Core::Component
 				const Vector4D kVec0 = pathData.ComputeKappaVector( i, 0.0 );
 				const Vector4D kVec1 = pathData.ComputeKappaVector( i, 1.0 );
 
-				const double scaleL0 = 1 + corr0 * PathData::sComputeScale( kVec0, dispB0 );
-				const double scaleL1 = 1 + corr1 * PathData::sComputeScale( kVec1, dispB1 );
+				const double scaleL0 = 1 + PathData::sComputeScale( kVec0, dispB0 * corr0B );
+				const double scaleL1 = 1 + PathData::sComputeScale( kVec1, dispB1 * corr1B );
 
-				const double scaleR0 = 1 + corr0 * PathData::sComputeScale( kVec0, -dispB0 );
-				const double scaleR1 = 1 + corr1 * PathData::sComputeScale( kVec1, -dispB1 );
+				const double scaleR0 = 1 + PathData::sComputeScale( kVec0, -dispB0 * corr0B );
+				const double scaleR1 = 1 + PathData::sComputeScale( kVec1, -dispB1 * corr1B );
 
-				const double scaleLU0 = 1 + corr0 * PathData::sComputeScale( kVec0, dispB0 + dispN0 );
-				const double scaleLU1 = 1 + corr1 * PathData::sComputeScale( kVec1, dispB1 + dispN1 );
+				const double scaleLU0 = 1 + PathData::sComputeScale( kVec0, dispB0 * corr0B + dispN0 * corr0N );
+				const double scaleLU1 = 1 + PathData::sComputeScale( kVec1, dispB1 * corr1B + dispN1 * corr1N );
 
-				const double scaleRU0 = 1 + corr0 * PathData::sComputeScale( kVec0, -dispB0 + dispN0 );
-				const double scaleRU1 = 1 + corr1 * PathData::sComputeScale( kVec1, -dispB1 + dispN1 );
+				const double scaleRU0 = 1 + PathData::sComputeScale( kVec0, -dispB0 * corr0B + dispN0 * corr0N );
+				const double scaleRU1 = 1 + PathData::sComputeScale( kVec1, -dispB1 * corr1B + dispN1 * corr1N );
 
 				OutputDebugStringA( std::format( "Segment={} | L0={:.2f}, R0={:.2f}, L1={:.2f}, R1={:.2f}\n", i, scaleL0, scaleR0, scaleL1, scaleR1 ).c_str() );
 
@@ -973,20 +967,26 @@ namespace Cyclone::Core::Component
 				sideRU[i + 1].mInVec = DirectX::XMVectorScale( pathData.mKnots[i + 1].mInVec, scaleRU1 );
 			}
 
-			for ( size_t i = 1; i + 1 < pathData.mKnots.size(); ++i ) {
-				if ( ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::BITANGENT_MASK ) == PathData::EExtrusionType::BitangentTwist || true ) {
+			for ( size_t i = 0; i < pathData.mKnots.size(); ++i ) {
+				if ( ( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::EaseInOut ) != PathData::EExtrusionType::EaseInOut ) {
 					//Vector4D inPlane = -Vector4D::sCross3( Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mBitangent ), Vector4D::sFromXMVECTOR( pathData.mKnots[i].mInVec ).GetNorm3() ).GetNorm3();
 					//Vector4D outPlane = Vector4D::sCross3( Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mBitangent ), Vector4D::sFromXMVECTOR( pathData.mKnots[i].mOutVec ).GetNorm3() ).GetNorm3();
 					for ( auto pside : { &sideL, &sideR, &sideLU, &sideRU } ) {
 						std::vector<PathData::Knot> &side = *pside;
 
-						Vector4D inDelta = ( side[i].mPoint - side[i - 1].mPoint );
-						Vector4D outDelta = ( side[i + 1].mPoint - side[i].mPoint );
+						Vector4D inDelta = i == 0 ? ( side[i + 1].mPoint - side[i].mPoint ) : ( side[i].mPoint - side[i - 1].mPoint );
+						Vector4D outDelta = i + 1 == pathData.mKnots.size() ? ( side[i].mPoint - side[i - 1].mPoint ) : ( side[i + 1].mPoint - side[i].mPoint );
 
+						// NOTE
+						// SPECIAL INTERP MODE
+						//
 						if ( false ) {
 							inDelta -= Vector4D::sReplicate( inDelta.Dot3( Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mNormal ) ) ) * Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mNormal );
 							outDelta -= Vector4D::sReplicate( outDelta.Dot3( Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mNormal ) ) ) * Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mNormal );
 						}
+						//
+						// SPECIAL INTERP MODE
+						// NOTE
 
 						Vector4D inPlane = Vector4D::sCross3( inDelta.GetNorm3(), Vector4D::sCross3( Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mBitangent ), inDelta.GetNorm3() ).GetNorm3() ).GetNorm3();
 						Vector4D outPlane = -Vector4D::sCross3( outDelta.GetNorm3(), Vector4D::sCross3( Vector4D::sFromXMVECTOR( pathData.mExtrusions[i].mBitangent ), outDelta.GetNorm3() ).GetNorm3() ).GetNorm3();
@@ -1009,8 +1009,8 @@ namespace Cyclone::Core::Component
 						//side[i].mInVec = ( Vector4D::sReplicate( inVec.Dot3( inDir ) ) * inDir ).ToXMVECTOR();
 						//side[i].mOutVec = ( Vector4D::sReplicate( outVec.Dot3( outDir ) ) * outDir ).ToXMVECTOR();
 
-						side[i].mInVec = ( inVec ).ToXMVECTOR();
-						side[i].mOutVec = ( outVec ).ToXMVECTOR();
+						if ( !( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::EaseIn ) ) side[i].mInVec = ( inVec ).ToXMVECTOR();
+						if ( !( pathData.mExtrusionTypes[i] & PathData::EExtrusionType::EaseOut ) ) side[i].mOutVec = ( outVec ).ToXMVECTOR();
 
 						//if ( i == 12 ) {
 						//	__debugbreak();

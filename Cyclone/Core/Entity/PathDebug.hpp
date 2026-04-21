@@ -52,20 +52,24 @@ namespace Cyclone::Core::Entity
 			pathData.AddCurve( DirectX::XM_PIDIV2 * 1.0 / 2.0 );
 
 			pathData.AddCurve( DirectX::XM_PIDIV2 * 1.0 / 2.0 );
-			pathData.mPathWidths.back() = 4.0f;
+			pathData.mPathWidths.back() = 6.0f;
+			pathData.mExtrusionTypes.back() &= ~Component::PathData::EExtrusionType::CurveBitangent;
 
 			pathData.AddKnot();
 			pathData.mPathWidths.back() = 6.0f;
 
 			pathData.AddKnot();
 			pathData.AddKnot();
-			pathData.mPathWidths.back() = 4.0f;
+			pathData.mPathWidths.back() = 6.0f;
 
 			pathData.AddKnot();
 			pathData.mPathWidths.back() = 6.0f;
-			pathData.AddKnot();
 
-			pathData.mKnots[pathData.mKnots.size() - 3].mPoint += Cyclone::Math::Vector4D( 0.0, 4.0, 0.0 );
+			pathData.AddKnot();
+			pathData.mExtrusionTypes.back() &= ~Component::PathData::EExtrusionType::EaseIn;
+			pathData.mPathWidths.back() = 2.0f;
+
+			//pathData.mKnots[pathData.mKnots.size() - 3].mPoint += Cyclone::Math::Vector4D( 0.0, 4.0, 0.0 );
 
 			pathData.ValidatePath();
 
