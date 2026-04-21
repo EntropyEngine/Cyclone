@@ -371,11 +371,11 @@ void Cyclone::UI::Outliner::SelectionListUpdate( Cyclone::Core::LevelInterface *
 					}
 					ImGui::PopStyleVar( 1 );
 
+					EntityPopup( entityManager, entity );
+
 					ImGui::TableSetColumnIndex( 1 );
 					ImGui::AlignTextToFramePadding();
 					ImGui::Text( Cyclone::Util::PrefixString( "", entity ) );
-
-					EntityPopup( entityManager, entity );
 
 					auto &entityVisible = view.get<Visible>( entity );
 					auto &entitySelectable = view.get<Selectable>( entity );
