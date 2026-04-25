@@ -24,13 +24,11 @@ namespace Cyclone::Core::Component
 					DirectX::XMMATRIX rotmat = DirectX::XMMatrixRotationRollPitchYawFromVector( rotation.mPitchYawRoll );
 					DirectX::XMVECTOR newcenter = DirectX::XMVector3TransformCoord( mCenter, rotmat );
 					Cyclone::Math::Vector4D newextent = Cyclone::Math::Vector4D::sReplicate( mExtent.x );
-					inHandle.patch<BoundingBox>( [newcenter, newextent]( auto &inV ) {
-						inV.mValue.mCenter = Cyclone::Math::Vector4D::sFromXMVECTOR( newcenter );
-						inV.mValue.mExtent = newextent;
-					} );
+					inHandle.emplace_or_replace<BoundingBox>( Cyclone::Math::Vector4D::sFromXMVECTOR( newcenter ), newextent );
 					return;
 				}
 				case EType::BoundingBox: {
+					inHandle.emplace_or_replace<BoundingBox>( Cyclone::Math::Vector4D::sFromXMVECTOR( mCenter ), Cyclone::Math::Vector4D( mExtent.x, mExtent.y, mExtent.z ) );
 					return;
 				}
 				case EType::Path: {
@@ -85,10 +83,7 @@ namespace Cyclone::Core::Component
 					Cyclone::Math::Vector4D bbCenter = ( bbMax + bbMin ) * half;
 					Cyclone::Math::Vector4D bbExtent = ( bbMax - bbMin ) * half;
 					
-					inHandle.patch<BoundingBox>( [bbCenter, bbExtent]( auto &inV ) {
-						inV.mValue.mCenter = bbCenter;
-						inV.mValue.mExtent = bbExtent;
-					} );
+					inHandle.emplace_or_replace<BoundingBox>( bbCenter, bbExtent );
 					return;
 				}
 				default:

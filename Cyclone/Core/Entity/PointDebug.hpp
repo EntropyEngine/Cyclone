@@ -36,9 +36,6 @@ namespace Cyclone::Core::Entity
 			// Attach a Rotation component
 			handle.emplace<Cyclone::Core::Component::Rotation>( DirectX::g_XMZero );
 
-			// Attach default center and extents (25cm radius)
-			handle.emplace<Cyclone::Core::Component::BoundingBox>( Cyclone::Math::Vector4D::sZero(), Cyclone::Math::Vector4D::sZero() );
-
 			// Attach corresponding local bounds
 			handle.emplace<Cyclone::Core::Component::LocalBounds>( DirectX::g_XMZero, DirectX::XMFLOAT3( 0.25, 0.25, 0.25 ), Cyclone::Core::Component::LocalBounds::EType::Radius ).UpdateBoundingBox( handle );
 

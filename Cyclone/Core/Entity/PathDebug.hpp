@@ -22,7 +22,7 @@ namespace Cyclone::Core::Entity
 		static constexpr entt::hashed_string kEntityType = "path_debug"_hs;
 		static constexpr entt::hashed_string kEntityCategory = "path"_hs;
 
-		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<Component::PathTag, Component::PathData, Component::PathSelection>>;
+		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<Component::PathData, Component::PathSelection>>;
 
 		entt::entity Create( entt::registry &inRegistry, const Cyclone::Math::Vector4D inPosition )
 		{
@@ -37,12 +37,10 @@ namespace Cyclone::Core::Entity
 			handle.emplace<Cyclone::Core::Component::Rotation>( DirectX::g_XMZero );
 
 			// Attach empty BB and local bounds
-			handle.emplace<Cyclone::Core::Component::BoundingBox>( Cyclone::Math::Vector4D::sZero(), Cyclone::Math::Vector4D::sZero() );
 			Component::LocalBounds &localBounds = handle.emplace<Cyclone::Core::Component::LocalBounds>( DirectX::g_XMZero, DirectX::XMFLOAT3(), Cyclone::Core::Component::LocalBounds::EType::Path );
 
 			// Attach path tag and data
 			handle.emplace<Component::PathSelection>();
-			handle.emplace<Component::PathTag>();
 			Component::PathData &pathData = handle.emplace<Component::PathData>();
 
 			pathData.AddKnot();
@@ -82,6 +80,7 @@ namespace Cyclone::Core::Entity
 		void SynchroniseAuxiliaryComponents( entt::registry &inRegistry, entt::entity inEntity )
 		{
 			entt::handle handle = { inRegistry, inEntity };
+			handle.emplace_or_replace<Component::PathTag>();
 			handle.get_or_emplace<Component::PathCache>().Rebuild( handle );
 			handle.get_or_emplace<Component::PathChildren>().FindChildren( handle );
 		}

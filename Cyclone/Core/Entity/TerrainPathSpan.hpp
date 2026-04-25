@@ -23,7 +23,7 @@ namespace Cyclone::Core::Entity
 		static constexpr entt::hashed_string kEntityType = "terrain_path_span"_hs;
 		static constexpr entt::hashed_string kEntityCategory = "terrain"_hs;
 
-		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<Component::MeshTag, Component::PathDependency>>;
+		using history_components = entt::type_list_cat_t<BaseEntity::history_components, entt::type_list<Component::PathDependency>>;
 
 		// TODO: add tag list and auto apply
 
@@ -39,9 +39,6 @@ namespace Cyclone::Core::Entity
 			// Attach a Rotation component
 			handle.emplace<Cyclone::Core::Component::Rotation>( DirectX::g_XMZero );
 
-			// Attach default center and extents (25cm radius)
-			handle.emplace<Cyclone::Core::Component::BoundingBox>( Cyclone::Math::Vector4D::sZero(), Cyclone::Math::Vector4D::sZero() );
-
 			// Attach corresponding local bounds
 			handle.emplace<Cyclone::Core::Component::LocalBounds>( DirectX::g_XMZero, DirectX::XMFLOAT3( 0.25, 0.25, 0.25 ), Cyclone::Core::Component::LocalBounds::EType::Radius ).UpdateBoundingBox( handle );
 
@@ -52,6 +49,12 @@ namespace Cyclone::Core::Entity
 			handle.emplace<Component::PathDependency>();
 
 			return entity;
+		}
+
+		void SynchroniseAuxiliaryComponents( entt::registry &inRegistry, entt::entity inEntity )
+		{
+			entt::handle handle = { inRegistry, inEntity };
+			handle.emplace_or_replace<Component::MeshTag>();
 		}
 
 		void OnDelete( entt::registry &inRegistry, entt::entity inEntity, std::set<entt::entity> &ioDirtyEntities )

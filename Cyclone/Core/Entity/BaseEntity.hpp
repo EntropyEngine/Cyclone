@@ -30,11 +30,11 @@ namespace Cyclone::Core::Entity
 	class BaseEntity
 	{
 	public:
-		using history_components = entt::type_list<Component::EntityType, Component::EntityCategory, Component::Visible, Component::Selectable, Component::Position, Component::Rotation, Component::BoundingBox, Component::LocalBounds>;
+		using history_components = entt::type_list<Component::EntityType, Component::Visible, Component::Selectable, Component::Position, Component::Rotation, Component::LocalBounds>;
 
 		static void sRegister( entt::meta_ctx &inMetaContext )
 		{
-			static_assert( T::history_components::size > 4 );
+			static_assert( T::history_components::size >= history_components::size );
 			static_assert( entt::type_list_diff_t<T::history_components, history_components>::size + history_components::size == T::history_components::size );
 			static_assert( !entt::type_list_contains_v<T::history_components, Component::EpochNumber> );
 
@@ -49,14 +49,19 @@ namespace Cyclone::Core::Entity
 				entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sOnDelete>( "on_delete"_hs );
 			}
 
-			if constexpr ( HasSynchroniseAuxiliaryComponents<T> ) {
-				entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sSynchroniseAuxiliaryComponents>( "synchronise_auxiliary_components"_hs );
-			}
+			entt::meta_factory<T>{ inMetaContext }.type( T::kEntityType ).func<&T::sSynchroniseAuxiliaryComponents>( "synchronise_auxiliary_components"_hs );
 		}
 
-		static void sSynchroniseAuxiliaryComponents( entt::registry &inRegistry, entt::entity inEntity ) requires HasSynchroniseAuxiliaryComponents<T>
+		static void sSynchroniseAuxiliaryComponents( entt::registry &inRegistry, entt::entity inEntity )
 		{
-			T().SynchroniseAuxiliaryComponents( inRegistry, inEntity );
+			if constexpr ( HasSynchroniseAuxiliaryComponents<T> ) {
+				T().SynchroniseAuxiliaryComponents( inRegistry, inEntity );
+			}
+
+			entt::handle handle = { inRegistry, inEntity };
+
+			handle.emplace_or_replace<Component::EntityCategory>( static_cast<Component::EntityCategory>( T::kEntityCategory.value() ) );
+			handle.get<Component::LocalBounds>().UpdateBoundingBox( handle );
 		}
 
 		static void sOnDelete( entt::registry &inRegistry, entt::entity inEntity, std::set<entt::entity> &ioDirtyEntities ) requires HasOnDelete<T>
