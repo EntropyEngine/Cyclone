@@ -1,9 +1,5 @@
 #include "pch.h"
-
 #include "Cyclone/Core/LevelInterface.hpp"
-
-#include "Cyclone/Core/Entity/PointDebug.hpp"
-#include "Cyclone/Core/Entity/InfoDebug.hpp"
 
 Cyclone::Core::LevelInterface::LevelInterface()
 {

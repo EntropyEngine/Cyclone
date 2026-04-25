@@ -85,11 +85,6 @@ namespace Cyclone::Core::Entity
 			handle.get_or_emplace<Component::PathChildren>().FindChildren( handle );
 		}
 
-		void SynchroniseChildren( entt::registry &inRegistry, entt::entity inEntity )
-		{
-
-		}
-
 		void OnDelete( entt::registry &inRegistry, entt::entity inEntity, std::set<entt::entity> &ioDirtyEntities )
 		{
 			entt::handle handle = { inRegistry, inEntity };
