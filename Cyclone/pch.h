@@ -21,6 +21,7 @@
 #include <cmath>
 #include <cstdint>
 #include <exception>
+#include <format>
 #include <iterator>
 #include <memory>
 #include <stdexcept>
@@ -42,5 +43,11 @@ namespace DX
 using namespace entt::literals;
 
 #include <imgui.h>
+
+template<typename... Args>
+inline void OutputDebugStringF( std::format_string<Args...> fmt, Args&&... args )
+{
+	OutputDebugStringA( std::format( fmt, std::forward<Args>( args )... ).c_str() );
+}
 
 #endif //PCH_H
