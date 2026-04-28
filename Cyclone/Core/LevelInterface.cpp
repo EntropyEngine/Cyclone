@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Cyclone/Core/LevelInterface.hpp"
 
+#include "Cyclone/Core/Event/Test.hpp"
+
 Cyclone::Core::LevelInterface::LevelInterface()
 {
 	mLevel = std::make_unique<Level>();
@@ -57,6 +59,8 @@ void Cyclone::Core::LevelInterface::Initialize()
 	mEntityManager.EndAction( GetRegistry() );
 
 	mEntityManager.OpenEntityProperties( i );
+
+	Cyclone::Core::Event::TestMain();
 }
 
 void Cyclone::Core::LevelInterface::SetDevice( ID3D11Device3 *inDevice )
