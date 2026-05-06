@@ -59,6 +59,9 @@
     <Filter Include="Common\ImGuizmo">
       <UniqueIdentifier>{eacdb54d-9c6d-47af-b321-1d1d723aff5d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Event">
+      <UniqueIdentifier>{8371c798-4871-42a6-aedf-78c437078007}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -269,6 +272,9 @@
     <ClInclude Include="Core\Component\Mesh.hpp">
       <Filter>Core\Component</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Event\Test.hpp">
+      <Filter>Core\Event</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -391,6 +397,9 @@
     </ClCompile>
     <ClCompile Include="Core\EntityManagerRegistry.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Event\Test.cpp">
+      <Filter>Core\Event</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
