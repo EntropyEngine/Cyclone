@@ -275,6 +275,9 @@
     <ClInclude Include="Core\Event\Test.hpp">
       <Filter>Core\Event</Filter>
     </ClInclude>
+    <ClInclude Include="Util\Array.hpp">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
