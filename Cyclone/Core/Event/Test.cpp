@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Cyclone/Core/Event/Test.hpp"
 
+#include "Cyclone/Util/Array.hpp"
+
 // STL Includes
 #include <format>
 
@@ -72,6 +74,22 @@ void Cyclone::Core::Event::TestMain()
 	OutputDebugStringA( "\n" );
 
 	OutputDebugStringA( "\n===  End Event Test  === \n\n" );
+
+	Cyclone::Util::Array<int> a;
+	Cyclone::Util::Array<std::unique_ptr<int>> b;
+	Cyclone::Util::Array<std::vector<entt::registry>> c;
+	Cyclone::Util::Array<entt::registry> q;
+
+	a.resize( 5, 5 );
+	b.resize( 5 );
+	c.resize( 5 );
+
+	a.resize( 2 );
+	b.resize( 2 );
+	c.resize( 2 );
+	//Cyclone::Util::Array<std::vector<entt::registry>> d( c.begin(), c.end() );
+
+	__debugbreak();
 }
 
 void Cyclone::Core::Event::TestManager::PrintComponents()
